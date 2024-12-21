@@ -1,11 +1,9 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from 'react';
-import Navbar from '../component/navbar';
 import jwt from 'jsonwebtoken';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { supabase } from '@/utils/supabase/client';
-
 
 export default function AuctionItems() {
   const [items, setItems] = useState([]);
@@ -13,40 +11,44 @@ export default function AuctionItems() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedItem, setSelectedItem] = useState(null); // Modal state
-  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Image slider
-  
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        const decoded = jwt.decode(token);
-        setUser(decoded);
-        setIsAuthenticated(true);
-      } catch (err) {
-        console.error('Failed to decode token:', err);
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const decoded = jwt.decode(token);
+          setUser(decoded);
+          setIsAuthenticated(true);
+        } catch (err) {
+          console.error('Failed to decode token:', err);
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
         setUser(null);
         setIsAuthenticated(false);
       }
-    } else {
-      setUser(null);
-      setIsAuthenticated(false);
     }
   }, []);
+
   useEffect(() => {
-    const refreshSession = async () => {
-      const { data, error } = await supabase.auth.refreshSession();
-      if (error) {
-        console.error("Error refreshing session:", error);
-      } else {
-        localStorage.setItem('authToken', data.session.access_token);
-        console.log("Token refreshed successfully.");
-      }
-    };
-    refreshSession();
-  }, []); // Добавьте пустой массив зависимостей
-  
+    if (typeof window !== 'undefined') {
+      const refreshSession = async () => {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error('Error refreshing session:', error);
+        } else {
+          localStorage.setItem('authToken', data.session.access_token);
+          console.log('Token refreshed successfully.');
+        }
+      };
+      refreshSession();
+    }
+  }, []);
+
   useEffect(() => {
     const fetchAuctionItems = async () => {
       setLoading(true);
@@ -67,7 +69,7 @@ export default function AuctionItems() {
   }, []);
 
   const openModal = (item) => {
-    console.log("Opening modal with item:", item);
+    console.log('Opening modal with item:', item);
     if (!item) {
       toast.error('Invalid item selected.');
       return;
@@ -75,102 +77,71 @@ export default function AuctionItems() {
     setSelectedItem(item);
     setCurrentImageIndex(0);
   };
-  
-  useEffect(() => {
-    console.log("selectedItem updated:", selectedItem);
-  }, [selectedItem]);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.time_left > 0
-            ? { ...item, time_left: item.time_left - 1 }
-            : item
-        )
-      );
-    }, 1000);
 
-    return () => clearInterval(interval); // Cleanup interval on component unmount
-  }, []);
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(secs).padStart(2, "0")}`;
-  };
   const closeModal = () => setSelectedItem(null);
 
   const handleBidChange = (change, minRaise) => {
     setSelectedItem((prevItem) => {
-      if (!prevItem) {
-        console.error("handleBidChange called with null selectedItem");
-        return null;
-      }
-  
+      if (!prevItem) return null;
+
       const newBid = Math.max(
         prevItem.current_bid + minRaise,
         (prevItem.bid || prevItem.current_bid) + change
       );
-  
-      console.log("New bid calculated:", newBid);
       return {
         ...prevItem,
-        bid: newBid || prevItem.current_bid + minRaise, // Убедитесь, что bid всегда корректен
+        bid: newBid || prevItem.current_bid + minRaise,
       };
     });
   };
-  
-  
-  
+
   const handlePlaceBid = async () => {
     if (!isAuthenticated) {
       toast.error('Please log in to place a bid.');
       return;
     }
-  
+
     if (!selectedItem || !selectedItem.id || !selectedItem.bid) {
       toast.error('Invalid item or bid.');
-      console.error('Invalid selectedItem:', selectedItem);
       return;
     }
-  
+
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        toast.error('Authorization token is missing.');
-        return;
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          toast.error('Authorization token is missing.');
+          return;
+        }
+
+        const response = await fetch(`/api/place-bid/${selectedItem.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ newBid: selectedItem.bid }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to place bid.');
+        }
+
+        const updatedItem = await response.json();
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.id === updatedItem.id ? updatedItem : item
+          )
+        );
+
+        toast.success('Bid placed successfully! You will be notified via email.');
       }
-  
-      const response = await fetch(`/api/place-bid/${selectedItem.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ newBid: selectedItem.bid }),
-      });
-  
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to place bid.');
-      }
-  
-      const updatedItem = await response.json();
-      setItems((prevItems) =>
-        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-      );
-  
-      toast.success('Bid placed successfully! You will be notified via email.');
     } catch (err) {
       console.error('Error placing bid:', err);
       toast.error(err.message || 'Failed to place bid. Please try again.');
     }
   };
-  
-  
   
   if (loading)
     return (

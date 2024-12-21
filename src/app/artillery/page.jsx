@@ -51,16 +51,26 @@ export default function SendMessage() {
 
     fetchOptions();
   }, []);
+  // Helper functions for localStorage
+  const getUserFromLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('user');
+      return userData ? JSON.parse(userData) : null;
+    }
+    return null;
+  };
 
+  const getAuthTokenFromLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('authToken');
+    }
+    return null;
+  };
   useEffect(() => {
-    try {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        const decoded = jwt.decode(token);
-        setUser(decoded);
-      }
-    } catch (err) {
-      console.error('Error decoding token:', err);
+    const token = getAuthTokenFromLocalStorage();
+    if (token) {
+      const decoded = jwt.decode(token);
+      setUser(decoded);
     }
   }, []);
 
@@ -70,24 +80,14 @@ export default function SendMessage() {
     return baseCost + message.length * 5;
   };
 
-  const getUsernameFromLocalStorage = () => {
-    const userData = JSON.parse(localStorage.getItem('user'));
 
-    if (userData && userData.user_metadata && userData.user_metadata.username) {
-      return userData.user_metadata.username;
-    } else {
-      console.warn('Username not found in localStorage');
-      return null;
-    }
-  };
-
-  const username = getUsernameFromLocalStorage();
+  const username = getUserFromLocalStorage()?.user_metadata?.username || 'Guest';
   console.log('Username:', username);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const userData = JSON.parse(localStorage.getItem('user'));
+    const userData = getUserFromLocalStorage();
     const user_id = userData?.id;
     const username = userData?.user_metadata?.username || 'User';
 

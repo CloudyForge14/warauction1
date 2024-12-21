@@ -85,28 +85,31 @@ export default function Profile() {
   const updateUsername = async () => {
     try {
       setLoading(true);
-  
+
       // First, update the username in the authentication metadata
       const { error: authError } = await supabase.auth.updateUser({
         data: { username: newUsername },
       });
-  
+
       if (authError) {
         toast.error('Failed to update username in authentication.');
         return;
       }
-  
+
       // Then, update the username in the database
-      const { error: dbError } = await supabase
-        .from('users')
-        .update({ username: newUsername })
-        .eq('id', user.id);
-  
-      if (dbError) {
-        toast.error('Failed to update username in database.');
-        return;
+      if (typeof window !== 'undefined') {
+        const userId = user?.id;
+        const { error: dbError } = await supabase
+          .from('users')
+          .update({ username: newUsername })
+          .eq('id', userId);
+
+        if (dbError) {
+          toast.error('Failed to update username in database.');
+          return;
+        }
       }
-  
+
       toast.success('Username updated successfully!');
       setNewUsername('');
     } catch (error) {
@@ -115,7 +118,6 @@ export default function Profile() {
       setLoading(false);
     }
   };
-  
 
   const changePassword = async () => {
     try {
@@ -147,16 +149,16 @@ export default function Profile() {
         closeOnClick
         pauseOnHover
         draggable
-        theme="dark" // Matches the dark theme
+        theme="dark"
         toastStyle={{
-          marginTop:"60px",
-          backgroundColor: '#1f2937', // Dark gray
-          color: '#fff', // White text
-          border: '1px solid #374151', // Subtle border
+          marginTop: '60px',
+          backgroundColor: '#1f2937',
+          color: '#fff',
+          border: '1px solid #374151',
           borderRadius: '8px',
           boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
         }}
-        progressStyle={{ backgroundColor: '#2563eb' }} // Blue progress bar
+        progressStyle={{ backgroundColor: '#2563eb' }}
       />
       <div className="flex-grow flex flex-col items-center justify-start mt-24">
         <div className="p-8 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">

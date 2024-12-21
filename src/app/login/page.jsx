@@ -26,10 +26,12 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // Save tokens and user info in localStorage
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Check for window and localStorage availability
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('refreshToken', data.refresh_token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
 
         const { error } = await supabase.auth.setSession({
           access_token: data.token,
@@ -56,23 +58,23 @@ export default function Login() {
   return (
     <div>
       <ToastContainer
-                    position="top-right"
-                    autoClose={3000}
-                    hideProgressBar={false}
-                    closeOnClick
-                    pauseOnHover
-                    draggable
-                    theme="dark"
-                    toastStyle={{
-                      marginTop: "60px",
-                      backgroundColor: '#1f2937',
-                      color: '#fff',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
-                    }}
-                    progressStyle={{ backgroundColor: '#2563eb' }}
-                  />
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="dark"
+        toastStyle={{
+          marginTop: '60px',
+          backgroundColor: '#1f2937',
+          color: '#fff',
+          border: '1px solid #374151',
+          borderRadius: '8px',
+          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+        }}
+        progressStyle={{ backgroundColor: '#2563eb' }}
+      />
       <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white px-6 py-12">
         <div className="text-center -mt-64">
           <h1 className="text-3xl font-bold">Welcome Back</h1>
