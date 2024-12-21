@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-40">
         {/* Company Info */}
         <div>
-          <h3 className="text-lg font-bold mb-4">Gloooudy TrophyStore</h3>
+          <h3 className="text-lg font-bold mb-4">CloudyForge</h3>
           <p className="text-gray-400">
             Your trusted store for unique trophies and auction items. We strive to deliver quality and satisfaction.
           </p>
@@ -24,7 +24,7 @@ export default function Footer() {
                 href="mailto:support@gloooudy.com"
                 className="text-gray-400 hover:text-white transition"
               >
-                ✉️ Email: support@gloooudy.com
+                ✉️ Email: support@cloudyforge.com
               </a>
             </li>
             <li>
@@ -44,7 +44,7 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-bold mb-4">Legal</h3>
           <p className="text-gray-400">
-            © 2024 Gloooudy TrophyStore. All rights reserved.
+            © 2024 CloudyForge. All rights reserved.
           </p>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function Footer() {
       {/* Divider */}
       <div className="border-t border-gray-800 mt-8 pt-4 text-center">
         <p className="text-gray-500 text-sm">
-          Designed with ❤️ by the Gloooudy Team.
+          Designed with ❤️ by the CloudyForge Team.
         </p>
       </div>
     </footer>
