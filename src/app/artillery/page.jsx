@@ -52,20 +52,26 @@ export default function SendMessage() {
     fetchOptions();
   }, []);
   // Helper functions for localStorage
-  const getUserFromLocalStorage = () => {
-    if (typeof window !== 'undefined') {
+ // Helper functions for localStorage
+ const getUserFromLocalStorage = () => {
+  if (typeof window !== 'undefined') {
+    try {
       const userData = localStorage.getItem('user');
       return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return null;
     }
-    return null;
-  };
+  }
+  return null;
+};
 
-  const getAuthTokenFromLocalStorage = () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('authToken');
-    }
-    return null;
-  };
+const getAuthTokenFromLocalStorage = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('authToken') || null;
+  }
+  return null;
+};
   useEffect(() => {
     const token = getAuthTokenFromLocalStorage();
     if (token) {
