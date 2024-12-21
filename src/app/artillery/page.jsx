@@ -308,7 +308,7 @@ export default function SendMessage() {
     {/* Slider Section with Video */}
     <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center">
       <video
-        src="/artillery/otstrel.mp4"
+        src="/artillery/otstrel.MP4"
         className="w-full h-full object-cover"
         autoPlay
         loop
