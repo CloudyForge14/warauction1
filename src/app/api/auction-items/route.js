@@ -19,19 +19,35 @@ export async function GET() {
 
 
 export async function uploadImage(file) {
-  const fileName = `${Date.now()}-${file.name}`;
-const { data, error } = await supabase.storage
-  .from('auction_images') // Здесь имя bucket
-  .upload(fileName, file);
+  // Заменяем пробелы на символы подчеркивания, чтобы избежать проблем с URL
+  const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
 
+  try {
+    // Загружаем файл в Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('auction_images') // Имя bucket
+      .upload(fileName, file);
 
-  if (error) {
-    console.error('Error uploading image:', error.message);
+    if (error) {
+      console.error('Error uploading file:', error.message);
+      return null;
+    }
+
+    // Получаем публичный URL из Supabase Storage
+    const { data: publicUrlData } = supabase.storage
+      .from('auction_images')
+      .getPublicUrl(fileName);
+
+    console.log("Public URL:", publicUrlData.publicUrl); // Логируем корректный URL
+
+    // Возвращаем корректный публичный URL
+    return publicUrlData.publicUrl;
+  } catch (err) {
+    console.error("Unexpected error during upload:", err.message || err);
     return null;
   }
-
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/auction-images/${fileName}`;
 }
+
 
 
 

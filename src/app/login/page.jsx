@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '../component/navbar';
+import { supabase } from '@/utils/supabase/client';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,29 +16,63 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      // Save token and user info in localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      if (response.ok) {
+        // Save tokens and user info in localStorage
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('refreshToken', data.refresh_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
 
-      alert('Login successful');
-      router.push('/auction'); // Replace with your desired redirect
-    } else {
-      setError(data.error || 'Login failed. Please check your credentials.');
+        const { error } = await supabase.auth.setSession({
+          access_token: data.token,
+          refresh_token: data.refresh_token,
+        });
+
+        if (error) {
+          toast.error(`Error setting session: ${error.message}`);
+          return;
+        }
+
+        toast.success('Login successful!');
+        router.push('/auction');
+      } else {
+        setError(data.error || 'Login failed. Please check your credentials.');
+        toast.error(data.error || 'Login failed. Please check your credentials.');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred.');
+      console.error(err);
     }
   };
 
   return (
     <div>
-      <Navbar />
+      <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    closeOnClick
+                    pauseOnHover
+                    draggable
+                    theme="dark"
+                    toastStyle={{
+                      marginTop: "60px",
+                      backgroundColor: '#1f2937',
+                      color: '#fff',
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+                    }}
+                    progressStyle={{ backgroundColor: '#2563eb' }}
+                  />
       <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white px-6 py-12">
         <div className="text-center -mt-64">
           <h1 className="text-3xl font-bold">Welcome Back</h1>

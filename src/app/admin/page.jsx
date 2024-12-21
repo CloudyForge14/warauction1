@@ -3,88 +3,74 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../component/navbar';
 import { supabase } from '@/utils/supabase/client';
-import jwt from 'jsonwebtoken';
 
 export default function AdminPage() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState([]);
+  const [options, setOptions] = useState([]);
   const [newLot, setNewLot] = useState({ name: '', description: '', current_bid: 0, time_left: 0 });
-  const [file, setFile] = useState(null);
   const [newOption, setNewOption] = useState({ name: '', cost: 0, description: '' });
+  const [file, setFile] = useState(null);
   const [users, setUsers] = useState([]);
   const [admins, setAdmins] = useState([]);
+  const [editItem, setEditItem] = useState(null);
+  const [editOption, setEditOption] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Controls modal visibility
+  const [modalContent, setModalContent] = useState(null); // Modal content (Add/Edit/Delete forms)
 
-  // Загрузка администраторов
   useEffect(() => {
-    const fetchAdmins = async () => {
-      const { data: adminsData, error } = await supabase.from('admins').select('*');
-      if (error) {
-        console.error('Error fetching admins:', error.message);
+    const fetchUserAndAdmins = async () => {
+      const {
+        data: { user },
+        error: sessionError,
+      } = await supabase.auth.getUser();
+
+      if (sessionError || !user) {
+        setUser(null);
+        setIsAdmin(false);
         return;
       }
-      setAdmins(adminsData);
+
+      setUser(user);
+
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('user_id', user.id);
+
+      setIsAdmin(adminData.length > 0);
     };
 
-    fetchAdmins();
+    fetchUserAndAdmins();
   }, []);
-
-  // Проверка прав администратора
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      const decoded = jwt.decode(token);
-      setUser(decoded);
-
-      const checkAdmin = async () => {
-        const { data, error } = await supabase
-          .from('admins')
-          .select('*')
-          .eq('user_id', decoded.id);
-
-        if (error) {
-          console.error('Error checking admin rights:', error.message);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(data.length > 0);
-        }
-      };
-
-      checkAdmin();
-    } else {
-      setUser(null);
-      setIsAdmin(false);
-    }
-  }, []);
-
-  // Загрузка существующих лотов и пользователей
   useEffect(() => {
     const fetchData = async () => {
       const { data: itemsData } = await supabase.from('auction_items').select('*');
       setItems(itemsData);
 
+      const { data: optionsData } = await supabase.from('options').select('*');
+      setOptions(optionsData);
+
       const { data: usersData } = await supabase.from('users').select('*');
       setUsers(usersData);
+
+      const { data: adminsData } = await supabase.from('admins').select('*');
+      setAdmins(adminsData);
     };
 
     fetchData();
   }, []);
 
-  // Удаление администратора
-  const handleRemoveAdmin = async (userId) => {
-    try {
-      const { error } = await supabase.from('admins').delete().eq('user_id', userId);
-      if (error) throw error;
-
-      alert('User removed from admins!');
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to remove admin');
-    }
+  const openModal = (content) => {
+    setModalContent(content);
+    setIsModalOpen(true);
   };
 
-  // Добавление нового лота
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalContent(null);
+  };
   const handleAddLot = async () => {
     try {
       let imageUrl = '';
@@ -92,45 +78,58 @@ export default function AdminPage() {
         const fileName = `${Date.now()}-${file.name}`;
         const { data, error } = await supabase.storage.from('auction_images').upload(fileName, file);
         if (error) throw error;
-        imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/auction-images/${fileName}`;
+        const { data: publicUrlData } = supabase.storage
+        .from('auction_images')
+        .getPublicUrl(fileName);
+  
+      console.log("Public URL:", publicUrlData.publicUrl); // Логируем корректный URL
+        imageUrl = publicUrlData.publicUrl;
       }
 
-      const { error } = await supabase.from('auction_items').insert({
+      const { error: insertError } = await supabase.from('auction_items').insert({
         ...newLot,
         image_url: imageUrl,
         is_active: true,
       });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       alert('Lot added successfully!');
       setNewLot({ name: '', description: '', current_bid: 0, time_left: 0 });
       setFile(null);
     } catch (err) {
-      console.error(err);
-      alert('Failed to add lot');
+      alert(`Error adding lot: ${err.message}`);
     }
   };
 
-  // Завершение аукциона
-  const handleEndAuction = async (itemId) => {
+  const handleEditItem = async () => {
     try {
       const { error } = await supabase
         .from('auction_items')
-        .update({ is_active: false })
-        .eq('id', itemId);
+        .update(editItem)
+        .eq('id', editItem.id);
 
       if (error) throw error;
 
-      alert('Auction ended successfully!');
-      setItems(items.map((item) => (item.id === itemId ? { ...item, is_active: false } : item)));
+      alert('Auction item updated successfully!');
+      setEditItem(null);
     } catch (err) {
-      console.error('Error ending auction:', err);
-      alert('Failed to end auction');
+      alert(`Error updating item: ${err.message}`);
     }
   };
 
-  // Создание новой опции
+  const handleDeleteItem = async (itemId) => {
+    try {
+      const { error } = await supabase.from('auction_items').delete().eq('id', itemId);
+      if (error) throw error;
+
+      alert('Item deleted successfully!');
+      setItems(items.filter((item) => item.id !== itemId));
+    } catch (err) {
+      alert(`Error deleting item: ${err.message}`);
+    }
+  };
+
   const handleAddOption = async () => {
     try {
       const { error } = await supabase.from('options').insert(newOption);
@@ -139,37 +138,76 @@ export default function AdminPage() {
       alert('Option added successfully!');
       setNewOption({ name: '', cost: 0, description: '' });
     } catch (err) {
-      console.error(err);
-      alert('Failed to add option');
+      alert(`Error adding option: ${err.message}`);
     }
   };
 
-  // Добавление администратора
+  const handleEditOption = async () => {
+    try {
+      const { error } = await supabase
+        .from('options')
+        .update(editOption)
+        .eq('id', editOption.id);
+
+      if (error) throw error;
+
+      alert('Option updated successfully!');
+      setEditOption(null);
+    } catch (err) {
+      alert(`Error updating option: ${err.message}`);
+    }
+  };
+
+  const handleDeleteOption = async (optionId) => {
+    try {
+      const { error } = await supabase.from('options').delete().eq('id', optionId);
+      if (error) throw error;
+
+      alert('Option deleted successfully!');
+      setOptions(options.filter((option) => option.id !== optionId));
+    } catch (err) {
+      alert(`Error deleting option: ${err.message}`);
+    }
+  };
+
   const handleMakeAdmin = async (userId) => {
     try {
-      const { data: existingAdmins, error: checkError } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (checkError) throw checkError;
-
-      if (existingAdmins.length > 0) {
-        alert('This user is already an admin.');
-        return;
-      }
-
       const { error } = await supabase.from('admins').insert({ user_id: userId });
       if (error) throw error;
 
       alert('User promoted to admin!');
-      window.location.reload();
     } catch (err) {
-      console.error(err);
-      alert('Failed to promote user');
+      alert(`Error promoting user to admin: ${err.message}`);
     }
   };
 
+  const handleRemoveAdmin = async (userId) => {
+    try {
+      const { error } = await supabase.from('admins').delete().eq('user_id', userId);
+      if (error) throw error;
+
+      alert('Admin removed successfully!');
+    } catch (err) {
+      alert(`Error removing admin: ${err.message}`);
+    }
+  };
+  const Modal = ({ isOpen, onClose, children }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full text-white relative">
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 text-gray-400 hover:text-white font-bold"
+          >
+            X
+          </button>
+          {children}
+        </div>
+      </div>
+    );
+  };
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -179,151 +217,204 @@ export default function AdminPage() {
   }
 
   return (
-    <div>
-      <Navbar />
-      <div className="bg-gray-900 text-white min-h-screen px-6 py-12">
-        <h1 className="text-4xl font-extrabold text-center mb-12">Admin Panel</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Add Lot */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Add New Lot</h2>
-            <input
-              type="text"
-              placeholder="Name"
-              value={newLot.name}
-              onChange={(e) => setNewLot({ ...newLot, name: e.target.value })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <textarea
-              placeholder="Description"
-              value={newLot.description}
-              onChange={(e) => setNewLot({ ...newLot, description: e.target.value })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <input
-              type="number"
-              placeholder="Current Bid"
-              value={newLot.current_bid}
-              onChange={(e) => setNewLot({ ...newLot, current_bid: parseFloat(e.target.value) })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <input
-              type="number"
-              placeholder="Time Left (seconds)"
-              value={newLot.time_left}
-              onChange={(e) => setNewLot({ ...newLot, time_left: parseInt(e.target.value) })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files[0])}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <button
-              onClick={handleAddLot}
-              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white w-full"
-            >
-              Add Lot
-            </button>
-          </div>
-
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-8">
+        <h1 className="text-4xl font-extrabold text-center mb-8 text-gray-100">Admin Panel</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Manage Admins */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Manage Admins</h2>
-            <ul className="space-y-4">
-              {users.map((user) => {
-                const isUserAdmin = admins.some((admin) => admin.user_id === user.id);
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2">Manage Admins</h2>
+            <ul className="space-y-3">
+              {users.map((u) => {
+                const isUserAdmin = admins.some((a) => a.user_id === u.id);
                 return (
-                  <li key={user.id} className="flex justify-between items-center bg-gray-700 p-4 rounded-lg">
-                    <div>
-                      <p className="font-bold">{user.username}</p>
-                      <p className="text-sm text-gray-300">{user.email}</p>
-                    </div>
-                    <div className="flex space-x-2">
-                      {isUserAdmin ? (
-                        <button
-                          disabled
-                          className="bg-gray-600 px-4 py-2 rounded text-white cursor-not-allowed"
-                        >
-                          Already Admin
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleMakeAdmin(user.id)}
-                          className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white"
-                        >
-                          Make Admin
-                        </button>
-                      )}
+                  <li key={u.id} className="flex justify-between items-center">
+                    <span className="text-lg">{u.username || u.email}</span>
+                    {isUserAdmin ? (
                       <button
-                        onClick={() => handleRemoveAdmin(user.id)}
-                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
+                        onClick={() => alert('Remove Admin')}
+                        className="bg-red-500 hover:bg-red-600 text-sm px-3 py-1 rounded"
                       >
-                        Remove Admin
+                        Remove
                       </button>
-                    </div>
+                    ) : (
+                      <button
+                        onClick={() => alert('Make Admin')}
+                        className="bg-green-500 hover:bg-green-600 text-sm px-3 py-1 rounded"
+                      >
+                        Make Admin
+                      </button>
+                    )}
                   </li>
                 );
               })}
             </ul>
           </div>
 
-          {/* Manage Lots */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Manage Lots</h2>
-            <ul className="space-y-4">
+          {/* Auction Items */}
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2">Auction Items</h2>
+            <ul className="space-y-3">
               {items.map((item) => (
-                <li key={item.id} className="flex justify-between items-center bg-gray-700 p-4 rounded-lg">
-                  <div>
-                    <p className="font-bold">{item.name}</p>
-                    <p className="text-sm text-gray-300">${item.current_bid.toFixed(2)}</p>
-                  </div>
-                  {item.is_active && (
+                <li key={item.id} className="flex justify-between items-center">
+                  <span className="text-lg">{item.name}</span>
+                  <div className="space-x-2">
+                  <button
+                    onClick={() => openModal(
+                      <div>
+                        <h2 className="text-xl font-bold">Edit Item</h2>
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => setEditItem({ ...item, name: e.target.value })}
+                          className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                        />
+                        <textarea
+                          value={item.description}
+                          onChange={(e) => setEditItem({ ...item, description: e.target.value })}
+                          className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                        ></textarea>
+                        <button
+                                                        onClick={() => {
+                                                          handleEditItem();
+                                                          closeModal();
+                                                        }}
+                          className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded mt-4"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    )}
+                    className="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
                     <button
-                      onClick={() => handleEndAuction(item.id)}
-                      className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="bg-red-500 hover:bg-red-600 text-sm px-3 py-1 rounded"
                     >
-                      End Auction
+                      Delete
                     </button>
-                  )}
+                  </div>
                 </li>
               ))}
             </ul>
+            <button
+              onClick={() => openModal(
+                <div>
+                  <h2 className="text-xl font-bold">Add New Lot</h2>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    onChange={(e) => setNewLot({ ...newLot, name: e.target.value })}
+                    className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                  />
+                  <textarea
+                    placeholder="Description"
+                    onChange={(e) => setNewLot({ ...newLot, description: e.target.value })}
+                    className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                  ></textarea>
+                  <button
+                                        onClick={()=> {handleAddLot();
+                                          closeModal();}
+                                        }
+                    className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mt-4"
+                  >
+                    Add Lot
+                  </button>
+                </div>
+              )}
+              className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mt-4"
+            >
+              Add Lot
+            </button>
           </div>
 
-          {/* Add New Option */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Add New Option</h2>
-            <input
-              type="text"
-              placeholder="Option Name"
-              value={newOption.name}
-              onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <input
-              type="number"
-              placeholder="Cost"
-              value={newOption.cost}
-              onChange={(e) => setNewOption({ ...newOption, cost: parseFloat(e.target.value) })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
-            <textarea
-              placeholder="Description"
-              value={newOption.description}
-              onChange={(e) => setNewOption({ ...newOption, description: e.target.value })}
-              className="block w-full mb-4 p-2 bg-gray-700 rounded"
-            />
+          {/* Options */}
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2">Options</h2>
+            <ul className="space-y-3">
+              {options.map((opt) => (
+                <li key={opt.id} className="flex justify-between items-center">
+                  <span className="text-lg">{opt.name}</span>
+                  <div className="space-x-2">
+                    <button
+                      onClick={() => openModal(
+                        <div>
+                          <h2 className="text-xl font-bold">Edit Item</h2>
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => setEditOption({ ...item, name: e.target.value })}
+                            className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                          />
+                          <textarea
+                            value={item.description}
+                            onChange={(e) => setEditOption({ ...item, description: e.target.value })}
+                            className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                          ></textarea>
+                          <button
+                                                        onClick={() => {
+                                                          handleEditOption();
+                                                          closeModal();
+                                                        }}
+                            className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded mt-4"
+                          >
+                            Save Changes
+                          </button>
+                        </div>
+                      )}
+                      className="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteOption(opt.id)}
+                      className="bg-red-500 hover:bg-red-600 text-sm px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
             <button
-              onClick={handleAddOption}
-              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white w-full"
+              onClick={() => openModal(
+                <div>
+                  <h2 className="text-xl font-bold">Add Option</h2>
+                  <input
+                    type="text"
+                    placeholder="Option Name"
+                    onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
+                    className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                  />
+                  <textarea
+                    placeholder="Description"
+                    onChange={(e) => setNewOption({ ...newOption, description: e.target.value })}
+                    className="block w-full p-2 mt-4 bg-gray-700 rounded"
+                  ></textarea>
+                  <button
+                    onClick={()=> {handleAddOption();
+                      closeModal();}
+                    }
+                    
+                    className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mt-4"
+                  >
+                    Add Option
+                  </button>
+                </div>
+              )}
+              className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded"
             >
               Add Option
             </button>
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        {modalContent}
+      </Modal>
     </div>
-  );
-}
+  );}
