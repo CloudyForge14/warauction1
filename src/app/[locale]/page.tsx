@@ -1,11 +1,12 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
-
+import {useTranslations} from 'next-intl';
+import {Link} from '@/i18n/routing';
 const AuctionApp = () => {
+    const t = useTranslations('HomePage');
     const [days, setDays] = useState(5);
     const [hours, setHours] = useState(12);
     const [minutes, setMinutes] = useState(54);
@@ -83,10 +84,11 @@ const AuctionApp = () => {
       className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center"
     >
       <h1 className="text-5xl font-extrabold mb-6 text-blue-500 ">
-        Stand wi<span className="text-yellow-500">th Ukraine</span>
+        {t('title1')}<span className="text-yellow-500">{t('title2')}</span>
+
       </h1>
       <p className="text-xl text-gray-300 mb-10 max-w-md">
-        Join our auctions to own unique trophy items captured by Ukrainian soldiers and support their fight for freedom.
+        {t("about")}
       </p>
 
       <div className="flex justify-center items-center w-full max-w-screen-lg gap-x-12">
@@ -99,19 +101,22 @@ const AuctionApp = () => {
     />
   </div>
 
-        {/* Countdown Timer */}
-        <div className="bg-gray-800 rounded-lg shadow-lg p-6 flex space-x-8 items-center flex-shrink-0">
-          {[{ label: 'Days', value: days }, { label: 'Hours', value: hours }, { label: 'Minutes', value: minutes }, { label: 'Seconds', value: seconds }].map(
-            (time, index) => (
+          {/* Countdown Timer */}
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6 flex space-x-8 items-center flex-shrink-0">
+            {[
+              { label: t('timer.days'), value: days },
+              { label: t('timer.hours'), value: hours },
+              { label: t('timer.minutes'), value: minutes },
+              { label: t('timer.seconds'), value: seconds },
+            ].map((time, index) => (
               <div key={index} className="flex flex-col items-center">
                 <span className="text-4xl font-bold text-yellow-500">
                   {String(time.value).padStart(2, '0')}
                 </span>
                 <span className="text-gray-400 mt-1">{time.label}</span>
               </div>
-            )
-          )}
-        </div>
+            ))}
+          </div>
 
         {/* Right Image Placeholder */}
         <div className="w-1/3 h-48  md:flex hidden bg-gray-700 border-4 border-yellow-500 rounded-lg  items-center justify-center flex-shrink-0 overflow-hidden">
@@ -125,8 +130,8 @@ const AuctionApp = () => {
 
       <Link href="/auction">
         <button className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300 mt-8">
-          Enter Auction
-        </button>
+          {t('auction.enter')}
+      </button>
       </Link>
     </motion.div>
   </section>
@@ -148,27 +153,21 @@ const AuctionApp = () => {
                     transition={{ duration: 0.5 }}
                     className="max-w-screen-lg mx-auto px-6"
                 >
-                    <h2 className="text-4xl font-bold text-center mb-12">Why Choose Us</h2>
+                    <h2 className="text-4xl font-bold text-center mb-12">{t("whyChooseUs.title")}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        {['Trusted Items', 'Support Ukraine', 'Unique Collectibles'].map((title, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: index * 0.2 }}
-                                className="bg-gray-700 p-6 rounded-lg shadow-md text-center"
-                            >
-                                <h3 className="text-2xl font-semibold mb-4">{title}</h3>
-                                <p className="text-gray-400">
-                                    {title === 'Trusted Items'
-                                        ? 'All items are certified and come directly from Ukrainian soldiers.'
-                                        : title === 'Support Ukraine'
-                                        ? 'Your purchases contribute to helping Ukrainian efforts.'
-                                        : 'Own one-of-a-kind trophies with incredible stories.'}
-                                </p>
-                            </motion.div>
-                        ))}
+                    {['trustedItems', 'supportUkraine', 'uniqueCollectibles'].map((reasonKey, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.2 }}
+              className="bg-gray-700 p-6 rounded-lg shadow-md text-center"
+            >
+              <h3 className="text-2xl font-semibold mb-4">{t(`whyChooseUs.reasons.${reasonKey}Title`)}</h3>
+              <p className="text-gray-400">{t(`whyChooseUs.reasons.${reasonKey}`)}</p>
+            </motion.div>
+          ))}
                     </div>
                 </motion.div>
             </section>
@@ -178,27 +177,27 @@ const AuctionApp = () => {
             {/* How It Works */}
             <section className="py-20 bg-gray-800 text-gray-100">
                 <div className="max-w-screen-lg mx-auto px-6">
-                    <h2 className="text-4xl font-bold text-center mb-12">How It Works</h2>
+                    <h2 className="text-4xl font-bold text-center mb-12">{t("howItWorks.title")}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         <div className="text-center">
                             <span className="text-5xl font-bold text-blue-500">1</span>
-                            <h3 className="text-2xl font-semibold mt-4 mb-2">Browse Items</h3>
+                            <h3 className="text-2xl font-semibold mt-4 mb-2">{t("howItWorks.steps.browseItemsTitle")}</h3>
                             <p className="text-gray-400">
-                                Explore our collection of exclusive trophy items.
+                            {t("howItWorks.steps.browseItems")}
                             </p>
                         </div>
                         <div className="text-center">
                             <span className="text-5xl font-bold text-blue-500">2</span>
-                            <h3 className="text-2xl font-semibold mt-4 mb-2">Place Your Bid</h3>
+                            <h3 className="text-2xl font-semibold mt-4 mb-2">{t("howItWorks.steps.placeBidTitle")}</h3>
                             <p className="text-gray-400">
-                                Participate in auctions and win your desired items.
+                            {t("howItWorks.steps.placeBid")}
                             </p>
                         </div>
                         <div className="text-center">
                             <span className="text-5xl font-bold text-blue-500">3</span>
-                            <h3 className="text-2xl font-semibold mt-4 mb-2">Make an Impact</h3>
+                            <h3 className="text-2xl font-semibold mt-4 mb-2">{t("howItWorks.steps.makeImpactTitle")}</h3>
                             <p className="text-gray-400">
-                                Your contribution directly helps the Ukrainian cause.
+                            {t("howItWorks.steps.makeImpact")}
                             </p>
                         </div>
                     </div>
@@ -239,9 +238,9 @@ const AuctionApp = () => {
 
                     {/* Text Block */}
                     <div className="w-full md:w-1/2 mt-10 md:mt-0">
-                        <h3 className="text-3xl font-bold mb-4">About Our <span className="text-blue-500 text-4xl">Auctions</span></h3>
+                        <h3 className="text-3xl font-bold mb-4">{t("auction.aboutTitle")} <span className="text-blue-500 text-4xl">{t("auction.auctions")}</span></h3>
                         <p className="text-gray-400 leading-relaxed">
-                            Each item in our collection has a unique story and helps support Ukrainian efforts. Browse through our gallery to see some of the featured items, and join the auction to make an impact.
+                            {t("auction.aboutDescription")}
                         </p>
                         <p className="text-gray-400 mt-4">
                             Together, we can preserve history and support a vital cause.
@@ -255,9 +254,9 @@ const AuctionApp = () => {
                 <div className="max-w-screen-lg mx-auto px-6 flex flex-col md:flex-row items-center md:space-x-10">
                     {/* Text Block */}
                     <div className="w-full md:w-1/2 mt-10 md:mt-0">
-                        <h3 className="text-3xl font-bold mb-4">About Project <span className="text-blue-500 text-4xl">"REVENGE"</span></h3>
+                        <h3 className="text-3xl font-bold mb-4">{t("projectRevenge.title")} <span className="text-blue-500 text-4xl">"REVENGE"</span></h3>
                         <p className="text-gray-400 leading-relaxed">
-                            Send a powerful message against Russian aggression by personalizing an artillery shell. Each message carries a unique story, supporting Ukraine’s fight for freedom and symbolizing justice.
+                            {t("projectRevenge.description")}
                         </p>
                         <p className="text-gray-400 mt-4">
                             Together, we can take a stand and make a difference.

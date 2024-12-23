@@ -5,7 +5,7 @@ import Navbar from '../component/navbar';
 import jwt from 'jsonwebtoken';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { useTranslations } from 'next-intl';
 export default function SendMessage() {
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState('');
@@ -14,7 +14,7 @@ export default function SendMessage() {
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+  const t = useTranslations('SendMessage');
   const images = [
     '/artillery/1.jpeg',
     '/artillery/2.jpg',
@@ -37,7 +37,7 @@ export default function SendMessage() {
     const fetchOptions = async () => {
       try {
         const response = await fetch('/api/artillery');
-        if (!response.ok) throw new Error('Failed to fetch options');
+        if (!response.ok) throw new Error(t('errors.fetchOptions'));
         const data = await response.json();
         setOptions(data);
 
@@ -45,7 +45,7 @@ export default function SendMessage() {
           setSelectedOption(data[0]?.id);
         }
       } catch (error) {
-        console.error('Error:', error);
+        toast.error(t('errors.fetchOptionsRetry'));
       }
     };
 
@@ -135,7 +135,7 @@ const getAuthTokenFromLocalStorage = () => {
       setMessage('');
     } catch (error) {
       console.error('Error submitting message:', error);
-      toast.error('An error occurred while sending your message.');
+      toast.error(t('errors.submitRetry'));
     }
   };
 
@@ -163,16 +163,10 @@ const getAuthTokenFromLocalStorage = () => {
 <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-6 py-12 gap-6">
   {/* First block */}
   <div className="w-full lg:w-[60%] bg-gray-800 p-6 rounded-lg shadow-lg">
-    <h1 className="text-3xl lg:text-4xl font-bold text-center">
-      Send Your Message to Russian Invaders!
-    </h1>
-    <h3 className="text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">
-      But how it works?
-    </h3>
-    <p className="text-sm lg:text-base text-gray-400 mt-4 text-center">
-      Your chosen message will be written with a permanent marker on an artillery shell by soldiers at the front lines.
-      Every donation directly supports Ukraine.
-    </p>
+  <h1 className="text-3xl lg:text-4xl font-bold text-center">{t('title')}</h1>
+
+  <h3 className="text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">{t('subtitle')}</h3>
+  <p className="text-sm lg:text-base text-gray-400 mt-4 text-center">{t('description')}</p>
 
     {/* Image Slider */}
     <div className="mt-6 w-full lg:w-[60%] h-64 md:h-80 bg-gray-700 rounded-lg overflow-hidden mx-auto relative">
@@ -203,9 +197,6 @@ const getAuthTokenFromLocalStorage = () => {
       </div>
     </div>
 
-    <p className="text-xs text-gray-400 mt-8 text-center">
-      For more questions to @almasezhe
-    </p>
   </div>
 
   {/* Second Block */}
@@ -213,7 +204,7 @@ const getAuthTokenFromLocalStorage = () => {
     <form onSubmit={handleSubmit} className="space-y-9">
       <div>
         <label htmlFor="message" className="block text-sm font-medium">
-          Message
+        {t('form.message')}
         </label>
         <input
           type="text"
@@ -228,7 +219,7 @@ const getAuthTokenFromLocalStorage = () => {
       <div className="flex space-x-4">
         <div className="w-1/2">
           <label htmlFor="option" className="block text-sm font-medium">
-            Option
+          {t('form.option')}
           </label>
           <select
             id="option"
@@ -245,7 +236,7 @@ const getAuthTokenFromLocalStorage = () => {
         </div>
         <div className="w-1/2">
           <label htmlFor="payment" className="block text-sm font-medium">
-            Payment Method
+          {t('form.payment')}
           </label>
           <select
             id="payment"
@@ -253,9 +244,9 @@ const getAuthTokenFromLocalStorage = () => {
             onChange={(e) => setPayment(e.target.value)}
             className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
           >
-            <option value="visa">Visa</option>
-            <option value="mastercard">MasterCard</option>
-            <option value="paypal">PayPal</option>
+               <option value="visa">{t('form.paymentVisa')}</option>
+                  <option value="mastercard">{t('form.paymentMasterCard')}</option>
+                  <option value="paypal">{t('form.paymentPayPal')}</option>
           </select>
         </div>
       </div>
@@ -272,25 +263,29 @@ const getAuthTokenFromLocalStorage = () => {
           required
           className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
         />
-        <p className="text-gray-400 text-xs mt-1">
-          We will send you a confirmation that your message has been received.
-        </p>
-      </div>
-      <div className=" p-4 bg-gray-700 rounded-md">
-        <h2 className="text-lg font-semibold">Cost Summary</h2>
-        <p>
-          Base Cost (Option): ${options.find((opt) => opt.id === selectedOption)?.cost || 0}
-        </p>
-        <p>Message Cost ($5 per character): ${message.length * 5}</p>
-        <hr className="my-2 border-gray-600" />
-        <p className="font-bold">Total Cost: ${calculateTotalCost()}</p>
-      </div>
-      <button
-        type="submit"
-        className="w-full p-3 bg-blue-600 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        Send Message
-      </button>
+<p className="text-gray-400 text-xs mt-1">
+  {t('form.confirmation')}
+</p>
+</div>
+<div className="p-4 bg-gray-700 rounded-md">
+  <h2 className="text-lg font-semibold">{t('summary.title')}</h2>
+  <p>
+    {t('summary.baseCost')}: ${options.find((opt) => opt.id === selectedOption)?.cost || 0}
+  </p>
+  <p>{t('summary.messageCost', { cost: message.length * 5 })}</p>
+  <hr className="my-2 border-gray-600" />
+  <p className="font-bold">{t('summary.totalCost', { total: calculateTotalCost() })}</p>
+</div>
+
+
+
+<button
+  type="submit"
+  className="w-full p-3 bg-blue-600 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  {t('form.submit')}
+</button>
+
     </form>
   </div>
 </div>
@@ -301,14 +296,10 @@ const getAuthTokenFromLocalStorage = () => {
     {/* Text Block */}
     <div className="w-full md:w-1/2">
       <h3 className="text-3xl font-bold mb-4">
-        About Project <span className="text-blue-500 text-4xl">"REVENGE"</span>
+        {t('about.title')} <span className="text-blue-500 text-4xl">{t('about.projectName')}</span>
       </h3>
-      <p className="text-gray-400 leading-relaxed">
-        Send a powerful message against Russian aggression by personalizing an artillery shell. Each message carries a unique story, supporting Ukraine’s fight for freedom and symbolizing justice.
-      </p>
-      <p className="text-gray-400 mt-4">
-        Together, we can take a stand and make a difference.
-      </p>
+      <p className="text-gray-400 leading-relaxed">{t('about.description')}</p>
+      <p className="text-gray-400 mt-4">{t('about.callToAction')}</p>
     </div>
 
     {/* Slider Section with Video */}
@@ -323,6 +314,7 @@ const getAuthTokenFromLocalStorage = () => {
     </div>
   </div>
 </section>
+
 
     </div>
   );

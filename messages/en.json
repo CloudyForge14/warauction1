@@ -1,0 +1,141 @@
+{
+    "HomePage": {
+        "title1": "Stand wi",
+        "title2": "th Ukraine",
+        "about": "Join our auctions to own unique trophy items captured by Ukrainian soldiers and support their fight for freedom.",
+        "timer": {
+            "days": "Days",
+            "hours": "Hours",
+            "minutes": "Minutes",
+            "seconds": "Seconds"
+        },
+        "auction": {
+            "enter": "Enter Auction",
+            "aboutTitle": "About Our",
+            "auctions":"Auctions",
+            "aboutDescription": "Each item in our collection has a unique story and helps support Ukrainian efforts. Browse through our gallery to see some of the featured items, and join the auction to make an impact."
+        },
+        "projectRevenge": {
+            "title": "About Project",
+            "description": "Send a powerful message against Russian aggression by personalizing an artillery shell. Each message carries a unique story, supporting Ukraine’s fight for freedom and symbolizing justice."
+        },
+        "whyChooseUs": {
+            "title": "Why Choose Us",
+            "reasons": {
+                "trustedItemsTitle":"Trusted Items",
+                "supportUkraineTitle":"Support Ukraine",
+                "uniqueCollectiblesTitle":"Unique Collectibles",
+                "trustedItems": "All items are certified and come directly from Ukrainian soldiers.",
+                "supportUkraine": "Your purchases contribute to helping Ukrainian efforts.",
+                "uniqueCollectibles": "Own one-of-a-kind trophies with incredible stories."
+            }
+        },
+        "howItWorks": {
+            "title": "How It Works",
+            "steps": {
+                "browseItemsTitle":"Browse Items",
+                "placeBidTitle":"Place Bid",
+                "makeImpactTitle":"Make Impact",
+                "browseItems": "Explore our collection of exclusive trophy items.",
+                "placeBid": "Participate in auctions and win your desired items.",
+                "makeImpact": "Your contribution directly helps the Ukrainian cause."
+            }
+        }
+    },
+        "Navbar": {
+          "logo": {
+            "part1": "Cloudy",
+            "part2": "Forge"
+          },
+          "links": {
+            "home": "🏠 Home",
+            "auction": "🏆 Auction",
+            "revenge": "✉️ \"REVENGE\""
+          },
+          "language": "🌐 EN",
+          "user": {
+            "defaultName": "User",
+            "profile": "Profile",
+            "logout": "Logout",
+            "register": "Register"
+          }
+        },
+        "Footer":{
+            "company": {
+              "title": "CloudyForge",
+              "description": "Your trusted store for unique trophies and auction items. We strive to deliver quality and satisfaction."
+            },
+            "support": {
+              "title": "Support",
+              "email": "✉️ Email: support@cloudyforge.com",
+              "telegram": "📱 Telegram: @GloOouD"
+            },
+            "legal": {
+              "title": "Legal",
+              "copyright": "© 2024 CloudyForge. All rights reserved."
+            },
+            "footerNote": "Designed with ❤️ by the CloudyForge Team."
+          },
+        
+            "AuctionItems": {
+              "title": "Auction Items",
+              "timeLeft": "Time Left",
+              "currentBid": "Current Bid",
+              "minRaise":"Min Raise",
+              "placeBid": "Place Bid",
+              "close": "Close",
+              "loading": "Loading...",
+              "errors": {
+                "fetchItems": "Failed to fetch auction items.",
+                "fetchItemsRetry": "Could not fetch auction items. Please try again later.",
+                "invalidItem": "Invalid item selected.",
+                "invalidBid": "Invalid bid. Please try again."
+              },
+              "success": {
+                "bidPlaced": "Bid placed successfully!"
+              }
+            
+          },
+          
+            "SendMessage": {
+              "title": "Send Your Message to Russian Invaders!",
+              "subtitle": "But how it works?",
+              "description": "Your chosen message will be written on an artillery shell by soldiers at the front lines. Every donation directly supports Ukraine.",
+              "form": {
+                "message": "Message",
+                "messagePlaceholder": "Enter your message...",
+                "option": "Option",
+                "payment": "Payment Method",
+                "paymentVisa": "Visa",
+                "paymentMasterCard": "MasterCard",
+                "paymentPayPal": "PayPal",
+                "confirmation": "We will send you a confirmation that your message has been received.",
+                "submit": "Send Message"
+              },
+              "summary": {
+                "title": "Cost Summary",
+                "baseCost": "Base Cost (Option)",
+                "messageCost": "Message Cost ($5 per character): ${cost}",
+                "totalCost": "Total Cost: ${total}"
+              },
+              "errors": {
+                "fetchOptions": "Failed to fetch options.",
+                "fetchOptionsRetry": "Could not load options. Please try again later.",
+                "submitFailed": "Failed to submit your message.",
+                "submitRetry": "An error occurred. Please try again later."
+              },
+              "success": {
+                "messageSent": "Message sent successfully! Total cost: ${{cost}}"
+              },
+              "about": {
+      "title": "About Project",
+      "projectName": "\"REVENGE\"",
+      "description": "Send a powerful message against Russian aggression by personalizing an artillery shell. Each message carries a unique story, supporting Ukraine’s fight for freedom and symbolizing justice.",
+      "callToAction": "Together, we can take a stand and make a difference."
+    }
+            }
+          
+          
+          
+      
+}

@@ -1,30 +1,31 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function Footer() {
+  const t = useTranslations('Footer');
+
   return (
     <footer className="bg-gray-900 text-white py-8 px-6">
       {/* Container */}
-      <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-40">
+      <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-40">
         {/* Company Info */}
         <div>
-          <h3 className="text-lg font-bold mb-4">CloudyForge</h3>
-          <p className="text-gray-400">
-            Your trusted store for unique trophies and auction items. We strive to deliver quality and satisfaction.
-          </p>
+          <h3 className="text-lg font-bold mb-4">{t('company.title')}</h3>
+          <p className="text-gray-400">{t('company.description')}</p>
         </div>
 
         {/* Support Info */}
         <div>
-          <h3 className="text-lg font-bold mb-4">Support</h3>
+          <h3 className="text-lg font-bold mb-4">{t('support.title')}</h3>
           <ul>
             <li>
               <a
-                href="mailto:support@gloooudy.com"
+                href="mailto:support@cloudyforge.com"
                 className="text-gray-400 hover:text-white transition"
               >
-                ✉️ Email: support@cloudyforge.com
+                {t('support.email')}
               </a>
             </li>
             <li>
@@ -34,7 +35,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition"
               >
-                📱 Telegram: @GloOouD
+                {t('support.telegram')}
               </a>
             </li>
           </ul>
@@ -42,18 +43,14 @@ export default function Footer() {
 
         {/* Legal Info */}
         <div>
-          <h3 className="text-lg font-bold mb-4">Legal</h3>
-          <p className="text-gray-400">
-            © 2024 CloudyForge. All rights reserved.
-          </p>
+          <h3 className="text-lg font-bold mb-4">{t('legal.title')}</h3>
+          <p className="text-gray-400">{t('legal.copyright')}</p>
         </div>
       </div>
 
       {/* Divider */}
       <div className="border-t border-gray-800 mt-8 pt-4 text-center">
-        <p className="text-gray-500 text-sm">
-          Designed with ❤️ by the CloudyForge Team.
-        </p>
+        <p className="text-gray-500 text-sm">{t('footerNote')}</p>
       </div>
     </footer>
   );

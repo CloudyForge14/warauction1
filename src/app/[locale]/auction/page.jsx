@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { supabase } from '@/utils/supabase/client';
-
+import { useTranslations } from "next-intl";
 export default function AuctionItems() {
   const [items, setItems] = useState([]);
   const [user, setUser] = useState(null);
@@ -13,6 +13,7 @@ export default function AuctionItems() {
   const [error, setError] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const t = useTranslations("AuctionItems");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -53,13 +54,13 @@ export default function AuctionItems() {
     const fetchAuctionItems = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/auction-items');
-        if (!response.ok) throw new Error('Failed to fetch auction items');
+        const response = await fetch("/api/auction-items");
+        if (!response.ok) throw new Error(t("errors.fetchItems"));
         const auctionItems = await response.json();
         setItems(auctionItems);
       } catch (err) {
-        console.error('Error fetching auction items:', err);
-        setError('Could not fetch auction items. Please try again later.');
+        console.error("Error fetching auction items:", err);
+        setError(t("errors.fetchItemsRetry"));
       } finally {
         setLoading(false);
       }
@@ -69,9 +70,8 @@ export default function AuctionItems() {
   }, []);
 
   const openModal = (item) => {
-    console.log('Opening modal with item:', item);
     if (!item) {
-      toast.error('Invalid item selected.');
+      toast.error(t("errors.invalidItem"));
       return;
     }
     setSelectedItem(item);
@@ -107,51 +107,48 @@ export default function AuctionItems() {
   
   const handlePlaceBid = async () => {
     if (!isAuthenticated) {
-      toast.error('Please log in to place a bid.');
+      toast.error(t("errors.notAuthenticated"));
       return;
     }
 
     if (!selectedItem || !selectedItem.id || !selectedItem.bid) {
-      toast.error('Invalid item or bid.');
+      toast.error(t("errors.invalidBid"));
       return;
     }
 
     try {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          toast.error('Authorization token is missing.');
-          return;
-        }
-
-        const response = await fetch(`/api/place-bid/${selectedItem.id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ newBid: selectedItem.bid }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Failed to place bid.');
-        }
-
-        const updatedItem = await response.json();
-        setItems((prevItems) =>
-          prevItems.map((item) =>
-            item.id === updatedItem.id ? updatedItem : item
-          )
-        );
-
-        toast.success('Bid placed successfully! You will be notified via email.');
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        toast.error(t("errors.missingToken"));
+        return;
       }
+
+      const response = await fetch(`/api/place-bid/${selectedItem.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newBid: selectedItem.bid }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || t("errors.placeBid"));
+      }
+
+      const updatedItem = await response.json();
+      setItems((prevItems) =>
+        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+      );
+
+      toast.success(t("success.bidPlaced"));
     } catch (err) {
-      console.error('Error placing bid:', err);
-      toast.error(err.message || 'Failed to place bid. Please try again.');
+      console.error("Error placing bid:", err);
+      toast.error(err.message || t("errors.placeBidRetry"));
     }
   };
+
   
   if (loading)
     return (
@@ -198,7 +195,7 @@ export default function AuctionItems() {
               progressStyle={{ backgroundColor: '#2563eb' }}
             />
       <div className="bg-gray-900 text-white min-h-screen py-12">
-        <h1 className="text-3xl font-bold text-center mb-8">Auction Items</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">{t("title")}</h1>
 
         {/* Responsive Grid */}
         <div
@@ -240,7 +237,7 @@ export default function AuctionItems() {
 
                 {/* Current Bid */}
                 <p className="font-semibold text-lg">
-                  Current Bid:{' '}
+                {t("currentBid")}:{" "}
                   <span className="text-yellow-500 font-bold">
                     ${item.current_bid.toFixed(2)}
                   </span>
@@ -289,11 +286,11 @@ export default function AuctionItems() {
           <h2 className="text-2xl lg:text-3xl font-bold mb-4">{selectedItem.name}</h2>
           <p className="text-gray-400 mb-4">{selectedItem.description}</p>
           <p className="font-semibold">
-            Current Bid:{' '}
+          {t("currentBid")}:{" "}
             <span className="text-yellow-500">${selectedItem.current_bid}</span>
           </p>
           <p className="font-semibold mt-2">
-            Min Raise: <span className="text-yellow-500">${selectedItem.min_raise}</span>
+          {t("minRaise")}: <span className="text-yellow-500">${selectedItem.min_raise}</span>
           </p>
         </div>
         <div className="mt-4">
@@ -323,13 +320,13 @@ export default function AuctionItems() {
             onClick={handlePlaceBid}
             className="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold"
           >
-            Place Bid
+            {t("placeBid")}
           </button>
           <button
             onClick={closeModal}
             className="mt-2 w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold"
           >
-            Close
+            {t("close")}
           </button>
         </div>
       </div>
