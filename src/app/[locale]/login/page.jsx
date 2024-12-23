@@ -1,17 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-
+  const t = useTranslations('Login');
+  const locale = useLocale(); // Get the current locale
+  const handleNavigation = (path) => {
+    const localizedPath = `/${locale}${path}`; // Prepend the locale to the path
+    router.push(localizedPath); // Navigate to the localized path
+  };
   const loginUser = async (e) => {
     e.preventDefault();
     setError('');
@@ -26,7 +33,6 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // Check for window and localStorage availability
         if (typeof window !== 'undefined') {
           localStorage.setItem('authToken', data.token);
           localStorage.setItem('refreshToken', data.refresh_token);
@@ -43,14 +49,14 @@ export default function Login() {
           return;
         }
 
-        toast.success('Login successful!');
-        router.push('/auction');
+        toast.success(t('loginSuccessful'));
+        handleNavigation('/auction')
       } else {
-        setError(data.error || 'Login failed. Please check your credentials.');
-        toast.error(data.error || 'Login failed. Please check your credentials.');
+        setError(data.error || t('errorLoginFailed'));
+        toast.error(data.error || t('errorLoginFailed'));
       }
     } catch (err) {
-      toast.error('An unexpected error occurred.');
+      toast.error(t('errorUnexpected'));
       console.error(err);
     }
   };
@@ -77,13 +83,13 @@ export default function Login() {
       />
       <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white px-6 py-12">
         <div className="text-center -mt-64">
-          <h1 className="text-3xl font-bold">Welcome Back</h1>
-          <p className="mt-2 text-lg">Log in to your account</p>
+          <h1 className="text-3xl font-bold">{t('welcomeBack')}</h1>
+          <p className="mt-2 text-lg">{t('logInToAccount')}</p>
           <form onSubmit={loginUser} className="mt-8 max-w-md mx-auto space-y-4">
             <div>
               <input
                 type="email"
-                placeholder="Email address"
+                placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -93,7 +99,7 @@ export default function Login() {
             <div>
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -105,14 +111,14 @@ export default function Login() {
               type="submit"
               className="w-full rounded-md bg-blue-600 py-2 font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Login
+              {t('loginButton')}
             </button>
           </form>
           <p className="mt-4 text-sm">
-            Don't have an account?{' '}
-            <a href="/register" className="text-blue-500 hover:underline">
-              Register here
-            </a>
+            {t('dontHaveAccount')}{' '}
+            <Link href="/register" className="text-blue-500 hover:underline">
+              {t('loginHere')}
+            </Link>
           </p>
         </div>
       </div>

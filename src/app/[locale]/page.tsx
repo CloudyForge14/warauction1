@@ -7,12 +7,13 @@ import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/routing';
 const AuctionApp = () => {
     const t = useTranslations('HomePage');
-    const [days, setDays] = useState(5);
-    const [hours, setHours] = useState(12);
-    const [minutes, setMinutes] = useState(54);
-    const [seconds, setSeconds] = useState(46);
+    const [days, setDays] = useState(0);
+    const [hours, setHours] = useState(0);
+    const [minutes, setMinutes] = useState(0);
+    const [seconds, setSeconds] = useState(0);
     const [currentAuctionImageIndex, setCurrentAuctionImageIndex] = useState(0);
     const [currentArtilleryImageIndex, setCurrentArtilleryImageIndex] = useState(0);
+    const [loading, setLoading] = useState(false); // Add this line
 
     const artilleryImages = [
         '/artillery/1.jpeg',
@@ -29,29 +30,59 @@ const AuctionApp = () => {
         '/auction/3.jpeg',
         '/auction/5.jpeg',
     ];
+    useEffect(() => {
+        const fetchAuctionItems = async () => {
+            setLoading(true); // Loading state is updated here
+            try {
+                const response = await fetch("/api/auction-items");
+                if (!response.ok) throw new Error(t("errors.fetchItems"));
+                const auctionItems = await response.json();
+
+                // Find the item with the closest time
+                const closestItem = auctionItems.reduce(
+                    (closest: { time_left: number }, item: { time_left: number }) => {
+                        const remainingTime = item.time_left; // Assume time_left is in seconds
+                        return !closest || remainingTime < closest.time_left
+                            ? item
+                            : closest;
+                    },
+                    null
+                );
+
+                if (closestItem) {
+                    const remainingTime = closestItem.time_left;
+                    setDays(Math.floor(remainingTime / (3600 * 24)));
+                    setHours(Math.floor((remainingTime % (3600 * 24)) / 3600));
+                    setMinutes(Math.floor((remainingTime % 3600) / 60));
+                    setSeconds(remainingTime % 60);
+                }
+            } catch (err) {
+                console.error("Error fetching auction items:", err);
+                setError(t("errors.fetchItemsRetry"));
+            } finally {
+                setLoading(false); // Reset loading state
+            }
+        };
+
+        fetchAuctionItems();
+    }, [t]);
 
     useEffect(() => {
         const countdownInterval = setInterval(() => {
             if (seconds > 0) {
                 setSeconds(seconds - 1);
-            } else {
-                if (minutes > 0) {
-                    setMinutes(minutes - 1);
-                    setSeconds(59);
-                } else {
-                    if (hours > 0) {
-                        setHours(hours - 1);
-                        setMinutes(59);
-                        setSeconds(59);
-                    } else {
-                        if (days > 0) {
-                            setDays(days - 1);
-                            setHours(23);
-                            setMinutes(59);
-                            setSeconds(59);
-                        }
-                    }
-                }
+            } else if (minutes > 0) {
+                setMinutes(minutes - 1);
+                setSeconds(59);
+            } else if (hours > 0) {
+                setHours(hours - 1);
+                setMinutes(59);
+                setSeconds(59);
+            } else if (days > 0) {
+                setDays(days - 1);
+                setHours(23);
+                setMinutes(59);
+                setSeconds(59);
             }
         }, 1000);
 
@@ -299,3 +330,7 @@ const AuctionApp = () => {
 
 
 export default AuctionApp;
+function setError(arg0: string) {
+    throw new Error('Function not implemented.');
+}
+

@@ -6,6 +6,8 @@ import jwt from 'jsonwebtoken';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslations } from 'next-intl';
+import { supabase } from '@/utils/supabase/client';
+
 export default function SendMessage() {
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState('');
@@ -23,8 +25,21 @@ export default function SendMessage() {
     '/artillery/5.jpg',
     '/artillery/8.jpeg',
   ];
-
-  // Slider logic
+    useEffect(() => {
+      if (typeof window !== 'undefined'){
+      const fetchUser = async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+  
+        if (error) {
+          console.error('Error fetching user:', error.message);
+        } else {
+          setUser(user);
+          localStorage.setItem('user', JSON.stringify(user)); // Save user to localStorage
+        }
+      };
+  
+      fetchUser();}
+    }, []);
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);

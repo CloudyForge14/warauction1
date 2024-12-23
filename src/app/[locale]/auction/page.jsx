@@ -34,7 +34,21 @@ export default function AuctionItems() {
       }
     }
   }, []);
-
+    useEffect(() => {
+      if (typeof window !== 'undefined'){
+      const fetchUser = async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+  
+        if (error) {
+          console.error('Error fetching user:', error.message);
+        } else {
+          setUser(user);
+          localStorage.setItem('user', JSON.stringify(user)); // Save user to localStorage
+        }
+      };
+  
+      fetchUser();}
+    }, []);
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const refreshSession = async () => {

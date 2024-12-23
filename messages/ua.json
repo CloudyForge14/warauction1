@@ -136,7 +136,56 @@
                       }
                     
                   
-                }
+                },
+                "Login": {
+    "welcomeBack": "Ласкаво просимо назад",
+    "logInToAccount": "Увійдіть до свого облікового запису",
+    "emailPlaceholder": "Адреса електронної пошти",
+    "passwordPlaceholder": "Пароль",
+    "loginButton": "Увійти",
+    "dontHaveAccount": "Немає облікового запису?",
+    "loginHere": "Увійдіть тут",
+    "loginSuccessful": "Вхід успішний!",
+    "errorUnexpected": "Сталася несподівана помилка.",
+    "errorLoginFailed": "Не вдалося увійти. Перевірте свої облікові дані."
+  },
+  "Register": {
+    "title": "Приєднайтесь до спільноти",
+    "subtitle": "Будьте з Україною у складні часи",
+    "usernamePlaceholder": "Ім'я користувача",
+    "emailPlaceholder": "Адреса електронної пошти",
+    "passwordPlaceholder": "Пароль",
+    "registerButton": "Зареєструватися",
+    "alreadyHaveAccount": "Вже маєте обліковий запис?",
+    "loginHere": "Увійдіть тут",
+    "registrationSuccessful": "Реєстрація успішна!",
+    "errorOccurred": "Сталася несподівана помилка.",
+    "errorGeneric": "Щось пішло не так"
+  },
+  "Profile": {
+    "title": "Ваш Профіль",
+    "avatarPlaceholder": "Завантажити Аватар",
+    "avatarUploading": "...",
+    "usernameLabel": "Ім'я користувача",
+    "usernamePlaceholder": "Введіть нове ім'я користувача",
+    "usernameSaveButton": "Зберегти ім'я користувача",
+    "usernameUpdating": "Оновлюється...",
+    "newPasswordLabel": "Новий пароль",
+    "newPasswordPlaceholder": "Введіть новий пароль",
+    "changePasswordButton": "Змінити пароль",
+    "changePasswordUpdating": "Оновлюється...",
+    "emailLabel": "Електронна пошта:",
+    "currentUsernameLabel": "Поточне ім'я користувача:",
+    "notSet": "Не встановлено",
+    "logInPrompt": "Будь ласка, увійдіть, щоб переглянути свій профіль.",
+    "toastAvatarError": "Не вдалося оновити аватар.",
+    "toastAvatarSuccess": "Аватар успішно оновлено!",
+    "toastUsernameError": "Не вдалося оновити ім'я користувача.",
+    "toastUsernameSuccess": "Ім'я користувача успішно оновлено!",
+    "toastPasswordError": "Не вдалося змінити пароль.",
+    "toastPasswordSuccess": "Пароль успішно оновлено!",
+    "toastUnexpectedError": "Сталася несподівана помилка."
+  }
               
               
             

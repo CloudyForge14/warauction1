@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useTranslations } from 'next-intl';
 
 export default function Profile() {
+  const t = useTranslations('Profile');
   const [user, setUser] = useState(null);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -13,19 +15,34 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+    useEffect(() => {
+      if (typeof window !== 'undefined'){
+      const fetchUser = async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+  
+        if (error) {
+          console.error('Error fetching user:', error.message);
+        } else {
+          setUser(user);
+          localStorage.setItem('user', JSON.stringify(user)); // Save user to localStorage
+        }
+      };
+  
+      fetchUser();}
+    }, []);
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error) {
-        toast.error('Error fetching user data.');
-        return;
-      }
-
-      setUser(user);
-    };
-
-    fetchUser();
+    if (typeof window !== 'undefined') {
+      const refreshSession = async () => {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error('Error refreshing session:', error);
+        } else {
+          localStorage.setItem('authToken', data.session.access_token);
+          console.log('Token refreshed successfully.');
+        }
+      };
+      refreshSession();
+    }
   }, []);
 
   const updateAvatarInMetadata = async (avatarUrl) => {
@@ -35,16 +52,19 @@ export default function Profile() {
       });
 
       if (error) {
-        toast.error('Failed to update avatar.');
+        toast.error(t('toastAvatarError'));
       } else {
         const { data: { user }, error: fetchError } = await supabase.auth.getUser();
         if (fetchError) throw fetchError;
 
         setUser(user);
-        toast.success('Avatar updated successfully!');
+        toast.success(t('toastAvatarSuccess'));
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       }
     } catch (error) {
-      toast.error('An error occurred while updating the avatar.');
+      toast.error(t('toastUnexpectedError'));
     } finally {
       setUploading(false);
     }
@@ -92,7 +112,7 @@ export default function Profile() {
       });
 
       if (authError) {
-        toast.error('Failed to update username in authentication.');
+        toast.error(t('toastUsernameError'));
         return;
       }
 
@@ -105,15 +125,15 @@ export default function Profile() {
           .eq('id', userId);
 
         if (dbError) {
-          toast.error('Failed to update username in database.');
+          toast.error(t('toastUsernameError'));
           return;
         }
       }
 
-      toast.success('Username updated successfully!');
+      toast.success(t('toastUsernameSuccess'));
       setNewUsername('');
     } catch (error) {
-      toast.error('An error occurred while updating the username.');
+      toast.error(t('toastUsernameError'));
     } finally {
       setLoading(false);
     }
@@ -128,13 +148,13 @@ export default function Profile() {
       });
 
       if (error) {
-        toast.error('Failed to change password.');
+        toast.error(t('toastPasswordError'));
       } else {
-        toast.success('Password updated successfully!');
+        toast.success(t('toastPasswordSuccess'));
         setNewPassword('');
       }
     } catch (error) {
-      toast.error('An error occurred while changing the password.');
+      toast.error(t('toastUnexpectedError'));
     } finally {
       setPasswordLoading(false);
     }
@@ -162,13 +182,13 @@ export default function Profile() {
       />
       <div className="flex-grow flex flex-col items-center justify-start mt-24">
         <div className="p-8 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">
-          <h1 className="text-3xl font-bold text-center mb-8">Your Profile</h1>
+          <h1 className="text-3xl font-bold text-center mb-8">{t('title')}</h1>
           {user ? (
             <div className="text-center">
               {/* Avatar */}
               <div className="mb-6 relative inline-block">
                 <img
-                  src={user.user_metadata?.avatar_url || 'https://via.placeholder.com/150'}
+                  src={user.user_metadata?.avatar_url || 'https://xerkmpqjygwvwzgiysep.supabase.co/storage/v1/object/public/avatars/placeholder.png?t=2024-12-23T14%3A47%3A21.310Z'}
                   alt="Avatar"
                   className="w-32 h-32 mx-auto rounded-full border-4 border-blue-500 object-cover"
                 />
@@ -192,7 +212,7 @@ export default function Profile() {
                   id="username"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
-                  placeholder={user.user_metadata?.username || 'Enter new username'}
+                  placeholder={user.user_metadata?.username || t('usernamePlaceholder')}
                   className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600"
                 />
                 <button
@@ -200,19 +220,19 @@ export default function Profile() {
                   className={`mt-3 w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-500 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={loading}
                 >
-                  {loading ? 'Updating...' : 'Save Username'}
+                  {loading ? t('usernameUpdating') : t('usernameSaveButton')}
                 </button>
               </div>
 
               {/* Change Password */}
               <div className="mb-4">
-                <label htmlFor="newPassword" className="block text-sm font-medium mb-2">New Password</label>
+                <label htmlFor="newPassword" className="block text-sm font-medium mb-2">{t('newPasswordLabel')}</label>
                 <input
                   type="password"
                   id="newPassword"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
+                  placeholder={t('newPasswordPlaceholder')}
                   className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600"
                 />
                 <button
@@ -220,7 +240,7 @@ export default function Profile() {
                   className={`mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 transition ${passwordLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={passwordLoading}
                 >
-                  {passwordLoading ? 'Updating...' : 'Change Password'}
+                  {passwordLoading ? t('changePasswordUpdating') : t('changePasswordButton')}
                 </button>
               </div>
 
@@ -230,12 +250,12 @@ export default function Profile() {
                   <strong>Email:</strong> {user.email}
                 </p>
                 <p className="text-sm text-gray-400">
-                  <strong>Current Username:</strong> {user.user_metadata?.username || 'Not set'}
+                  <strong>{t('currentUsernameLabel')}</strong> {user.user_metadata?.username || t('notSet')}
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-center text-gray-400">Please log in to view your profile.</p>
+            <p className="text-center text-gray-400">{t('logInPrompt')}</p>
           )}
         </div>
       </div>

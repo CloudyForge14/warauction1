@@ -133,7 +133,56 @@
       "description": "Send a powerful message against Russian aggression by personalizing an artillery shell. Each message carries a unique story, supporting Ukraine’s fight for freedom and symbolizing justice.",
       "callToAction": "Together, we can take a stand and make a difference."
     }
-            }
+            },
+            "Login": {
+    "welcomeBack": "Welcome Back",
+    "logInToAccount": "Log in to your account",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Password",
+    "loginButton": "Login",
+    "dontHaveAccount": "Don't have an account?",
+    "loginHere": "Login here",
+    "loginSuccessful": "Login successful!",
+    "errorUnexpected": "An unexpected error occurred.",
+    "errorLoginFailed": "Login failed. Please check your credentials."
+  },
+  "Register": {
+    "title": "Join the Community",
+    "subtitle": "Stand with Ukraine during challenging times",
+    "usernamePlaceholder": "Username",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Password",
+    "registerButton": "Register",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginHere": "Login here",
+    "registrationSuccessful": "Registration successful!",
+    "errorOccurred": "An unexpected error occurred.",
+    "errorGeneric": "Something went wrong"
+  },
+  "Profile": {
+    "title": "Your Profile",
+    "avatarPlaceholder": "Upload Avatar",
+    "avatarUploading": "...",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter new username",
+    "usernameSaveButton": "Save Username",
+    "usernameUpdating": "Updating...",
+    "newPasswordLabel": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "changePasswordButton": "Change Password",
+    "changePasswordUpdating": "Updating...",
+    "emailLabel": "Email:",
+    "currentUsernameLabel": "Current Username:",
+    "notSet": "Not set",
+    "logInPrompt": "Please log in to view your profile.",
+    "toastAvatarError": "Failed to update avatar.",
+    "toastAvatarSuccess": "Avatar updated successfully!",
+    "toastUsernameError": "Failed to update username.",
+    "toastUsernameSuccess": "Username updated successfully!",
+    "toastPasswordError": "Failed to change password.",
+    "toastPasswordSuccess": "Password updated successfully!",
+    "toastUnexpectedError": "An unexpected error occurred."
+  }
           
           
           

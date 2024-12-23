@@ -2,9 +2,12 @@
 
 import { supabase } from '@/utils/supabase/client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -12,6 +15,8 @@ export default function Register() {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('Register');
 
   const registerUser = async (e) => {
     e.preventDefault();
@@ -27,7 +32,6 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        // Save token and user info in localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('authToken', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
@@ -44,16 +48,21 @@ export default function Register() {
           return;
         }
 
-        toast.success('Registration successful!');
-        router.push('/auction'); // Redirect to your desired page
+        toast.success(t('registrationSuccessful'));
+        handleNavigation('/auction');
       } else {
-        setError(data.error || 'Something went wrong');
-        toast.error(data.error || 'Something went wrong');
+        setError(data.error || t('errorGeneric'));
+        toast.error(data.error || t('errorGeneric'));
       }
     } catch (err) {
-      toast.error('An unexpected error occurred.');
+      toast.error(t('errorOccurred'));
       console.error(err);
     }
+  };
+
+  const handleNavigation = (path) => {
+    const localizedPath = `/${locale}${path}`;
+    router.push(localizedPath);
   };
 
   return (
@@ -78,13 +87,13 @@ export default function Register() {
       />
       <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white px-6 py-12">
         <div className="text-center -mt-64">
-          <h1 className="text-3xl font-bold">Join the Community</h1>
-          <p className="mt-2 text-lg">Stand with Ukraine during challenging times</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="mt-2 text-lg">{t('subtitle')}</p>
           <form onSubmit={registerUser} className="mt-8 max-w-md mx-auto space-y-4">
             <div>
               <input
                 type="text"
-                placeholder="Username"
+                placeholder={t('usernamePlaceholder')}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -94,7 +103,7 @@ export default function Register() {
             <div>
               <input
                 type="email"
-                placeholder="Email address"
+                placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -104,7 +113,7 @@ export default function Register() {
             <div>
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -116,14 +125,14 @@ export default function Register() {
               type="submit"
               className="w-full rounded-md bg-blue-600 py-2 font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Register
+              {t('registerButton')}
             </button>
           </form>
           <p className="mt-4 text-sm">
-            Already have an account?{' '}
-            <a href="/login" className="text-blue-500 hover:underline">
-              Login here
-            </a>
+            {t('alreadyHaveAccount')}{' '}
+            <Link href="/login" className="text-blue-500 hover:underline">
+              {t('loginHere')}
+            </Link>
           </p>
         </div>
       </div>
