@@ -134,7 +134,7 @@ const AuctionApp = () => {
 
           {/* Countdown Timer */}
           <div className="bg-gray-800 rounded-lg shadow-lg p-6 flex space-x-8 items-center flex-shrink-0">
-            <p>Till the start of the next Auction</p>{[
+            {[
               { label: t('timer.days'), value: days },
               { label: t('timer.hours'), value: hours },
               { label: t('timer.minutes'), value: minutes },
@@ -161,7 +161,7 @@ const AuctionApp = () => {
 
       <Link href="/auction">
         <button className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300 mt-8">
-          {t('auction.enter')}
+          Till Next Auction
       </button>
       </Link>
     </motion.div>
