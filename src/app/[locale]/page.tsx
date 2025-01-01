@@ -7,10 +7,10 @@ import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/routing';
 const AuctionApp = () => {
     const t = useTranslations('HomePage');
-    const [days, setDays] = useState(0);
-    const [hours, setHours] = useState(0);
-    const [minutes, setMinutes] = useState(0);
-    const [seconds, setSeconds] = useState(0);
+    const [days, setDays] = useState(10);
+    const [hours, setHours] = useState(21);
+    const [minutes, setMinutes] = useState(28);
+    const [seconds, setSeconds] = useState(10);
     const [currentAuctionImageIndex, setCurrentAuctionImageIndex] = useState(0);
     const [currentArtilleryImageIndex, setCurrentArtilleryImageIndex] = useState(0);
     const [loading, setLoading] = useState(false); // Add this line
@@ -134,7 +134,7 @@ const AuctionApp = () => {
 
           {/* Countdown Timer */}
           <div className="bg-gray-800 rounded-lg shadow-lg p-6 flex space-x-8 items-center flex-shrink-0">
-            {[
+            <p>Till the start of the next Auction</p>{[
               { label: t('timer.days'), value: days },
               { label: t('timer.hours'), value: hours },
               { label: t('timer.minutes'), value: minutes },
