@@ -22,35 +22,38 @@ export default function Login() {
   const loginUser = async (e) => {
     e.preventDefault();
     setError('');
-
+  
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          emailOrUsername: email, // Use the key expected by the back end
+          password,
+        }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         if (typeof window !== 'undefined') {
           localStorage.setItem('authToken', data.token);
           localStorage.setItem('refreshToken', data.refresh_token);
           localStorage.setItem('user', JSON.stringify(data.user));
         }
-
+  
         const { error } = await supabase.auth.setSession({
           access_token: data.token,
           refresh_token: data.refresh_token,
         });
-
+  
         if (error) {
           toast.error(`Error setting session: ${error.message}`);
           return;
         }
-
+  
         toast.success(t('loginSuccessful'));
-        handleNavigation('/auction')
+        handleNavigation('/auction');
       } else {
         setError(data.error || t('errorLoginFailed'));
         toast.error(data.error || t('errorLoginFailed'));
@@ -60,6 +63,7 @@ export default function Login() {
       console.error(err);
     }
   };
+  
 
   return (
     <div>
@@ -86,9 +90,10 @@ export default function Login() {
           <h1 className="text-3xl font-bold">{t('welcomeBack')}</h1>
           <p className="mt-2 text-lg">{t('logInToAccount')}</p>
           <form onSubmit={loginUser} className="mt-8 max-w-md mx-auto space-y-4">
-            <div>
-              <input
-                type="email"
+<div>
+  <input
+    type="text"
+    name="emailOrUsername" // Ensure the name matches the back-end key
                 placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

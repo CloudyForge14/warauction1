@@ -15,6 +15,9 @@ export default function SendMessage() {
   const [payment, setPayment] = useState('visa');
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
+  const [isQuick, setIsQuick] = useState(false);
+  const [includeVideo, setIncludeVideo] = useState(false);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const t = useTranslations('SendMessage');
   const images = [
@@ -34,6 +37,7 @@ export default function SendMessage() {
           console.error('Error fetching user:', error.message);
         } else {
           setUser(user);
+      setEmail(user?.email || ''); // Automatically set email from user data
           localStorage.setItem('user', JSON.stringify(user)); // Save user to localStorage
         }
       };
@@ -80,6 +84,34 @@ export default function SendMessage() {
   }
   return null;
 };
+const calculateMessageCost = () => {
+  if (!message) return 0;
+
+  const complexLanguagesRegex = /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/; // Chinese, Japanese, Korean, Thai, Georgian
+
+  const isComplexLanguage = complexLanguagesRegex.test(message);
+
+  let cost = 0;
+
+  if (isComplexLanguage) {
+    const charCount = message.length;
+    const additionalChars = Math.max(0, charCount - 7); // After 7 characters
+    cost = 40 + additionalChars * 5; // Minimum $40, then +$5 per character
+  } else {
+    const charCount = message.length;
+    if (charCount <= 18) {
+      cost = 40; // Minimum $40
+    } else if (charCount <= 28) {
+      cost = 40 + (charCount - 18) * 2; // +$2 per character after 18
+    } else {
+      const additionalChars = Math.max(0, charCount - 28);
+      cost = 40 + 20 + additionalChars * 5; // +$5 per character after 28
+    }
+  }
+
+  return cost;
+};
+
 
 const getAuthTokenFromLocalStorage = () => {
   if (typeof window !== 'undefined') {
@@ -92,14 +124,20 @@ const getAuthTokenFromLocalStorage = () => {
     if (token) {
       const decoded = jwt.decode(token);
       setUser(decoded);
+      
     }
   }, []);
 
   const calculateTotalCost = () => {
     const selectedOptionDetails = options.find((opt) => opt.id === selectedOption);
     const baseCost = selectedOptionDetails?.cost || 0;
-    return baseCost + message.length * 5;
+    const messageCost = calculateMessageCost();
+    const quickCost = isQuick ? 30 : 0; // Стоимость быстрого выполнения
+    const videoCost = includeVideo ? 100 : 0; // Стоимость видео выстрела
+  
+    return baseCost + messageCost + quickCost + videoCost;
   };
+  
 
 
   const username = getUserFromLocalStorage()?.user_metadata?.username || 'Guest';
@@ -107,17 +145,30 @@ const getAuthTokenFromLocalStorage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const userData = getUserFromLocalStorage();
     const user_id = userData?.id;
-    const username = userData?.user_metadata?.username || 'User';
-
+    const username = userData?.user_metadata?.username || "User";
+  
     if (!user_id) {
-      toast.error('User ID not found. Please log in again.');
+      toast.error("User ID not found. Please log in again.");
       return;
     }
-
+    if (!selectedOption) {
+      toast.error("Please select an artillery option.");
+      return;
+    }
+    if (!message.trim()) {
+      toast.error("Message cannot be empty.");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("Email cannot be empty.");
+      return;
+    }
+  
     const totalCost = calculateTotalCost();
+  
     const messageData = {
       user_id,
       option_id: selectedOption,
@@ -126,33 +177,36 @@ const getAuthTokenFromLocalStorage = () => {
       payment_method: payment,
       cost: totalCost,
       username,
+      quick: isQuick, // Include quick option
+      video: includeVideo, // Include video option
     };
-
+  
     try {
-      const response = await fetch('/api/messages', {
-        method: 'POST',
+      const response = await fetch("/api/messages", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(messageData),
       });
-
+  
       if (!response.ok) {
         const errorResponse = await response.json();
-        console.error('Error:', errorResponse.error);
-        throw new Error(errorResponse.error || 'Failed to send the message');
+        console.error("Error:", errorResponse.error);
+        throw new Error(errorResponse.error || "Failed to send the message");
       }
-
+  
       const result = await response.json();
-      console.log('Message saved:', result);
-
       toast.success(`Message sent successfully! Total cost: $${totalCost}`);
-      setMessage('');
+      setMessage("");
     } catch (error) {
-      console.error('Error submitting message:', error);
-      toast.error(t('errors.submitRetry'));
+      console.error("Error submitting message:", error);
+      toast.error("Failed to submit the message. Please try again.");
     }
   };
+  
+  
+
 
   return (
     <div>
@@ -216,92 +270,100 @@ const getAuthTokenFromLocalStorage = () => {
 
   {/* Second Block */}
   <div className="w-full lg:w-[25%] bg-gray-800 p-6 rounded-lg shadow-lg">
-    <form onSubmit={handleSubmit} className="space-y-9">
-      <div>
-        <label htmlFor="message" className="block text-sm font-medium">
-        {t('form.message')}
-        </label>
-        <input
-          type="text"
-          id="message"
-          placeholder="Enter your message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          required
-          className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div className="flex space-x-4">
-        <div className="w-1/2">
-          <label htmlFor="option" className="block text-sm font-medium">
-          {t('form.option')}
-          </label>
-          <select
-            id="option"
-            value={selectedOption}
-            onChange={(e) => setSelectedOption(Number(e.target.value))}
-            className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-          >
-            {options.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name} - ${option.cost}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="w-1/2">
-          <label htmlFor="payment" className="block text-sm font-medium">
-          {t('form.payment')}
-          </label>
-          <select
-            id="payment"
-            value={payment}
-            onChange={(e) => setPayment(e.target.value)}
-            className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-          >
-               <option value="visa">{t('form.paymentVisa')}</option>
-                  <option value="mastercard">{t('form.paymentMasterCard')}</option>
-                  <option value="paypal">{t('form.paymentPayPal')}</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium">
-          Email
-        </label>
-        <input
-          type="email"
-          id="email"
-          placeholder="Enter your email..."
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-        />
-<p className="text-gray-400 text-xs mt-1">
-  {t('form.confirmation')}
-</p>
-</div>
-<div className="p-4 bg-gray-700 rounded-md">
-  <h2 className="text-lg font-semibold">{t('summary.title')}</h2>
-  <p>
-    {t('summary.baseCost')}: ${options.find((opt) => opt.id === selectedOption)?.cost || 0}
-  </p>
-  <p>{t('summary.messageCost', { cost: message.length * 5 })}</p>
-  <hr className="my-2 border-gray-600" />
-  <p className="font-bold">{t('summary.totalCost', { total: calculateTotalCost() })}</p>
-</div>
+  <form onSubmit={handleSubmit} className="space-y-9">
+  <div>
+    <label htmlFor="message" className="block text-sm font-medium">
+      {t("form.message")}
+    </label>
+    <input
+      type="text"
+      id="message"
+      placeholder="Enter your message..."
+      value={message}
+      onChange={(e) => setMessage(e.target.value)}
+      required
+      className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
 
+  <div className="flex space-x-4">
+    <div className="w-1/2">
+      <label htmlFor="option" className="block text-sm font-medium">
+        {t("form.option")}
+      </label>
+      <select
+        id="option"
+        value={selectedOption}
+        onChange={(e) => setSelectedOption(Number(e.target.value))}
+        className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+      >
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name} - ${option.cost}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="w-1/2">
+      <label htmlFor="payment" className="block text-sm font-medium">
+        {t("form.payment")}
+      </label>
+      <select
+        id="payment"
+        value={payment}
+        onChange={(e) => setPayment(e.target.value)}
+        className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="visa">{t("form.paymentVisa")}</option>
+        <option value="mastercard">{t("form.paymentMasterCard")}</option>
+        <option value="paypal">{t("form.paymentPayPal")}</option>
+      </select>
+    </div>
+  </div>
 
+  {/* Новые флажки для видео и быстрого выполнения */}
+  <div className="space-y-4">
+    <div className="flex items-center">
+      <input
+        type="checkbox"
+        id="quick"
+        checked={isQuick}
+        onChange={(e) => setIsQuick(e.target.checked)}
+        className="mr-2"
+      />
+      <label htmlFor="quick">quick (+$30)</label>
+    </div>
+    <div className="flex items-center">
+      <input
+        type="checkbox"
+        id="video"
+        checked={includeVideo}
+        onChange={(e) => setIncludeVideo(e.target.checked)}
+        className="mr-2"
+      />
+      <label htmlFor="video">video (+$100)</label>
+    </div>
+  </div>
 
-<button
-  type="submit"
-  className="w-full p-3 bg-blue-600 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  {t('form.submit')}
-</button>
+  {/* Сумма заказа */}
+  <div className="p-4 bg-gray-700 rounded-md">
+    <h2 className="text-lg font-semibold">{t("summary.title")}</h2>
+    <p>{t("summary.baseCost")}: ${options.find((opt) => opt.id === selectedOption)?.cost || 0}</p>
+    <p>{t("summary.messageCost", { cost: calculateMessageCost() })}</p>
+    {isQuick && <p>quick: +$30</p>}
+    {includeVideo && <p>video: +$100</p>}
+    <hr className="my-2 border-gray-600" />
+    <p className="font-bold">{t("summary.totalCost", { total: calculateTotalCost() })}</p>
+  </div>
 
-    </form>
+  <button
+    type="submit"
+    className="w-full p-3 bg-blue-600 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    {t("form.submit")}
+  </button>
+</form>
+
   </div>
 </div>
 

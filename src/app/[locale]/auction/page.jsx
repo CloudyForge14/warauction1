@@ -316,13 +316,29 @@ export default function AuctionItems() {
               -
             </button>
             <input
-              type="text"
-              readOnly
-              value={
-                selectedItem.bid || selectedItem.current_bid + selectedItem.min_raise
-              }
-              className="w-24 text-center bg-gray-700"
-            />
+  type="number"
+  value={selectedItem.bid || selectedItem.current_bid + selectedItem.min_raise}
+  onChange={(e) => {
+    const newBid = parseFloat(e.target.value) || ''; // Allow user to clear the field temporarily
+    setSelectedItem((prevItem) => ({
+      ...prevItem,
+      bid: newBid, // Temporarily update the bid without validation
+    }));
+  }}
+  onBlur={() => {
+    // Validate the bid on blur (when the input loses focus)
+    setSelectedItem((prevItem) => {
+      const minBid = prevItem.current_bid + prevItem.min_raise;
+      return {
+        ...prevItem,
+        bid: prevItem.bid >= minBid ? prevItem.bid : minBid, // Enforce the minimum bid
+      };
+    });
+  }}
+  className="w-24 text-center bg-gray-700"
+/>
+
+
             <button
               className="bg-blue-600 px-4 py-2 rounded-r"
               onClick={() => handleBidChange(1, selectedItem.min_raise)}

@@ -23,6 +23,6 @@
       "@/*": ["*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/api/register/route.js", "next.config.mjs"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/api/register/route.js", "next.config.mjs", "src/app/api/verify-otp/route.js"],
   "exclude": ["node_modules"]
 }

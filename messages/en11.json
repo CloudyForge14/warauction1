@@ -13,32 +13,32 @@
             "enter": "Enter Auction",
             "aboutTitle": "About Our",
             "auctions":"Auctions",
-            "aboutDescription": "Each item is unique and your purchase will help Ukraine in its fight for freedom. Join the auction and contribute to victory."
+            "aboutDescription": "Each item in our collection has a unique story and helps support Ukrainian efforts. Browse through our gallery to see some of the featured items, and join the auction to make an impact."
         },
         "projectRevenge": {
             "title": "About Project",
-            "description": "Send a message to the Russian occupiers in the form of a personalised shell. Each message supports Ukraine's fight for freedom and will be a just response to all the crimes committed by the russians."
+            "description": "Send a powerful message against Russian aggression by personalizing an artillery shell. Each message carries a unique story, supporting Ukraine’s fight for freedom and symbolizing justice."
         },
         "whyChooseUs": {
             "title": "Why Choose Us",
             "reasons": {
-                "trustedItemsTitle":"Reliability",
+                "trustedItemsTitle":"Trusted Items",
                 "supportUkraineTitle":"Support Ukraine",
-                "uniqueCollectiblesTitle":"Unique goods",
-                "trustedItems": "Receive your lots as soon as possible",
-                "supportUkraine": "Your purchases help Ukraine in its fight for freedom",
-                "uniqueCollectibles": "Get unique trophies straight from the battlefield"
+                "uniqueCollectiblesTitle":"Unique Collectibles",
+                "trustedItems": "All items are certified and come directly from Ukrainian soldiers.",
+                "supportUkraine": "Your purchases contribute to helping Ukrainian efforts.",
+                "uniqueCollectibles": "Own one-of-a-kind trophies with incredible stories."
             }
         },
         "howItWorks": {
             "title": "How It Works",
             "steps": {
                 "browseItemsTitle":"Browse Items",
-                "placeBidTitle":"Place Bids",
-                "makeImpactTitle":"Win lots",
-                "browseItems": "Take a look at our current proposition of exclusive trophies",
-                "placeBid": "Participate in auctions and win your desired items",
-                "makeImpact": "Your purchases will directly contribute to the defence of Ukraine."
+                "placeBidTitle":"Place Bid",
+                "makeImpactTitle":"Make Impact",
+                "browseItems": "Explore our collection of exclusive trophy items.",
+                "placeBid": "Participate in auctions and win your desired items.",
+                "makeImpact": "Your contribution directly helps the Ukrainian cause."
             }
         }
     },
@@ -48,11 +48,11 @@
             "part2": "Forge"
           },
           "links": {
-            "home": "Home",
-            "auction": "Auction",
-            "revenge": "\"REVENGE\""
+            "home": "🏠 Home",
+            "auction": "🏆 Auction",
+            "revenge": "✉️ \"REVENGE\""
           },
-          "language": "EN",
+          "language": "🌐 EN",
           "user": {
             "defaultName": "User",
             "profile": "Profile",
@@ -63,7 +63,7 @@
         "Footer":{
             "company": {
               "title": "CloudyForge",
-              "description": "Your trusted source for one-of-a-kind trophies and services"
+              "description": "Your trusted store for unique trophies and auction items. We strive to deliver quality and satisfaction."
             },
             "support": {
               "title": "Support",
@@ -72,7 +72,7 @@
             },
             "legal": {
               "title": "Legal",
-              "copyright": "© 2025 CloudyForge. All rights reserved."
+              "copyright": "© 2024 CloudyForge. All rights reserved."
             },
             "footerNote": "Designed with ❤️ by the CloudyForge Team."
           },
@@ -81,7 +81,7 @@
               "title": "Auction Items",
               "timeLeft": "Time Left",
               "currentBid": "Current Bid",
-              "minRaise":"Minimal Raise",
+              "minRaise":"Min Raise",
               "placeBid": "Place Bid",
               "close": "Close",
               "loading": "Loading...",
@@ -100,7 +100,7 @@
             "SendMessage": {
               "title": "Send Your Message to Russian Invaders!",
               "subtitle": "But how it works?",
-              "description": "Our defenders will write your message on the shell and send it to the Russian occupiers, and you will receive a photo confirmation!",
+              "description": "Your chosen message will be written on an artillery shell by soldiers at the front lines. Every donation directly supports Ukraine.",
               "form": {
                 "message": "Message",
                 "messagePlaceholder": "Enter your message...",
@@ -114,8 +114,8 @@
               },
               "summary": {
                 "title": "Cost Summary",
-                "baseCost": "Base Cost (18 characters)",
-                "messageCost": "2$ per additional character: ${cost}", 
+                "baseCost": "Base Cost (Option)",
+                "messageCost": "Message Cost ($5 per character): ${cost}",
                 "totalCost": "Total Cost: ${total}"
               },
               "errors": {
@@ -137,13 +137,13 @@
             "Login": {
     "welcomeBack": "Welcome Back",
     "logInToAccount": "Log in to your account",
-    "emailPlaceholder": "Email address",
+    "emailPlaceholder": "Email/Username",
     "passwordPlaceholder": "Password",
     "loginButton": "Login",
     "dontHaveAccount": "Don't have an account?",
     "loginHere": "Login here",
     "loginSuccessful": "Login successful!",
-    "errorUnexpected": "An error occurred.",
+    "errorUnexpected": "An unexpected error occurred.",
     "errorLoginFailed": "Login failed. Please check your credentials."
   },
   "Register": {
@@ -156,7 +156,7 @@
     "alreadyHaveAccount": "Already have an account?",
     "loginHere": "Login here",
     "registrationSuccessful": "Registration successful!",
-    "errorOccurred": "An error occurred.",
+    "errorOccurred": "An unexpected error occurred.",
     "errorGeneric": "Something went wrong"
   },
   "Profile": {

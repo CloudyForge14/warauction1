@@ -3,36 +3,53 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { useTranslations } from 'next-intl';
-import {Link} from '@/i18n/routing';
+import { Link } from '@/i18n/routing';
+
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [username, setUsername] = useState('');
   const t = useTranslations('Navbar');
-  const [loading, setLoading] = useState(true); // Добавляем состояние загрузки
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchUser = async () => {
-      if (typeof window !== 'undefined') {
-        const { data: { user }, error } = await supabase.auth.getUser();
-  
-        if (error) {
-          console.error('Error fetching user:', error.message);
-          setUser(null);
-          setLoading(false); // Завершаем загрузку
-          return;
-        }
-  
-        if (user) {
-          setUser(user);
-          setAvatarUrl(user.user_metadata?.avatar_url || '');
-          setUsername(user.user_metadata?.username || '');
-          localStorage.setItem('user', JSON.stringify(user)); // Save user to localStorage
-        }
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error('Error fetching user:', error.message);
+        setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false); // Завершаем загрузку
+
+      if (user) {
+        setUser(user);
+        setAvatarUrl(user.user_metadata?.avatar_url || '');
+        setUsername(user.user_metadata?.username || '');
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+
+      setLoading(false);
     };
-  
+
     fetchUser();
+
+    // Listen for auth changes
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        setUser(null);
+        setAvatarUrl('');
+        setUsername('');
+        localStorage.removeItem('authToken');
+      } else {
+        fetchUser();
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -45,21 +62,19 @@ export default function Navbar() {
       window.location.reload();
     }
   };
+
   const handleLanguageSwitch = () => {
-    const currentUrl = window.location.pathname; // Получаем текущий путь
+    const currentUrl = window.location.pathname;
     let newUrl;
 
-    // Проверяем и заменяем локаль в начале пути
     if (currentUrl.startsWith('/ua')) {
       newUrl = currentUrl.replace('/ua', '/en');
     } else if (currentUrl.startsWith('/en')) {
       newUrl = currentUrl.replace('/en', '/ua');
     } else {
-      // Если локали нет, добавляем дефолтную (например, en)
       newUrl = `/en${currentUrl}`;
     }
 
-    // Обновляем путь
     window.location.pathname = newUrl;
   };
   if (loading) {
@@ -144,7 +159,7 @@ export default function Navbar() {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex flex-grow justify-center space-x-8">
+      <nav className="flex flex-grow justify-center space-x-14">
         <Link href="/" className="items-center text-s flex text-white hover:text-blue-400 transition duration-200">
           {t('links.home')}
         </Link>

@@ -107,65 +107,62 @@ const AuctionApp = () => {
 
     return (
 <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-  <section className="w-full bg-gray-900 text-white py-20">
+<div className="relative">
+  {/* Background Image */}
+  <div className="absolute z-0 inset-0">
+    <img
+      src="back.png"
+      alt="Background Image"
+      className="w-full h-full object-cover"
+    />
+  </div>
+
+  {/* Overlay Section */}
+  <section className="relative z-10 w-full bg-gray-900/60 text-white py-20  ">
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center"
     >
-      <h1 className="text-5xl font-extrabold mb-6 text-blue-500 ">
+      <h1 className="text-5xl font-extrabold mb-6 text-blue-500">
         {t('title1')}<span className="text-yellow-500">{t('title2')}</span>
-
       </h1>
       <p className="text-xl text-gray-300 mb-10 max-w-md">
         {t("about")}
       </p>
 
       <div className="flex justify-center items-center w-full max-w-screen-lg gap-x-12">
-  {/* Left Image */}
-  <div className="w-1/3 h-48 md:flex hidden bg-gray-700 border-4 border-blue-500 rounded-lg  items-center justify-center flex-shrink-0 overflow-hidden">
-    <img
-      src="main1.jpg"
-      alt="Main Image 1"
-      className="w-full h-full object-cover"
-    />
-  </div>
-
-          {/* Countdown Timer */}
-          <div className="bg-gray-800 rounded-lg shadow-lg p-6 flex space-x-8 items-center flex-shrink-0">
-            {[
-              { label: t('timer.days'), value: days },
-              { label: t('timer.hours'), value: hours },
-              { label: t('timer.minutes'), value: minutes },
-              { label: t('timer.seconds'), value: seconds },
-            ].map((time, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <span className="text-4xl font-bold text-yellow-500">
-                  {String(time.value).padStart(2, '0')}
-                </span>
-                <span className="text-gray-400 mt-1">{time.label}</span>
-              </div>
-            ))}
-          </div>
-
-        {/* Right Image Placeholder */}
-        <div className="w-1/3 h-48  md:flex hidden bg-gray-700 border-4 border-yellow-500 rounded-lg  items-center justify-center flex-shrink-0 overflow-hidden">
-    <img
-      src="main2.jpg"
-      alt="Main Image 2"
-      className="w-full h-full object-cover"
-    />
-  </div>
+  {/* Countdown Timer */}
+  <div className="bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg p-8 flex space-x-10 items-center flex-shrink-0">
+    {[
+      { label: t("timer.days"), value: days },
+      { label: t("timer.hours"), value: hours },
+      { label: t("timer.minutes"), value: minutes },
+      { label: t("timer.seconds"), value: seconds },
+    ].map((time, index) => (
+      <div key={index} className="flex flex-col items-center">
+        <span className="text-5xl font-extrabold text-yellow-400">
+          {String(time.value).padStart(2, "0")}
+        </span>
+        <span className="text-gray-300 mt-2 text-sm uppercase tracking-wider">
+          {time.label}
+        </span>
       </div>
+    ))}
+  </div>
+</div>
+
 
       <Link href="/auction">
         <button className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300 mt-8">
-          {t('auction.enter')}
-      </button>
+          Till Next Auction
+        </button>
       </Link>
     </motion.div>
   </section>
+</div>
+
   <motion.hr
     initial={{ width: 0 }}
     animate={{ width: '100%' }}

@@ -4,7 +4,7 @@ import { templates } from '@/utils/sendEmail/emailTemplates';
 
 export async function POST(request) {
   try {
-    const { user_id, option_id, message, email, payment_method, cost, username } = await request.json();
+    const { user_id, option_id, message, email, payment_method, cost, username, quick, video } = await request.json();
 
     // Validate required fields
     if (!user_id || !option_id || !message || !email || !payment_method || !cost || !username) {
@@ -21,11 +21,13 @@ export async function POST(request) {
         email,
         payment_method,
         cost,
+        quick, // Include quick option
+        video, // Include video option
       })
       .select('*')
       .single();
 
-    if (insertError) {
+    if (insertError) {  
       console.error('Error inserting message:', insertError);
       return new Response(JSON.stringify({ error: 'Failed to save message' }), { status: 500 });
     }
@@ -33,14 +35,12 @@ export async function POST(request) {
     // Send email notification
     const template = templates['messageAccepted'];
 
-const emailResult = await sendEmail(
-  email,
-  template.subject,
-  template.text(username, 'Artillery Shell', cost, message), // Include user message
-  template.html(username, 'Artillery Shell', cost, message)
-);
-
-    
+    const emailResult = await sendEmail(
+      email,
+      template.subject,
+      template.text(username, 'Artillery Shell', cost, message),
+      template.html(username, 'Artillery Shell', cost, message)
+    );
 
     if (!emailResult.success) {
       console.error('Error sending email:', emailResult.error);
