@@ -7,10 +7,10 @@ import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/routing';
 const AuctionApp = () => {
     const t = useTranslations('HomePage');
-    const [days, setDays] = useState(0);
-    const [hours, setHours] = useState(0);
-    const [minutes, setMinutes] = useState(0);
-    const [seconds, setSeconds] = useState(0);
+    const [days, setDays] = useState(10);
+    const [hours, setHours] = useState(21);
+    const [minutes, setMinutes] = useState(28);
+    const [seconds, setSeconds] = useState(10);
     const [currentAuctionImageIndex, setCurrentAuctionImageIndex] = useState(0);
     const [currentArtilleryImageIndex, setCurrentArtilleryImageIndex] = useState(0);
     const [loading, setLoading] = useState(false); // Add this line
@@ -270,9 +270,6 @@ const AuctionApp = () => {
                         <p className="text-gray-400 leading-relaxed">
                             {t("auction.aboutDescription")}
                         </p>
-                        <p className="text-gray-400 mt-4">
-                            Together, we can preserve history and support a vital cause.
-                        </p>
                     </div>
                 </div>
             </section>
@@ -285,9 +282,6 @@ const AuctionApp = () => {
                         <h3 className="text-3xl font-bold mb-4">{t("projectRevenge.title")} <span className="text-blue-500 text-4xl">"REVENGE"</span></h3>
                         <p className="text-gray-400 leading-relaxed">
                             {t("projectRevenge.description")}
-                        </p>
-                        <p className="text-gray-400 mt-4">
-                            Together, we can take a stand and make a difference.
                         </p>
                     </div>
 
