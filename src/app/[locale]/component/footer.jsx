@@ -7,7 +7,8 @@ export default function Footer() {
   const t = useTranslations('Footer');
 
   return (
-    <footer className="bg-gray-900 text-white py-8 px-6">
+    <footer className="bg-gray-900 text-white py-8 px-6 left-0 w-full">
+
       {/* Container */}
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-40">
         {/* Company Info */}
@@ -30,12 +31,12 @@ export default function Footer() {
             </li>
             <li>
               <a
-                href="https://t.me/GloOouD"
+                href="https://x.com/GloOouD "
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition"
               >
-                {t('support.telegram')}
+                {t('support.twitter')}
               </a>
             </li>
           </ul>

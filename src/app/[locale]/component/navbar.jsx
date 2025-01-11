@@ -208,11 +208,18 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
+            <div className="flex space-x-2">
             <Link href="/register">
               <button className="bg-green-700 hover:bg-green-600 text-white px-2 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-lg shadow-md transition duration-200">
                 {t('user.register')}
               </button>
             </Link>
+            <Link href="/login">
+            <button className="bg-blue-700 hover:bg-blue-600 text-white px-2 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-lg shadow-md transition duration-200">
+              {t('user.login')}
+            </button>
+          </Link>
+          </div>
           )}
         </div>
       </div>

@@ -5,6 +5,55 @@ import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/routing';
+import { useSwipeable } from 'react-swipeable';
+
+type SymbolPosition = {
+    symbol: string;
+    left: number;
+    top: number;
+  };
+  
+  function BackgroundSymbols() {
+    const symbols = ["+", "-", "*", "/"];
+    // Храним массив объектов вида { symbol, left, top }
+    const [positions, setPositions] = useState<SymbolPosition[]>([]);
+  
+    useEffect(() => {
+      // Допустим, генерируем 50 символов
+      const arr: SymbolPosition[] = Array.from({ length: 50 }, () => {
+        const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+        return {
+          symbol,
+          left: Math.random() * 100, // % относительно ширины контейнера
+          top: Math.random() * 100,  // % относительно высоты контейнера
+        };
+      });
+      setPositions(arr);
+    }, []);
+  
+    return (
+      // Абсолютный контейнер занимает всю площадь родителя
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        {positions.map((pos, i) => (
+          <span
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${pos.left}%`,
+              top: `${pos.top}%`,
+              transform: "rotate(45deg)",
+              opacity: 0.1,
+              fontSize: "2rem"
+            }}
+            className="text-white font-extrabold"
+          >
+            {pos.symbol}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
 const AuctionApp = () => {
     const t = useTranslations('HomePage');
     const [days, setDays] = useState(10);
@@ -66,7 +115,30 @@ const AuctionApp = () => {
 
         fetchAuctionItems();
     }, [t]);
-
+    const auctionHandlers = useSwipeable({
+        onSwipedLeft: () =>
+          setCurrentAuctionImageIndex((prev) =>
+            prev === auctionImages.length - 1 ? 0 : prev + 1
+          ),
+        onSwipedRight: () =>
+          setCurrentAuctionImageIndex((prev) =>
+            prev === 0 ? auctionImages.length - 1 : prev - 1
+          ),
+        trackMouse: true,
+      });
+    
+      // Handlers for artillery slider
+      const artilleryHandlers = useSwipeable({
+        onSwipedLeft: () =>
+          setCurrentArtilleryImageIndex((prev) =>
+            prev === artilleryImages.length - 1 ? 0 : prev + 1
+          ),
+        onSwipedRight: () =>
+          setCurrentArtilleryImageIndex((prev) =>
+            prev === 0 ? artilleryImages.length - 1 : prev - 1
+          ),
+        trackMouse: true,
+      });
     useEffect(() => {
         const countdownInterval = setInterval(() => {
             if (seconds > 0) {
@@ -108,6 +180,9 @@ const AuctionApp = () => {
     return (
 <div className="min-h-screen bg-gray-900 text-white flex flex-col">
 <div className="relative">
+<BackgroundSymbols />
+
+    
   {/* Background Image */}
   <div className="absolute z-0 inset-0">
     <img
@@ -173,38 +248,44 @@ const AuctionApp = () => {
 
 
 
-            <section className="py-20 bg-gray-900 text-gray-100">
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className="max-w-screen-lg mx-auto px-6"
-                >
-                    <h2 className="text-4xl font-bold text-center mb-12">{t("whyChooseUs.title")}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    {['trustedItems', 'supportUkraine', 'uniqueCollectibles'].map((reasonKey, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.2 }}
-              className="bg-gray-700 p-6 rounded-lg shadow-md text-center"
-            >
-              <h3 className="text-2xl font-semibold mb-4">{t(`whyChooseUs.reasons.${reasonKey}Title`)}</h3>
-              <p className="text-gray-400">{t(`whyChooseUs.reasons.${reasonKey}`)}</p>
-            </motion.div>
-          ))}
-                    </div>
-                </motion.div>
-            </section>
+<section className="relative py-20 bg-gray-900 text-gray-100">
+  {/* Добавляем символы */}
+2
+  <motion.div
+    initial={{ opacity: 0, y: 50 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5 }}
+    className="max-w-screen-lg mx-auto px-6"
+  >
+    <h2 className="text-4xl font-bold text-center mb-12">{t("whyChooseUs.title")}</h2>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      {['trustedItems', 'supportUkraine', 'uniqueCollectibles'].map((reasonKey, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: index * 0.2 }}
+          className="bg-gray-700 p-6 rounded-lg shadow-md text-center"
+        >
+          <h3 className="text-2xl font-semibold mb-4">{t(`whyChooseUs.reasons.${reasonKey}Title`)}</h3>
+          <p className="text-gray-400">{t(`whyChooseUs.reasons.${reasonKey}`)}</p>
+        </motion.div>
+      ))}
+    </div>
+  </motion.div>
+</section>
+
 
 
 
             {/* How It Works */}
             <section className="py-20 bg-gray-800 text-gray-100">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+  </div>
                 <div className="max-w-screen-lg mx-auto px-6">
+                    
                     <h2 className="text-4xl font-bold text-center mb-12">{t("howItWorks.title")}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         <div className="text-center">
@@ -234,87 +315,151 @@ const AuctionApp = () => {
 
             {/* Auctions Section */}
             <section className="py-20 bg-gray-900 text-gray-100">
-                <div className="max-w-screen-lg mx-auto px-6 flex flex-col md:flex-row items-center md:space-x-10">
-                    {/* Slider Section */}
-                    <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative">
-                        <div
-                            className="w-full h-full flex transition-transform duration-500 ease-in-out"
-                            style={{ transform: `translateX(-${currentAuctionImageIndex * 100}%)` }}
-                        >
-                            {auctionImages.map((src, index) => (
-                                <img
-                                    key={index}
-                                    src={src}
-                                    alt={`Auction Slide ${index}`}
-                                    className="w-full h-full object-cover flex-shrink-0"
-                                />
-                            ))}
-                        </div>
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+  </div>
+        <div className="max-w-screen-lg mx-auto px-6 flex flex-col md:flex-row items-center md:space-x-10">
+          <div
+            {...auctionHandlers}
+            className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative"
+          >
+            <div
+              className="w-full h-full flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentAuctionImageIndex * 100}%)` }}
+            >
+              {auctionImages.map((src, index) => (
+                <img
+                  key={index}
+                  src={src}
+                  alt={`Auction Slide ${index}`}
+                  className="w-full h-full object-cover flex-shrink-0"
+                />
+              ))}
+            </div>
+            <button
+              onClick={() =>
+                setCurrentAuctionImageIndex((prev) =>
+                  prev === 0 ? auctionImages.length - 1 : prev - 1
+                )
+              }
+              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-4 rounded-full hover:bg-gray-600"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() =>
+                setCurrentAuctionImageIndex((prev) =>
+                  prev === auctionImages.length - 1 ? 0 : prev + 1
+                )
+              }
+              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-4 rounded-full hover:bg-gray-600"
+            >
+              ›
+            </button>
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              {auctionImages.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-3 h-3 rounded-full ${
+                    index === currentAuctionImageIndex ? 'bg-white' : 'bg-gray-400'
+                  }`}
+                ></div>
+              ))}
+            </div>
+          </div>
 
-                        {/* Dots Indicator */}
-                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                            {auctionImages.map((_, index) => (
-                                <div
-                                    key={index}
-                                    className={`w-3 h-3 rounded-full ${
-                                        index === currentAuctionImageIndex ? 'bg-white' : 'bg-gray-400'
-                                    }`}
-                                ></div>
-                            ))}
-                        </div>
-                    </div>
+          <div className="w-full md:w-1/2 mt-10 md:mt-0">
+            <h3 className="text-3xl font-bold mb-4">
+              {t('auction.aboutTitle')}{' '}
+              <span className="text-blue-500">{t('auction.auctions')}</span>
+            </h3>
+            <p className="text-gray-400">{t('auction.aboutDescription')}</p>
+          </div>
+        </div>
+      </section>
 
-                    {/* Text Block */}
-                    <div className="w-full md:w-1/2 mt-10 md:mt-0">
-                        <h3 className="text-3xl font-bold mb-4">{t("auction.aboutTitle")} <span className="text-blue-500 text-4xl">{t("auction.auctions")}</span></h3>
-                        <p className="text-gray-400 leading-relaxed">
-                            {t("auction.aboutDescription")}
-                        </p>
-                    </div>
-                </div>
-            </section>
+      <section className="relative py-20 bg-gray-800 text-gray-100">
+  {/* Добавляем символы */}
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+  </div>
 
-            {/* Revenge Section */}
-            <section className="py-20 bg-gray-800 text-gray-100">
-                <div className="max-w-screen-lg mx-auto px-6 flex flex-col md:flex-row items-center md:space-x-10">
-                    {/* Text Block */}
-                    <div className="w-full md:w-1/2 mt-10 md:mt-0">
-                        <h3 className="text-3xl font-bold mb-4">{t("projectRevenge.title")} <span className="text-blue-500 text-4xl">"REVENGE"</span></h3>
-                        <p className="text-gray-400 leading-relaxed">
-                            {t("projectRevenge.description")}
-                        </p>
-                    </div>
+  <div className="max-w-screen-lg mx-auto px-6 flex flex-col md:flex-row items-center md:space-x-10">
+    {/* Text Block */}
+    <div className="w-full md:w-1/2 mt-10 md:mt-0">
+      <h3 className="text-3xl font-bold mb-4">
+        {t('projectRevenge.title')} <span className="text-blue-500 text-4xl">"REVENGE"</span>
+      </h3>
+      <p className="text-gray-400 leading-relaxed">{t('projectRevenge.description')}</p>
+    </div>
 
-                    {/* Slider Section */}
-                    <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative">
-                        <div
-                            className="w-full h-full flex transition-transform duration-500 ease-in-out"
-                            style={{ transform: `translateX(-${currentArtilleryImageIndex * 100}%)` }}
-                        >
-                            {artilleryImages.map((src, index) => (
-                                <img
-                                    key={index}
-                                    src={src}
-                                    alt={`Artillery Slide ${index}`}
-                                    className="w-full h-full object-cover flex-shrink-0"
-                                />
-                            ))}
-                        </div>
+    {/* Slider Section */}
+    <div
+      {...useSwipeable({
+        onSwipedLeft: () =>
+          setCurrentArtilleryImageIndex((prevIndex) =>
+            prevIndex === artilleryImages.length - 1 ? 0 : prevIndex + 1
+          ),
+        onSwipedRight: () =>
+          setCurrentArtilleryImageIndex((prevIndex) =>
+            prevIndex === 0 ? artilleryImages.length - 1 : prevIndex - 1
+          ),
+        trackMouse: true,
+      })}
+      className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative"
+    >
+      <div
+        className="w-full h-full flex transition-transform duration-500 ease-in-out"
+        style={{
+          transform: `translateX(-${currentArtilleryImageIndex * 100}%)`,
+        }}
+      >
+        {artilleryImages.map((src, index) => (
+          <img
+            key={index}
+            src={src}
+            alt={`Artillery Slide ${index}`}
+            className="w-full h-full object-cover flex-shrink-0"
+          />
+        ))}
+      </div>
 
-                        {/* Dots Indicator */}
-                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                            {artilleryImages.map((_, index) => (
-                                <div
-                                    key={index}
-                                    className={`w-3 h-3 rounded-full ${
-                                        index === currentArtilleryImageIndex ? 'bg-white' : 'bg-gray-400'
-                                    }`}
-                                ></div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </section>
+      {/* Navigation Buttons */}
+      <button
+        onClick={() =>
+          setCurrentArtilleryImageIndex((prevIndex) =>
+            prevIndex === 0 ? artilleryImages.length - 1 : prevIndex - 1
+          )
+        }
+        className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-4 rounded-full shadow-md hover:bg-gray-600"
+      >
+        ‹
+      </button>
+      <button
+        onClick={() =>
+          setCurrentArtilleryImageIndex((prevIndex) =>
+            prevIndex === artilleryImages.length - 1 ? 0 : prevIndex + 1
+          )
+        }
+        className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-4 rounded-full shadow-md hover:bg-gray-600"
+      >
+        ›
+      </button>
+
+      {/* Dots Indicator */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        {artilleryImages.map((_, index) => (
+          <div
+            key={index}
+            className={`w-3 h-3 rounded-full ${
+              index === currentArtilleryImageIndex ? 'bg-white' : 'bg-gray-400'
+            }`}
+          ></div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+
         </div>
     );
 };

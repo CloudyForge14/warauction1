@@ -1,21 +1,20 @@
 import { supabase } from '@/utils/supabase/client';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs'; // For password hashing
-import { templates } from '@/utils/sendEmail/emailTemplates';
-import { sendEmail } from '@/utils/sendEmail/sender';
 
 export async function POST(request) {
   const { email, password, username } = await request.json();
 
-  // Generate a 6-digit OTP
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15-minute expiration
-
+  // Регистрация пользователя
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username } },
+    options: {
+      data: { username },
+    },
   });
+
+  console.log('Supabase signUp response:', { data, error });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
@@ -24,42 +23,40 @@ export async function POST(request) {
   const user = data?.user || {};
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Хэшируем пароль перед сохранением
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Save user with OTP and expiration
+    // Добавление в таблицу users
     const { error: insertError } = await supabase
       .from('users')
       .insert([
         {
-          id: user.id,
+          id: user.id, // id из auth (UUID)
           email: user.email,
           username: user.user_metadata?.username || username,
-          password: hashedPassword,
-          otp_code: otpCode,
-          otp_expires_at: otpExpiresAt,
+          password: hashedPassword, // Сохранение хэшированного пароля
+          avatar_url: '', // Пустое значение по умолчанию
+          is_banned: false, // Устанавливаем флаг бана как false
         },
       ]);
 
     if (insertError) {
+      console.error('Error inserting into users table:', insertError.message);
       return NextResponse.json({ error: 'Failed to save user data.' }, { status: 500 });
     }
-
-    // Send OTP via email
-    const template = templates['welcome']; // Use your custom OTP email template
-    const emailResult = await sendEmail(
-      email,
-      `Your OTP Code: ${otpCode}`,
-      `Hi ${username},\n\nYour OTP code is: ${otpCode}\n\nThis code will expire in 15 minutes.`,
-      `<h1>Hi ${username},</h1><p>Your OTP code is: <strong>${otpCode}</strong></p><p>This code will expire in 15 minutes.</p>`
-    );
-
-    if (!emailResult.success) {
-      console.error('Error sending email:', emailResult.error);
-      return NextResponse.json({ error: 'Failed to send OTP email.' }, { status: 500 });
-    }
-
-    return NextResponse.json({ message: 'OTP sent successfully. Please verify your email.' });
   } catch (err) {
+    console.error('Unexpected error:', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+
+  // Возвращаем ответ с токеном
+  const token = data?.session?.access_token || null;
+
+  return NextResponse.json({
+    message: 'Check your email to confirm registration!',
+    token,
+
+    userinfo: { email: user.email, username: user.user_metadata?.username || '' },
+  });
 }

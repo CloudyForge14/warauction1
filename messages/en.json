@@ -57,7 +57,8 @@
             "defaultName": "User",
             "profile": "Profile",
             "logout": "Logout",
-            "register": "Register"
+            "register": "Register",
+            "login":"Login"
           }
         },
         "Footer":{
@@ -68,7 +69,7 @@
             "support": {
               "title": "Support",
               "email": "✉️ Email: support@cloudyforge.com",
-              "telegram": "📱 Telegram: @GloOouD"
+              "twitter": "📱 Twitter: @GloOouD"
             },
             "legal": {
               "title": "Legal",
@@ -155,7 +156,7 @@
     "registerButton": "Register",
     "alreadyHaveAccount": "Already have an account?",
     "loginHere": "Login here",
-    "registrationSuccessful": "Registration successful!",
+    "registrationSuccessful": "Check your email to confirm regstration!",
     "errorOccurred": "An error occurred.",
     "errorGeneric": "Something went wrong"
   },

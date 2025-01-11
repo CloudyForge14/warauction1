@@ -46,5 +46,24 @@ export const templates = {
              <p>Thank you for your patience!</p>
              <p>Best regards,<br/><strong>WarAuction Team</strong></p>`,
         },
+        usernameChanged: {
+          subject: 'Your username has been updated!',
+          text: (oldName, newName) =>
+            `Hello, ${oldName}!\n\nYour username has been changed. If you did not authorize this change, please contact support immediately.`,
+          html: (oldName, newName) =>
+            `<h1>Hi ${oldName},</h1>
+             <p>Your username has been changed.</p>
+             <p>If you did not authorize this change, please contact support immediately.</p>`,
+        },
+      
+        passwordChanged: {
+          subject: 'Your password has been updated!',
+          text: (username) =>
+            `Hello, ${username}!\n\nWe just wanted to let you know that your password has been updated. If you did not do this, please contact support immediately.`,
+          html: (username) =>
+            `<h1>Hi ${username},</h1>
+             <p>We just wanted to let you know that your password has been updated.</p>
+             <p>If you did not do this, please contact support immediately.</p>`,
+        },
       };
     
