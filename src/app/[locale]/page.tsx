@@ -233,7 +233,7 @@ const AuctionApp = () => {
             To the Auction
           </button>
         </Link>
-        <Link href="/auction">
+        <Link href="/artillery">
           <button className="bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300">
             Order Artillery
           </button>
