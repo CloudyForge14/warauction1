@@ -83,7 +83,7 @@ export default function AuctionItems() {
               current_bid: 0,
               min_raise: 0,
               time_left: 0,
-              image_url: "/placeholder.jpg",
+              image_url: "/auction/comingsoon.jpg",
             })
           );
           auctionItems = [...auctionItems, ...placeholders];
@@ -231,7 +231,7 @@ export default function AuctionItems() {
   if (error) return <div>{error}</div>;
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen py-12">
+    <div className="bg-gray-900 text-white h-auto py-12 ">
       <ToastContainer
         position="top-right"
         autoClose={3000}

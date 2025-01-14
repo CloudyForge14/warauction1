@@ -107,10 +107,11 @@
                 "messagePlaceholder": "Enter your message...",
                 "option": "Option",
                 "payment": "Payment Method",
-                "quick":"Urgent order (receive a photo of your shell in the next 3 days, please make your order in advance!)",
-                "video":"Video of firing (Our defenders will record a video of loading and firing your shell)",
-                "paymentVisa": "Visa",
-                "paymentMasterCard": "MasterCard",
+                "quick":"Urgent ord er: $30",
+                "quickTitle":"Receive a photo of your shell in the next 3 days, please make your order in advance!",
+                "video":"Video of firing: $100",
+                "videoTitle":"Our defenders will record a video of loading and firing your shell",
+                "paymentCard": "Card",
                 "paymentPayPal": "PayPal",
                 "confirmation": "We will send you a confirmation that your message has been received.",
                 "submit": "Send Message"
@@ -189,18 +190,23 @@
     "toastUnexpectedError": "An unexpected error occurred."
   },
   
-    "ResetPassword": {
-      "resetPassword": "Reset Your Password",
-      "setNewPassword": "Set a new password for your account",
-      "newPasswordPlaceholder": "New Password",
-      "confirmPasswordPlaceholder": "Confirm Password",
-      "resetPasswordButton": "Reset Password",
-      "passwordsDoNotMatch": "Passwords do not match",
-      "invalidOrExpiredToken": "Invalid or expired token",
-      "passwordResetSuccess": "Password reset successfully! Redirecting to login...",
-      "errorUnexpected": "An unexpected error occurred. Please try again."
-    
-  }
+"ForgotPassword": {
+  "emailPlaceholder": "Email address",
+  "sendResetLink": "Reset Password",
+  "emailSent": "A link to reset your password has been sent successfully!",
+  "errorSendingEmail": "Error sending the email. Please check your email address and try again.",
+  "enterEmail": "Enter your Email to restore password!",
+  "resetPassword": "Reset Your Password",
+  "setNewPassword": "Set a new password for your account",
+  "newPasswordPlaceholder": "New Password",
+  "confirmPasswordPlaceholder": "Confirm Password",
+  "resetPasswordButton": "Reset Password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "invalidOrExpiredToken": "Invalid or expired token",
+  "passwordResetSuccess": "Password reset successfully! Redirecting to login...",
+  "errorUnexpected": "An unexpected error occurred. Please try again."
+}
+
   
           
           

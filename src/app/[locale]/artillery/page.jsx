@@ -362,10 +362,7 @@ export default function SendMessage() {
                   onChange={(e) => setPayment(e.target.value)}
                   className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="visa">{t('form.paymentVisa')}</option>
-                  <option value="mastercard">
-                    {t('form.paymentMasterCard')}
-                  </option>
+                  <option value="visa">{t('form.paymentCard')}</option>
                   <option value="paypal">{t('form.paymentPayPal')}</option>
                 </select>
               </div>
@@ -381,7 +378,7 @@ export default function SendMessage() {
                   onChange={(e) => setIsQuick(e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor="quick">{t('form.quick')}</label>
+                <label htmlFor="quick" title={t('form.quickTitle')}>{t('form.quick')}</label>
               </div>
               <div className="flex items-center">
                 <input
@@ -391,7 +388,7 @@ export default function SendMessage() {
                   onChange={(e) => setIncludeVideo(e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor="video">{t('form.video')}</label>
+                <label htmlFor="video" title={t('form.videoTitle')} >{t('form.video')}</label>
               </div>
             </div>
 
@@ -404,8 +401,8 @@ export default function SendMessage() {
                 {options.find((opt) => opt.id === selectedOption)?.cost || 0}
               </p>
               <p>{t('summary.messageCost', { cost: calculateMessageCost() })}</p>
-              {isQuick && <p>quick: +$30</p>}
-              {includeVideo && <p>video: +$100</p>}
+              {isQuick && <p>{t('form.quick')}</p>}
+              {includeVideo && <p>{t('form.video')}</p>}
               <hr className="my-2 border-gray-600" />
               <p className="font-bold">
                 {t('summary.totalCost', { total: calculateTotalCost() })}

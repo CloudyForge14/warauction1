@@ -73,11 +73,15 @@ const AuctionApp = () => {
         '/artillery/8.jpeg',
     ];
     const auctionImages = [
-        '/auction/4.jpeg',
-        '/auction/2.jpeg',
         '/auction/1.jpeg',
+        '/auction/2.jpeg',
         '/auction/3.jpeg',
+        '/auction/4.jpeg',
         '/auction/5.jpeg',
+        '/auction/6.jpeg',
+        '/auction/7.jpeg',
+        '/auction/8.jpeg',
+
     ];
     useEffect(() => {
         const fetchAuctionItems = async () => {
@@ -109,7 +113,7 @@ const AuctionApp = () => {
                 console.error("Error fetching auction items:", err);
                 setError(t("errors.fetchItemsRetry"));
             } finally {
-                setLoading(false); // Reset loading state
+                setLoading(false); 
             }
         };
 
@@ -127,7 +131,6 @@ const AuctionApp = () => {
         trackMouse: true,
       });
     
-      // Handlers for artillery slider
       const artilleryHandlers = useSwipeable({
         onSwipedLeft: () =>
           setCurrentArtilleryImageIndex((prev) =>
@@ -180,10 +183,8 @@ const AuctionApp = () => {
     return (
 <div className="min-h-screen bg-gray-900 text-white flex flex-col">
 <div className="relative">
-<BackgroundSymbols />
+  <BackgroundSymbols />
 
-    
-  {/* Background Image */}
   <div className="absolute z-0 inset-0">
     <img
       src="back.png"
@@ -192,8 +193,7 @@ const AuctionApp = () => {
     />
   </div>
 
-  {/* Overlay Section */}
-  <section className="relative z-10 w-full bg-gray-900/60 text-white py-20  ">
+  <section className="relative z-10 w-full bg-gray-900/60 text-white py-20">
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -208,35 +208,41 @@ const AuctionApp = () => {
       </p>
 
       <div className="flex justify-center items-center w-full max-w-screen-lg gap-x-12">
-  {/* Countdown Timer */}
-  <div className="bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg p-8 flex space-x-10 items-center flex-shrink-0">
-    {[
-      { label: t("timer.days"), value: days },
-      { label: t("timer.hours"), value: hours },
-      { label: t("timer.minutes"), value: minutes },
-      { label: t("timer.seconds"), value: seconds },
-    ].map((time, index) => (
-      <div key={index} className="flex flex-col items-center">
-        <span className="text-5xl font-extrabold text-yellow-400">
-          {String(time.value).padStart(2, "0")}
-        </span>
-        <span className="text-gray-300 mt-2 text-sm uppercase tracking-wider">
-          {time.label}
-        </span>
+        <div className="bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg p-8 flex space-x-10 items-center flex-shrink-0">
+          {[
+            { label: t("timer.days"), value: days },
+            { label: t("timer.hours"), value: hours },
+            { label: t("timer.minutes"), value: minutes },
+            { label: t("timer.seconds"), value: seconds },
+          ].map((time, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <span className="text-5xl font-extrabold text-yellow-400">
+                {String(time.value).padStart(2, "0")}
+              </span>
+              <span className="text-gray-300 mt-2 text-sm uppercase tracking-wider">
+                {time.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-    ))}
-  </div>
-</div>
 
-
-      <Link href="/auction">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300 mt-8">
-          Till Next Auction
-        </button>
-      </Link>
+      <div className="flex justify-center gap-4 mt-8">
+        <Link href="/auction">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300">
+            To the Auction
+          </button>
+        </Link>
+        <Link href="/auction">
+          <button className="bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-8 rounded-lg text-lg font-medium shadow-md transition duration-300">
+            Order Artillery
+          </button>
+        </Link>
+      </div>
     </motion.div>
   </section>
 </div>
+
 
   <motion.hr
     initial={{ width: 0 }}
@@ -245,12 +251,8 @@ const AuctionApp = () => {
     className="border-gray-800 border-4 mx-auto"
   />
 
-
-
-
 <section className="relative py-20 bg-gray-900 text-gray-100">
-  {/* Добавляем символы */}
-2
+
   <motion.div
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -277,10 +279,6 @@ const AuctionApp = () => {
   </motion.div>
 </section>
 
-
-
-
-            {/* How It Works */}
             <section className="py-20 bg-gray-800 text-gray-100">
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
   </div>
@@ -313,7 +311,7 @@ const AuctionApp = () => {
                 </div>
             </section>
 
-            {/* Auctions Section */}
+
             <section className="py-20 bg-gray-900 text-gray-100">
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
   </div>
@@ -378,12 +376,12 @@ const AuctionApp = () => {
       </section>
 
       <section className="relative py-20 bg-gray-800 text-gray-100">
-  {/* Добавляем символы */}
+
   <div className="absolute inset-0 pointer-events-none overflow-hidden">
   </div>
 
   <div className="max-w-screen-lg mx-auto px-6 flex flex-col md:flex-row items-center md:space-x-10">
-    {/* Text Block */}
+
     <div className="w-full md:w-1/2 mt-10 md:mt-0">
       <h3 className="text-3xl font-bold mb-4">
         {t('projectRevenge.title')} <span className="text-blue-500 text-4xl">"REVENGE"</span>
@@ -391,7 +389,6 @@ const AuctionApp = () => {
       <p className="text-gray-400 leading-relaxed">{t('projectRevenge.description')}</p>
     </div>
 
-    {/* Slider Section */}
     <div
       {...useSwipeable({
         onSwipedLeft: () =>
@@ -422,7 +419,6 @@ const AuctionApp = () => {
         ))}
       </div>
 
-      {/* Navigation Buttons */}
       <button
         onClick={() =>
           setCurrentArtilleryImageIndex((prevIndex) =>
@@ -444,7 +440,6 @@ const AuctionApp = () => {
         ›
       </button>
 
-      {/* Dots Indicator */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
         {artilleryImages.map((_, index) => (
           <div
@@ -458,8 +453,6 @@ const AuctionApp = () => {
     </div>
   </div>
 </section>
-
-
         </div>
     );
 };

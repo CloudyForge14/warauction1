@@ -39,11 +39,13 @@ export default async function LocaleLayout({
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body>
+      <body className="flex flex-col min-h-screen bg-gray-900 text-white">
+
         <NextIntlClientProvider messages={messages}>
         <Navbar />
-
-          {children}
+        <main className="flex-1">
+        {children}
+        </main>
           <Footer/>
 
         </NextIntlClientProvider>
