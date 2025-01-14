@@ -94,7 +94,7 @@ export default function Register() {
             </button>
             {/* Заголовок */}
             <h2 className="text-xl font-bold mb-4">Public Offer General</h2>
-            {/* Текст оферты (я вынес сокращённо, чтобы не перегружать код — но у тебя в реале всё содержимое) */}
+            
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
   <strong className="block mb-2">Public Offer General</strong>
   <strong className="block mb-4">PUBLIC CONTRACT (OFFER)</strong>
@@ -102,10 +102,10 @@ export default function Register() {
   to order, purchase and sale, and delivery of goods
 
   <br /><br />
-  The site is
+  The site is https://cloudyforge.vercel.app/
 
   <br /><br />
-  The "" site offers the user to buy and receive in the form of a photo/video of an inscription on an artillery, mortar shell, items that were purchased in the auction format.
+  The "CloudyForge" site offers the user to buy and receive in the form of a photo/video of an inscription on an artillery, mortar shell, items that were purchased in the auction format.
 
   <br /><br />
   This contract is the official and public offer of the Seller to make a contract of purchase and sale of the Goods presented on the website:

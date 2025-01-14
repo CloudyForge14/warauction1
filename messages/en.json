@@ -107,6 +107,8 @@
                 "messagePlaceholder": "Enter your message...",
                 "option": "Option",
                 "payment": "Payment Method",
+                "quick":"Urgent order (receive a photo of your shell in the next 3 days, please make your order in advance!)",
+                "video":"Video of firing (Our defenders will record a video of loading and firing your shell)",
                 "paymentVisa": "Visa",
                 "paymentMasterCard": "MasterCard",
                 "paymentPayPal": "PayPal",
@@ -145,7 +147,9 @@
     "loginHere": "Login here",
     "loginSuccessful": "Login successful!",
     "errorUnexpected": "An error occurred.",
-    "errorLoginFailed": "Login failed. Please check your credentials."
+    "errorLoginFailed": "Login failed. Please check your credentials.",
+    "forgotPassword":"Forgot Password?"
+
   },
   "Register": {
     "title": "Join the Community",
@@ -183,7 +187,21 @@
     "toastPasswordError": "Failed to change password.",
     "toastPasswordSuccess": "Password updated successfully!",
     "toastUnexpectedError": "An unexpected error occurred."
+  },
+  
+    "ResetPassword": {
+      "resetPassword": "Reset Your Password",
+      "setNewPassword": "Set a new password for your account",
+      "newPasswordPlaceholder": "New Password",
+      "confirmPasswordPlaceholder": "Confirm Password",
+      "resetPasswordButton": "Reset Password",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "invalidOrExpiredToken": "Invalid or expired token",
+      "passwordResetSuccess": "Password reset successfully! Redirecting to login...",
+      "errorUnexpected": "An unexpected error occurred. Please try again."
+    
   }
+  
           
           
           

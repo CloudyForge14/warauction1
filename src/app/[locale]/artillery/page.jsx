@@ -381,7 +381,7 @@ export default function SendMessage() {
                   onChange={(e) => setIsQuick(e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor="quick">quick (+$30)</label>
+                <label htmlFor="quick">{t('form.quick')}</label>
               </div>
               <div className="flex items-center">
                 <input
@@ -391,7 +391,7 @@ export default function SendMessage() {
                   onChange={(e) => setIncludeVideo(e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor="video">video (+$100)</label>
+                <label htmlFor="video">{t('form.video')}</label>
               </div>
             </div>
 

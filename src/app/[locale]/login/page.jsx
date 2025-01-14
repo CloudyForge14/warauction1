@@ -119,7 +119,12 @@ export default function Login() {
               {t('loginButton')}
             </button>
           </form>
-          <p className="mt-4 text-sm">
+            <Link href="/forgotpassword" className="text-blue-500 hover:underline">
+            <p className="mt-4 text-sm">
+            {t('forgotPassword')}
+          </p>
+            </Link>
+          <p className="mt-2 text-sm">
             {t('dontHaveAccount')}{' '}
             <Link href="/register" className="text-blue-500 hover:underline">
               {t('loginHere')}
