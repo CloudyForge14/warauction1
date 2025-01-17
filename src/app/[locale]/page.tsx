@@ -68,15 +68,15 @@ const AuctionApp = () => {
         '/artillery/1.jpeg',
         '/artillery/2.jpg',
         '/artillery/3.jpg',
-        '/artillery/4.jpg',
         '/artillery/5.jpg',
         '/artillery/8.jpeg',
     ];
     const auctionImages = [
+      '/auction/4.jpeg',
+
         '/auction/1.jpeg',
         '/auction/2.jpeg',
         '/auction/3.jpeg',
-        '/auction/4.jpeg',
         '/auction/5.jpeg',
         '/auction/6.jpeg',
         '/auction/7.jpeg',
@@ -207,25 +207,30 @@ const AuctionApp = () => {
         {t("about")}
       </p>
 
-      <div className="flex justify-center items-center w-full max-w-screen-lg gap-x-12">
-        <div className="bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg p-8 flex space-x-10 items-center flex-shrink-0">
-          {[
-            { label: t("timer.days"), value: days },
-            { label: t("timer.hours"), value: hours },
-            { label: t("timer.minutes"), value: minutes },
-            { label: t("timer.seconds"), value: seconds },
-          ].map((time, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <span className="text-5xl font-extrabold text-yellow-400">
-                {String(time.value).padStart(2, "0")}
-              </span>
-              <span className="text-gray-300 mt-2 text-sm uppercase tracking-wider">
-                {time.label}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div className="flex justify-center items-center w-full px-4">
+  <div className="bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg p-6 flex flex-wrap justify-center gap-y-6 gap-x-4 items-center max-w-xs sm:max-w-md md:max-w-screen-lg">
+    {[
+      { label: t("timer.days"), value: days },
+      { label: t("timer.hours"), value: hours },
+      { label: t("timer.minutes"), value: minutes },
+      { label: t("timer.seconds"), value: seconds },
+    ].map((time, index) => (
+      <div
+        key={index}
+        className="flex flex-col items-center w-16 sm:w-20 md:w-24"
+      >
+        <span className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-yellow-400">
+          {String(time.value).padStart(2, "0")}
+        </span>
+        <span className="text-gray-300 mt-2 text-xs sm:text-sm uppercase tracking-wide text-center">
+          {time.label}
+        </span>
       </div>
+    ))}
+  </div>
+</div>
+
+
 
       <div className="flex justify-center gap-4 mt-8">
         <Link href="/auction">
@@ -329,7 +334,7 @@ const AuctionApp = () => {
                   key={index}
                   src={src}
                   alt={`Auction Slide ${index}`}
-                  className="w-full h-full object-cover flex-shrink-0"
+                  className="w-full h-full object-contain flex-shrink-0"
                 />
               ))}
             </div>

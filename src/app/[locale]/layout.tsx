@@ -42,7 +42,7 @@ export default async function LocaleLayout({
       <body className="flex flex-col min-h-screen bg-gray-900 text-white">
 
         <NextIntlClientProvider messages={messages}>
-        <Navbar />
+          <Navbar />
         <main className="flex-1">
         {children}
         </main>

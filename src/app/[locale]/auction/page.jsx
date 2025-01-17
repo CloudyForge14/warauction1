@@ -402,7 +402,12 @@ export default function AuctionItems() {
                         };
                       });
                     }}
-                    className="w-24 text-center bg-gray-700"
+                    className="w-24 text-center bg-gray-700 "
+                    style={{
+                      appearance: "textfield", // Для Firefox
+                      WebkitAppearance: "none", // Для Chrome, Edge и Safari
+                      MozAppearance: "textfield", // Для Mozilla
+                    }}
                   />
                   <button
                     className="bg-blue-600 px-4 py-2 rounded-r"

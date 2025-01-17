@@ -13,7 +13,7 @@ export default function SendMessage() {
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
-  const [payment, setPayment] = useState('visa');
+  const [payment, setPayment] = useState('paypal');
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const [isQuick, setIsQuick] = useState(false);
@@ -330,6 +330,7 @@ export default function SendMessage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 required
+                maxLength={35}
                 className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -362,35 +363,67 @@ export default function SendMessage() {
                   onChange={(e) => setPayment(e.target.value)}
                   className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="visa">{t('form.paymentCard')}</option>
                   <option value="paypal">{t('form.paymentPayPal')}</option>
+                  <option value="visa">{t('form.paymentCard')}</option>
                 </select>
               </div>
             </div>
 
             {/* Новые флажки для видео и быстрого выполнения */}
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="quick"
-                  checked={isQuick}
-                  onChange={(e) => setIsQuick(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="quick" title={t('form.quickTitle')}>{t('form.quick')}</label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="video"
-                  checked={includeVideo}
-                  onChange={(e) => setIncludeVideo(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="video" title={t('form.videoTitle')} >{t('form.video')}</label>
-              </div>
-            </div>
+{/* Новые флажки для видео и быстрого выполнения */}
+<div className="space-y-4">
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id="quick"
+      checked={isQuick}
+      onChange={(e) => setIsQuick(e.target.checked)}
+      className="mr-2"
+    />
+    <label htmlFor="quick" className="flex items-center">
+      {t('form.quick')}
+
+
+      <span
+        title={t('form.quickTitle')}
+        className="ml-1 text-blue-500 cursor-pointer"
+      >
+          <svg  xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25" height="25" viewBox="0 30 350 190" style={{ fill: "#FFFFFF" }}>
+  <g fill="#ffffff" fillRule="nonzero" stroke="none" strokeWidth="1" strokeLinecap="butt" strokeLinejoin="miter" strokeMiterlimit="10" fontFamily="none" fontWeight="none" fontSize="none" textAnchor="none" style={{ mixBlendMode: "normal" }}>
+    <g transform="scale(5.33333,5.33333)">
+      <path d="M24,4c-11.02793,0 -20,8.97207 -20,20c0,11.02793 8.97207,20 20,20c11.02793,0 20,-8.97207 20,-20c0,-11.02793 -8.97207,-20 -20,-20zM24,7c9.40662,0 17,7.59339 17,17c0,9.40661 -7.59338,17 -17,17c-9.40661,0 -17,-7.59339 -17,-17c0,-9.40661 7.59339,-17 17,-17zM24,14c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM23.97656,20.97852c-0.82766,0.01293 -1.48843,0.69381 -1.47656,1.52148v11c-0.00765,0.54095 0.27656,1.04412 0.74381,1.31683c0.46725,0.27271 1.04514,0.27271 1.51238,0c0.46725,-0.27271 0.75146,-0.77588 0.74381,-1.31683v-11c0.00582,-0.40562 -0.15288,-0.7963 -0.43991,-1.08296c-0.28703,-0.28666 -0.67792,-0.44486 -1.08353,-0.43852z"></path>
+    </g>
+  </g>
+</svg>
+      </span>
+    </label>
+  </div>
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id="video"
+      checked={includeVideo}
+      onChange={(e) => setIncludeVideo(e.target.checked)}
+      className="mr-2"
+    />
+    <label htmlFor="video" className="flex items-center">
+      {t('form.video')} 
+      <span
+        title={t('form.videoTitle')}
+        className="ml-1 text-blue-500 cursor-pointer"
+      >
+                  <svg  xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25" height="25" viewBox="0 30 350 190" style={{ fill: "#FFFFFF" }}>
+  <g fill="#ffffff" fillRule="nonzero" stroke="none" strokeWidth="1" strokeLinecap="butt" strokeLinejoin="miter" strokeMiterlimit="10" fontFamily="none" fontWeight="none" fontSize="none" textAnchor="none" style={{ mixBlendMode: "normal" }}>
+    <g transform="scale(5.33333,5.33333)">
+      <path d="M24,4c-11.02793,0 -20,8.97207 -20,20c0,11.02793 8.97207,20 20,20c11.02793,0 20,-8.97207 20,-20c0,-11.02793 -8.97207,-20 -20,-20zM24,7c9.40662,0 17,7.59339 17,17c0,9.40661 -7.59338,17 -17,17c-9.40661,0 -17,-7.59339 -17,-17c0,-9.40661 7.59339,-17 17,-17zM24,14c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM23.97656,20.97852c-0.82766,0.01293 -1.48843,0.69381 -1.47656,1.52148v11c-0.00765,0.54095 0.27656,1.04412 0.74381,1.31683c0.46725,0.27271 1.04514,0.27271 1.51238,0c0.46725,-0.27271 0.75146,-0.77588 0.74381,-1.31683v-11c0.00582,-0.40562 -0.15288,-0.7963 -0.43991,-1.08296c-0.28703,-0.28666 -0.67792,-0.44486 -1.08353,-0.43852z"></path>
+    </g>
+  </g>
+</svg>
+      </span>
+    </label>
+  </div>
+</div>
+
 
             {/* Сумма заказа */}
             <div className="p-4 bg-gray-700 rounded-md">
