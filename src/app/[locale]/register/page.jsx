@@ -43,8 +43,13 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(t('registrationSuccessful'));
-        handleNavigation('/auction');
+        if (res.ok) {
+          toast.success(t('registrationSuccessful'));
+          setTimeout(() => {
+            handleNavigation('/auction');
+          }, 3000); // Задержка в 3 секунды
+        }
+        
       } else {
         setError(data.error || t('errorGeneric'));
         toast.error(data.error || t('errorGeneric'));
@@ -62,7 +67,7 @@ export default function Register() {
 
   return (
     <div>
-      <ToastContainer
+                <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}

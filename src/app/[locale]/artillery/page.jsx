@@ -23,12 +23,16 @@ export default function SendMessage() {
   const t = useTranslations('SendMessage');
 
   const images = [
+    '/artillery/10.jpeg',
+    '/artillery/11.jpeg',
     '/artillery/1.jpeg',
     '/artillery/2.jpg',
     '/artillery/3.jpg',
     '/artillery/4.jpg',
     '/artillery/5.jpg',
     '/artillery/8.jpeg',
+    '/artillery/9.jpg',
+    
   ];
 
   const swipeHandlers = useSwipeable({

@@ -379,36 +379,40 @@ export default function AuctionItems() {
                     -
                   </button>
                   <input
-                    type="number"
-                    value={
-                      selectedItem.bid ||
-                      selectedItem.current_bid + selectedItem.min_raise
-                    }
-                    onChange={(e) => {
-                      const newBid = parseFloat(e.target.value) || "";
-                      setSelectedItem((prevItem) => ({
-                        ...prevItem,
-                        bid: newBid,
-                      }));
-                    }}
-                    onBlur={() => {
-                      setSelectedItem((prevItem) => {
-                        const minBid =
-                          prevItem.current_bid + prevItem.min_raise;
-                        return {
-                          ...prevItem,
-                          bid:
-                            prevItem.bid >= minBid ? prevItem.bid : minBid,
-                        };
-                      });
-                    }}
-                    className="w-24 text-center bg-gray-700 "
-                    style={{
-                      appearance: "textfield", // Для Firefox
-                      WebkitAppearance: "none", // Для Chrome, Edge и Safari
-                      MozAppearance: "textfield", // Для Mozilla
-                    }}
-                  />
+  type="number"
+  value={
+    selectedItem.bid ||
+    selectedItem.current_bid + selectedItem.min_raise
+  }
+  onChange={(e) => {
+    const newBid = parseFloat(e.target.value) || "";
+    setSelectedItem((prevItem) => ({
+      ...prevItem,
+      bid: newBid,
+    }));
+  }}
+  onBlur={() => {
+    setSelectedItem((prevItem) => {
+      const minBid =
+        prevItem.current_bid + prevItem.min_raise;
+      return {
+        ...prevItem,
+        bid:
+          prevItem.bid >= minBid ? prevItem.bid : minBid,
+      };
+    });
+  }}
+  className="w-24 text-center bg-gray-700"
+  style={{
+    appearance: "none", // Отключить стрелки для всех браузеров
+    WebkitAppearance: "none", // Для Chrome, Edge и Safari
+    MozAppearance: "textfield", // Для Firefox
+    margin: 0, // Убираем отступы
+    padding: 0,
+  }}
+/>
+
+
                   <button
                     className="bg-blue-600 px-4 py-2 rounded-r"
                     onClick={() =>

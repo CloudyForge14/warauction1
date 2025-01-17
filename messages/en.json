@@ -146,6 +146,7 @@
     "loginButton": "Login",
     "dontHaveAccount": "Don't have an account?",
     "loginHere": "Login here",
+    "registerHere": "Register here",
     "loginSuccessful": "Login successful!",
     "errorUnexpected": "An error occurred.",
     "errorLoginFailed": "Login failed. Please check your credentials.",
@@ -161,7 +162,7 @@
     "registerButton": "Register",
     "alreadyHaveAccount": "Already have an account?",
     "loginHere": "Login here",
-    "registrationSuccessful": "Check your email to confirm regstration!",
+    "registrationSuccessful": "Check your email to confirm registration!",
     "errorOccurred": "An error occurred.",
     "errorGeneric": "Something went wrong"
   },

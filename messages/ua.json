@@ -148,6 +148,8 @@
     "loginButton": "Увійти",
     "dontHaveAccount": "Немає облікового запису?",
     "loginHere": "Увійдіть тут",
+    "registerHere": "Зареєструватися тут",
+
     "loginSuccessful": "Вхід успішний!",
     "errorUnexpected": "Сталася несподівана помилка.",
     "errorLoginFailed": "Не вдалося увійти. Перевірте свої облікові дані.",
