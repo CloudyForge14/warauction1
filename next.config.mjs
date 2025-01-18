@@ -1,8 +1,16 @@
 import createNextIntlPlugin from 'next-intl/plugin';
- 
-const withNextIntl = createNextIntlPlugin();
- 
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
- 
+const nextConfig = {
+  reactStrictMode: true,
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      require('./scripts/generate-sitemap');
+    }
+    return config;
+  },
+};
+
+// Создаём конфигурацию с плагином для интернационализации
+const withNextIntl = createNextIntlPlugin();
 export default withNextIntl(nextConfig);
