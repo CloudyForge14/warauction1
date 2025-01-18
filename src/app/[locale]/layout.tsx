@@ -7,7 +7,7 @@ import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: "CloudyForge",
@@ -40,7 +40,7 @@ export default async function LocaleLayout({
 <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body className="flex flex-col min-h-screen bg-gray-900 text-white">
-
+      <SpeedInsights />
         <NextIntlClientProvider messages={messages}>
           <Navbar />
 
