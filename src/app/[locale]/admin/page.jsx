@@ -31,18 +31,27 @@ export default function AdminPanel() {
     try {
       const { data, error } = await supabase
         .from('bid_history')
-        .select('*')
+        .select(`
+          *,
+          users (
+            username,
+            email
+          )
+        `)
         .eq('auction_item_id', lotId);
+  
       if (error) {
         toast.error('Error fetching bid history.');
         return [];
       }
+  
       return data;
     } catch (err) {
       console.error('Unexpected error fetching bid history:', err);
       return [];
     }
   };
+  
 
   const fetchOptions = async () => {
     const { data, error } = await supabase.from('options').select('*');
@@ -73,6 +82,7 @@ export default function AdminPanel() {
       .select(`
         id,
         username,
+        email,
         is_banned,
         admins (id)
       `);
@@ -381,7 +391,10 @@ export default function AdminPanel() {
                       {lotHistories[lot.id].map((bid) => (
                         <li key={bid.id} className="bg-gray-700 p-2 rounded">
                           <p>
-                            <strong>User ID:</strong> {bid.user_id}
+                            <strong>User:</strong> {bid.users.username}
+                          </p>
+                          <p>
+                            <strong>Email:</strong> {bid.users.email}
                           </p>
                           <p>
                             <strong>Bid Amount:</strong> ${bid.bid_amount}
@@ -497,7 +510,14 @@ export default function AdminPanel() {
             className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer"
           >
             <h3 className="text-lg font-semibold">{user.username}</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="text-base text-gray-400">{user.email}</h3>
+            <p         className={`text-sm ${
+          user.is_admin
+            ? 'text-yellow-500 font-bold' // Yellow for admins
+            : user.is_banned
+            ? 'text-red-500' // Red for banned users
+            : 'text-gray-400' // Default for active users
+        }`}>
               {user.is_banned ? 'Banned' : user.is_admin ? 'Admin' : 'Active'}
             </p>
             <div className="mt-2 flex space-x-2">

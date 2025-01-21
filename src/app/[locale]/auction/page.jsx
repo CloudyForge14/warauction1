@@ -16,7 +16,6 @@ export default function AuctionItems() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Новые состояния
-  const [agreedToTerms, setAgreedToTerms] = useState(false); // чекбокс
   const [showTermsModal, setShowTermsModal] = useState(false); // модалка с правилами
 
   const t = useTranslations("AuctionItems");
@@ -107,13 +106,11 @@ export default function AuctionItems() {
     }
     setSelectedItem(item);
     setCurrentImageIndex(0);
-    setAgreedToTerms(false); // сбрасываем состояние галочки
   };
 
   // Закрытие модалки
   const closeModal = () => {
     setSelectedItem(null);
-    setAgreedToTerms(false);
   };
 
   // Увеличиваем / уменьшаем ставку
@@ -148,10 +145,6 @@ export default function AuctionItems() {
       return;
     }
     // проверяем, согласился ли с terms
-    if (!agreedToTerms) {
-      toast.error("Please agree to the terms before placing a bid.");
-      return;
-    }
 
     if (!selectedItem || !selectedItem.id || !selectedItem.bid) {
       toast.error("Invalid bid data");
@@ -425,14 +418,8 @@ export default function AuctionItems() {
 
                 {/* Чекбокс + кнопка (показать модалку с правилами) */}
                 <div className="flex items-center mb-2 space-x-2">
-                  <input
-                    id="agree"
-                    type="checkbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  />
-                  <label htmlFor="agree" className="text-sm">
-                    I agree to{" "}
+                  <label htmlFor="agree" className="text-xs text-gray-400">
+                    By clicking on button you agree with{" "}
                     <button
                       type="button"
                       onClick={() => setShowTermsModal(true)}
@@ -445,10 +432,8 @@ export default function AuctionItems() {
 
                 <button
                   onClick={handlePlaceBid}
-                  className={`w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold ${
-                    !agreedToTerms ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  disabled={!agreedToTerms}
+                  className={`w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold 
+                  `}
                 >
                   Place Bid
                 </button>

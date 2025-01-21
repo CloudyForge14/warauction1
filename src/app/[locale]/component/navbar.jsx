@@ -7,6 +7,8 @@ import { Link } from '@/i18n/routing';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false); // New state for admin check
+
   const [avatarUrl, setAvatarUrl] = useState('');
   const [username, setUsername] = useState('');
   const t = useTranslations('Navbar');
@@ -52,7 +54,24 @@ export default function Navbar() {
       subscription?.unsubscribe();
     };
   }, []);
-
+  // Проверяем, админ ли
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        toast.error('Unable to verify admin status.');
+        return;
+      }
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      setIsAdmin(!!adminData); // Set true if adminData exists
+    };
+    console.log("admin");
+    checkAdmin();
+  }, []);
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -101,6 +120,11 @@ export default function Navbar() {
           <Link href="/artillery" className="flex items-center md:text-l text-s text-white hover:text-blue-400 transition duration-200">
             {t('links.revenge')}
           </Link>
+          {isAdmin && (
+          <Link href="/admin" className="flex items-center md:text-l text-s text-yellow-500 hover:text-yellow-400 transition duration-200">
+            ADMIN
+          </Link>
+        )}
         </nav>
 
         {/* User Actions */}
@@ -178,7 +202,7 @@ export default function Navbar() {
         <Link href="/artillery" className="flex items-center md:text-l text-s text-white hover:text-blue-400 transition duration-200">
           {t('links.revenge')}
         </Link>
-      </nav>
+        </nav>
 
       {/* Burger Icon for Mobile */}
       <div className="md:hidden flex items-center space-x-4">
@@ -223,6 +247,11 @@ export default function Navbar() {
                 <span className="text-white hidden md:flex">{username || t('user.defaultName')}</span>
               </div>
               <div className="absolute right-0 ml-1 bg-gray-800 text-white rounded-lg shadow-lg hidden group-hover:block">
+              {isAdmin && (
+                                  <Link href="/admin" className="block px-4 py-2 text-yellow-500 hover:text-yellow-400">
+                                  ADMIN
+                                </Link>
+        )}
                 <Link href="/profile" className="block px-4 py-2 hover:bg-gray-700">
                   {t('user.profile')}
                 </Link>
@@ -232,6 +261,7 @@ export default function Navbar() {
                 >
                   {t('user.logout')}
                 </button>
+
               </div>
             </div>
           ) : (

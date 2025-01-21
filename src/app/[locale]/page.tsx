@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/routing';
 import { useSwipeable } from 'react-swipeable';
-
+import Image from 'next/image';
 type SymbolPosition = {
     symbol: string;
     left: number;
@@ -190,11 +190,13 @@ const AuctionApp = () => {
   <BackgroundSymbols />
 
   <div className="absolute z-0 inset-0">
-    <img
-      src="back.png"
-      alt="Background Image"
-      className="w-full h-full object-cover"
-    />
+  <Image
+  src="/back.avif"
+  alt="Background Image"
+  layout="fill"
+  objectFit="cover"
+  priority // Ensures it loads faster for above-the-fold content
+/>
   </div>
 
   <section className="relative z-10 w-full bg-gray-900/60 text-white py-20">

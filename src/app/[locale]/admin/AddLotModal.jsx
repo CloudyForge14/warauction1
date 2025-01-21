@@ -1,8 +1,9 @@
 'use client';  // <-- очень важно
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const AddLotModal = ({ onSave, onClose }) => {
   const [formData, setFormData] = useState({
