@@ -54,7 +54,7 @@ export default function ResetPassword() {
 
       toast.success(t('passwordResetSuccess'));
       setTimeout(() => {
-        router.push('/login'); // Redirect to login page
+        router.push('/en/auction'); // Redirect to login page
       }, 3000);
     } catch (err) {
       toast.error(t('errorUnexpected'));

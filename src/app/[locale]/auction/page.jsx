@@ -273,6 +273,7 @@ export default function AuctionItems() {
               src={item.image_url}
               alt={item.name}
               className="w-full h-48 object-cover"
+              priority
             />
 
             {/* Content */}

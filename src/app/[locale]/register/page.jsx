@@ -8,7 +8,11 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
-import Image from 'next/image';
+import Image from 'next/image'; 
+import ReCAPTCHA from 'react-google-recaptcha';
+import { useRef } from 'react';
+
+const SITE_KEY = '6Lfm4r8qAAAAAPxS9jjb-W5uT7Sj0RFsX5jlmVNd'
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -18,11 +22,12 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false); 
   const [agreed, setAgreed] = useState(false); // Состояние чекбокса
   const [showTermsModal, setShowTermsModal] = useState(false); // Модалка с Terms
+  const recaptchaRef = useRef(null);
 
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('Register');
-
+  const [captchaToken, setCaptchaToken] = useState(null);
   const registerUser = async (e) => {
     e.preventDefault();
     setError('');
@@ -32,24 +37,25 @@ export default function Register() {
       toast.error('You must agree with all terms before registering.');
       return;
     }
-
+    if (!captchaToken) {
+      toast.error('Please verify the reCAPTCHA.');
+      return;
+    }
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, username }),
+        body: JSON.stringify({ email, password, username, captchaToken }),
       });
-
+  
       const data = await res.json();
-
+      console.log(data);
+  
       if (res.ok) {
-        if (res.ok) {
-          toast.success(t('registrationSuccessful'));
-          setTimeout(() => {
-            handleNavigation('/auction');
-          }, 3000); // Задержка в 3 секунды
-        }
-        
+        toast.success(t('registrationSuccessful'));
+        setTimeout(() => {
+          handleNavigation('/auction');
+        }, 3000); // Задержка в 3 секунды
       } else {
         setError(data.error || t('errorGeneric'));
         toast.error(data.error || t('errorGeneric'));
@@ -57,6 +63,9 @@ export default function Register() {
     } catch (err) {
       toast.error(t('errorOccurred'));
       console.error(err);
+    } finally {
+      // Сбрасываем reCAPTCHA в любом случае
+      if (recaptchaRef.current) recaptchaRef.current.reset();
     }
   };
 
@@ -64,7 +73,9 @@ export default function Register() {
     const localizedPath = `/${locale}${path}`;
     router.push(localizedPath);
   };
-
+  const onCaptchaChange = (token) => {
+    setCaptchaToken(token); // Сохраняем токен reCAPTCHA
+  };
   return (
     <div>
                 <ToastContainer
@@ -335,6 +346,12 @@ export default function Register() {
                 </button>
               </label>
             </div>
+            <ReCAPTCHA
+  sitekey={SITE_KEY}
+  onChange={onCaptchaChange}
+  ref={recaptchaRef} // Привязываем ref
+  className="mt-4"
+/>
 
             <button
               type="submit"

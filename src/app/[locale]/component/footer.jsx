@@ -51,7 +51,7 @@ export default function Footer() {
 
       {/* Divider */}
       <div className="border-t border-gray-800 mt-8 pt-4 text-center">
-        <p className="text-gray-500 text-sm">{t('footerNote')}</p>
+        <p className="text-gray-500 text-sm">📱 Twitter: @GloOouD</p>
       </div>
     </footer>
   );

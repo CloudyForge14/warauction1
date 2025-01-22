@@ -206,8 +206,21 @@
   "invalidOrExpiredToken": "Invalid or expired token",
   "passwordResetSuccess": "Password reset successfully! Redirecting to login...",
   "errorUnexpected": "An unexpected error occurred. Please try again."
+},
+"ResetPassword":{
+  
+    "invalidOrExpiredToken": "Invalid or expired token",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordResetSuccess": "Password successfully reset",
+    "errorUnexpected": "An unexpected error occurred. Please try again.",
+    "resetPassword": "Reset Password",
+    "setNewPassword": "Set a new password",
+    "newPasswordPlaceholder": "New password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "resetPasswordButton": "Reset Password"
+  
+  
 }
-
   
           
           

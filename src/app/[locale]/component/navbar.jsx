@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false); // New state for admin check
@@ -58,20 +59,27 @@ export default function Navbar() {
   useEffect(() => {
     const checkAdmin = async () => {
       const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
-        toast.error('Unable to verify admin status.');
+  
+      // Если user отсутствует, пропускаем проверку
+      if (!user) {
+        setIsAdmin(false);
         return;
       }
-      const { data: adminData } = await supabase
+  
+      // Если user есть, проверяем в таблице
+      const { data: adminData, error: adminError } = await supabase
         .from('admins')
         .select('*')
         .eq('user_id', user.id)
         .single();
-      setIsAdmin(!!adminData); // Set true if adminData exists
+  
+      // Если в admins запись не нашлась, adminData будет null, тогда isAdmin = false
+      setIsAdmin(!!adminData);
     };
-    console.log("admin");
+  
     checkAdmin();
   }, []);
+  
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);

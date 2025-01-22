@@ -42,3 +42,22 @@ input[type="number"] {
   -moz-appearance: textfield !important;
   appearance: none !important;
 }
+[data-gr-ext-installed],
+[data-new-gr-c-s-check-loaded] {
+  display: none !important;
+}
+
+
+.animate-fadeIn {
+     animation: fadeIn 0.2s ease-in-out forwards;
+   }
+ @keyframes fadeIn {
+     0% {
+       opacity: 0;
+      transform: translateY(-5px);
+    }
+ 100% {
+      opacity: 1;
+     transform: translateY(0);
+   }
+ }

@@ -208,6 +208,22 @@
   "invalidOrExpiredToken": "Недійсний або прострочений токен",
   "passwordResetSuccess": "Пароль успішно змінено! Перенаправлення на вхід...",
   "errorUnexpected": "Сталася непередбачена помилка. Спробуйте ще раз."
+},
+"ResetPassword":{
+  
+  
+    "invalidOrExpiredToken": "Невірний або протермінований токен",
+    "passwordsDoNotMatch": "Паролі не співпадають",
+    "passwordResetSuccess": "Пароль успішно скинуто",
+    "errorUnexpected": "Сталася помилка. Будь ласка, спробуйте ще раз.",
+    "resetPassword": "Скинути пароль",
+    "setNewPassword": "Введіть новий пароль",
+    "newPasswordPlaceholder": "Новий пароль",
+    "confirmPasswordPlaceholder": "Підтвердіть пароль",
+    "resetPasswordButton": "Скинути пароль"
+  
+  
+  
 }
 
               

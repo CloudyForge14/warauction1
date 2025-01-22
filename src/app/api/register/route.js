@@ -3,9 +3,23 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs'; // For password hashing
 
 export async function POST(request) {
-  const { email, password, username } = await request.json();
+  const { email, password, username, captchaToken } = await request.json();
 
   try {
+    // Проверка токена reCAPTCHA
+    const secretKey = '6Lfm4r8qAAAAAGAZDjlf_ujRwX-nJNVyXtT-1YK0'; // Замените на ваш reCAPTCHA Secret Key
+    const captchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${secretKey}&response=${captchaToken}`,
+    });
+
+    const captchaResult = await captchaResponse.json();
+
+    if (!captchaResult.success) {
+      return NextResponse.json({ error: 'Invalid reCAPTCHA token.' }, { status: 400 });
+    }
+
     // Проверка на существующий email
     const { data: emailExists, error: emailCheckError } = await supabase
       .from('users')

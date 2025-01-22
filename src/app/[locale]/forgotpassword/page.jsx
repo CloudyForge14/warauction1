@@ -1,25 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslations } from 'next-intl';
+import ReCAPTCHA from 'react-google-recaptcha';
+
+const SITE_KEY = '6Lfm4r8qAAAAAPxS9jjb-W5uT7Sj0RFsX5jlmVNd';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const t = useTranslations('ForgotPassword');
+  const recaptchaRef = useRef(null); // Реф для сброса капчи
+  const [captchaToken, setCaptchaToken] = useState(null);
+
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
+  };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-
+  
+    if (!captchaToken) {
+      toast.error('Please verify the reCAPTCHA.');
+      return;
+    }
+  
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: 'https://cloudyforge.com/en/reset-password',
       });
-
+      
+  
       if (error) {
-        toast.error(t('errorSendingEmail'));
+        if (
+          error.message.includes(
+            'For security purposes, you can only request this after'
+          )
+        ) {
+          toast.error('You need to wait before requesting a password reset again. Please try later.');
+        } else {
+          toast.error(t('errorSendingEmail'));
+        }
         console.error(error);
       } else {
         toast.success(t('emailSent'));
@@ -27,8 +50,13 @@ export default function ForgotPassword() {
     } catch (err) {
       toast.error(t('errorUnexpected'));
       console.error(err);
+    } finally {
+      // Сбрасываем капчу после завершения действия
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setCaptchaToken(null); // Сбрасываем состояние токена
     }
   };
+  
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white px-6 py-12">
@@ -47,6 +75,14 @@ export default function ForgotPassword() {
               className="w-full rounded-md bg-gray-800 text-white px-4 py-2 focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {/* Google reCAPTCHA */}
+          <ReCAPTCHA
+            sitekey={SITE_KEY}
+            onChange={handleCaptchaChange}
+            ref={recaptchaRef} // Привязываем реф для сброса
+          />
+
           <button
             type="submit"
             className="w-full rounded-md bg-blue-600 py-2 font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"

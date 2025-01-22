@@ -9,6 +9,25 @@ import { useTranslations } from 'next-intl';
 import { supabase } from '@/utils/supabase/client';
 import { useSwipeable } from 'react-swipeable';
 
+// 1) Если используешь Tailwind, можешь добавить в tailwind.config.js свои keyframes или
+// 2) В globals.css (если поддерживает) - вот пример стиля анимации:
+//
+// .animate-fadeIn {
+//   animation: fadeIn 0.15s ease-in-out forwards;
+// }
+// @keyframes fadeIn {
+//   0% {
+//     opacity: 0;
+//     transform: translateY(-5px);
+//   }
+//   100% {
+//     opacity: 1;
+//     transform: translateY(0);
+//   }
+// }
+//
+// Тогда просто юзаешь класс ".animate-fadeIn" на тултипе.
+
 export default function SendMessage() {
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState('');
@@ -23,6 +42,14 @@ export default function SendMessage() {
 
   // Модалка
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // ---- Тултипы для quick ----
+  const [showQuickTooltip, setShowQuickTooltip] = useState(false);
+  const [quickTooltipCoords, setQuickTooltipCoords] = useState({ x: 0, y: 0 });
+
+  // ---- Тултипы для video ----
+  const [showVideoTooltip, setShowVideoTooltip] = useState(false);
+  const [videoTooltipCoords, setVideoTooltipCoords] = useState({ x: 0, y: 0 });
 
   // Слайдер
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -64,7 +91,7 @@ export default function SendMessage() {
           console.error('Error fetching user:', error.message);
         } else {
           setUser(user);
-          setEmail(user?.email || ''); // Автоматически заполняем email
+          setEmail(user?.email || '');
           localStorage.setItem('user', JSON.stringify(user));
         }
       };
@@ -125,19 +152,19 @@ export default function SendMessage() {
 
     if (isComplexLanguage) {
       const charCount = message.length;
-      const additionalChars = Math.max(0, charCount - 7); // После 7 символов
-      cost = additionalChars * 5; // Минимум $40, потом +$5 за каждый символ
+      const additionalChars = Math.max(0, charCount - 7);
+      cost = additionalChars * 5; // После 7 символов +5$ за каждый
     } else {
       const charCount = message.length;
       if (charCount <= 28) {
-        cost = (charCount - 18) * 2; // +$2 за каждый символ после 18
+        cost = (charCount - 18) * 2; // +2$ за каждый символ после 18
       } else {
         const additionalChars = Math.max(0, charCount - 28);
-        cost = 20 + additionalChars * 5; // +$5 за каждый символ после 28
+        cost = 20 + additionalChars * 5; // 20$ +5$ за каждый символ после 28
       }
     }
 
-    return cost;
+    return cost < 0 ? 0 : cost;
   };
 
   const getAuthTokenFromLocalStorage = () => {
@@ -223,18 +250,31 @@ export default function SendMessage() {
         throw new Error(errorResponse.error || 'Failed to send the message');
       }
 
-      // Если всё ок — показать тост
       toast.success(`Message sent successfully! Total cost: $${totalCost}`);
-
-      // Очищаем форму
       setMessage('');
-
-      // И открываем модалку
       setShowPaymentModal(true);
     } catch (error) {
       console.error('Error submitting message:', error);
       toast.error('Failed to submit the message. Please try again.');
     }
+  };
+
+  // Хендлеры для quick
+  const handleQuickMouseMove = (e) => {
+    setShowQuickTooltip(true);
+    setQuickTooltipCoords({ x: e.clientX, y: e.clientY });
+  };
+  const handleQuickMouseLeave = () => {
+    setShowQuickTooltip(false);
+  };
+
+  // Хендлеры для video
+  const handleVideoMouseMove = (e) => {
+    setShowVideoTooltip(true);
+    setVideoTooltipCoords({ x: e.clientX, y: e.clientY });
+  };
+  const handleVideoMouseLeave = () => {
+    setShowVideoTooltip(false);
   };
 
   return (
@@ -260,92 +300,94 @@ export default function SendMessage() {
 
       {/* Модальное окно с реквизитами */}
       {showPaymentModal && (
-  <div
-    className="
-      fixed inset-0 z-50 flex items-center justify-center
-      bg-black bg-opacity-50 
-      transition-opacity duration-300 
-      animate-fadeIn
-    "
-  >
-    <div
-      className="
-        bg-gray-800 relative rounded-lg shadow-lg 
-        max-w-sm w-full p-6 
-        transform transition-transform duration-300 
-        animate-scaleIn
-      "
-    >
-      {/* Иконка закрытия в правом верхнем углу */}
-      <button
-        onClick={() => setShowPaymentModal(false)}
-        className="
-          absolute right-4 top-4 text-gray-400 hover:text-gray-200 
-          transition-colors duration-200
-        "
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24" 
-          height="24" 
-          fill="none"
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-          className="w-6 h-6"
+        <div
+          className="
+            fixed inset-0 z-50 flex items-center justify-center
+            bg-black bg-opacity-50 
+            transition-opacity duration-300 
+            animate-fadeIn
+          "
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-            d="M6 18L18 6M6 6l12 12" 
-          />
-        </svg>
-      </button>
+          <div
+            className="
+              bg-gray-800 relative rounded-lg shadow-lg 
+              max-w-sm w-full p-6 
+              transform transition-transform duration-300 
+              animate-scaleIn
+            "
+          >
+            {/* Иконка закрытия в правом верхнем углу */}
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="
+                absolute right-4 top-4 text-gray-400 hover:text-gray-200 
+                transition-colors duration-200
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
 
-      <h2 className="text-xl font-bold mb-4 text-center">
-        {payment === 'paypal' ? 'PayPal Details' : 'Card Details'}
-      </h2>
+            <h2 className="text-xl font-bold mb-4 text-center">
+              {payment === 'paypal' ? 'PayPal Details' : 'Card Details'}
+            </h2>
 
-      <div className="text-center">
-        {payment === 'paypal' ? (
-          <>
-            <p className="text-sm text-gray-300">
-              Отправьте оплату на PayPal:
-            </p>
-            <p className="mb-4 text-blue-400 font-semibold">
-              example@paypal.com
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-gray-300">
-              Отправьте оплату на карту:
-            </p>
-            <p className="mb-4 text-blue-400 font-semibold">
-              1234 5678 9012 3456
-            </p>
-            <p className="mb-4 text-sm text-gray-400">
-              Имя держателя: JOHN DOE
-            </p>
-          </>
-        )}
-      </div>
+            <div className="text-center">
+              {payment === 'paypal' ? (
+                <>
+                  <p className="text-sm text-gray-300">
+                    Отправьте оплату на PayPal:
+                  </p>
+                  <p className="mb-4 text-blue-400 font-semibold">
+                    example@paypal.com
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-300">
+                    Отправьте оплату на карту:
+                  </p>
+                  <p className="mb-4 text-blue-400 font-semibold">
+                    1234 5678 9012 3456
+                  </p>
+                  <p className="mb-4 text-sm text-gray-400">
+                    Имя держателя: JOHN DOE
+                  </p>
+                </>
+              )}
+            </div>
 
-      <p className="text-center mb-4 text-gray-300">
-        Общая сумма: <span className="font-bold">${calculateTotalCost()}</span>
-      </p>
-      
-      <button
-        onClick={() => setShowPaymentModal(false)}
-        className="
-          block mx-auto bg-blue-600 px-6 py-2 rounded-md 
-          text-white font-medium hover:bg-blue-700 
-          focus:outline-none focus:ring-2 focus:ring-blue-500
-        "
-      >
-        Закрыть
-      </button>
-    </div>
-  </div>
-)}
-
+            <p className="text-center mb-4 text-gray-300">
+              Общая сумма: <span className="font-bold">${calculateTotalCost()}</span>
+            </p>
+            
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="
+                block mx-auto bg-blue-600 px-6 py-2 rounded-md 
+                text-white font-medium hover:bg-blue-700 
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Основной контейнер */}
       <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-6 py-12 gap-6">
@@ -472,6 +514,7 @@ export default function SendMessage() {
 
             {/* Чекбоксы */}
             <div className="space-y-4">
+              {/* QUICK */}
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -482,41 +525,46 @@ export default function SendMessage() {
                 />
                 <label htmlFor="quick" className="flex items-center">
                   {t('form.quick')}
-                  <span
-                    title={t('form.quickTitle')}
-                    className="ml-1 text-blue-500 cursor-pointer"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      x="0px"
-                      y="0px"
-                      width="25"
-                      height="25"
-                      viewBox="0 30 350 190"
-                      style={{ fill: '#FFFFFF' }}
-                    >
-                      <g
-                        fill="#ffffff"
-                        fillRule="nonzero"
-                        stroke="none"
-                        strokeWidth="1"
-                        strokeLinecap="butt"
-                        strokeLinejoin="miter"
-                        strokeMiterlimit="10"
-                        fontFamily="none"
-                        fontWeight="none"
-                        fontSize="none"
-                        textAnchor="none"
-                        style={{ mixBlendMode: 'normal' }}
-                      >
-                        <g transform="scale(5.33333,5.33333)">
-                          <path d="M24,4c-11.02793,0 -20,8.97207 -20,20c0,11.02793 8.97207,20 20,20c11.02793,0 20,-8.97207 20,-20c0,-11.02793 -8.97207,-20 -20,-20zM24,7c9.40662,0 17,7.59339 17,17c0,9.40661 -7.59338,17 -17,17c-9.40661,0 -17,-7.59339 -17,-17c0,-9.40661 7.59339,-17 17,-17zM24,14c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM23.97656,20.97852c-0.82766,0.01293 -1.48843,0.69381 -1.47656,1.52148v11c-0.00765,0.54095 0.27656,1.04412 0.74381,1.31683c0.46725,0.27271 1.04514,0.27271 1.51238,0c0.46725,-0.27271 0.75146,-0.77588 0.74381,-1.31683v-11c0.00582,-0.40562 -0.15288,-0.7963 -0.43991,-1.08296c-0.28703,-0.28666 -0.67792,-0.44486 -1.08353,-0.43852z"></path>
-                        </g>
-                      </g>
-                    </svg>
-                  </span>
                 </label>
+
+                {/* Иконка для Quick (отслеживаем движение мыши) */}
+                <div
+                  onMouseMove={handleQuickMouseMove}
+                  onMouseLeave={handleQuickMouseLeave}
+                  className="ml-1 text-blue-500 cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    x="0px"
+                    y="0px"
+                    width="25"
+                    height="25"
+                    viewBox="0 30 350 190"
+                    style={{ fill: '#FFFFFF' }}
+                  >
+                    <g
+                      fill="#ffffff"
+                      fillRule="nonzero"
+                      stroke="none"
+                      strokeWidth="1"
+                      strokeLinecap="butt"
+                      strokeLinejoin="miter"
+                      strokeMiterlimit="10"
+                      fontFamily="none"
+                      fontWeight="none"
+                      fontSize="none"
+                      textAnchor="none"
+                      style={{ mixBlendMode: 'normal' }}
+                    >
+                      <g transform="scale(5.33333,5.33333)">
+                        <path d="M24,4c-11.02793,0 -20,8.97207 -20,20c0,11.02793 8.97207,20 20,20c11.02793,0 20,-8.97207 20,-20c0,-11.02793 -8.97207,-20 -20,-20zM24,7c9.40662,0 17,7.59339 17,17c0,9.40661 -7.59338,17 -17,17c-9.40661,0 -17,-7.59339 -17,-17c0,-9.40661 7.59339,-17 17,-17zM24,14c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM23.97656,20.97852c-0.82766,0.01293 -1.48843,0.69381 -1.47656,1.52148v11c-0.00765,0.54095 0.27656,1.04412 0.74381,1.31683c0.46725,0.27271 1.04514,0.27271 1.51238,0c0.46725,-0.27271 0.75146,-0.77588 0.74381,-1.31683v-11c0.00582,-0.40562 -0.15288,-0.7963 -0.43991,-1.08296c-0.28703,-0.28666 -0.67792,-0.44486 -1.08353,-0.43852z"></path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
               </div>
+
+              {/* VIDEO */}
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -527,40 +575,43 @@ export default function SendMessage() {
                 />
                 <label htmlFor="video" className="flex items-center">
                   {t('form.video')}
-                  <span
-                    title={t('form.videoTitle')}
-                    className="ml-1 text-blue-500 cursor-pointer"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      x="0px"
-                      y="0px"
-                      width="25"
-                      height="25"
-                      viewBox="0 30 350 190"
-                      style={{ fill: '#FFFFFF' }}
-                    >
-                      <g
-                        fill="#ffffff"
-                        fillRule="nonzero"
-                        stroke="none"
-                        strokeWidth="1"
-                        strokeLinecap="butt"
-                        strokeLinejoin="miter"
-                        strokeMiterlimit="10"
-                        fontFamily="none"
-                        fontWeight="none"
-                        fontSize="none"
-                        textAnchor="none"
-                        style={{ mixBlendMode: 'normal' }}
-                      >
-                        <g transform="scale(5.33333,5.33333)">
-                          <path d="M24,4c-11.02793,0 -20,8.97207 -20,20c0,11.02793 8.97207,20 20,20c11.02793,0 20,-8.97207 20,-20c0,-11.02793 -8.97207,-20 -20,-20zM24,7c9.40662,0 17,7.59339 17,17c0,9.40661 -7.59338,17 -17,17c-9.40661,0 -17,-7.59339 -17,-17c0,-9.40661 7.59339,-17 17,-17zM24,14c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM23.97656,20.97852c-0.82766,0.01293 -1.48843,0.69381 -1.47656,1.52148v11c-0.00765,0.54095 0.27656,1.04412 0.74381,1.31683c0.46725,0.27271 1.04514,0.27271 1.51238,0c0.46725,-0.27271 0.75146,-0.77588 0.74381,-1.31683v-11c0.00582,-0.40562 -0.15288,-0.7963 -0.43991,-1.08296c-0.28703,-0.28666 -0.67792,-0.44486 -1.08353,-0.43852z"></path>
-                        </g>
-                      </g>
-                    </svg>
-                  </span>
                 </label>
+
+                {/* Иконка для Video (отслеживаем движение мыши) */}
+                <div
+                  onMouseMove={handleVideoMouseMove}
+                  onMouseLeave={handleVideoMouseLeave}
+                  className="ml-1 text-blue-500 cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    x="0px"
+                    y="0px"
+                    width="25"
+                    height="25"
+                    viewBox="0 30 350 190"
+                    style={{ fill: '#FFFFFF' }}
+                  >
+                    <g
+                      fill="#ffffff"
+                      fillRule="nonzero"
+                      stroke="none"
+                      strokeWidth="1"
+                      strokeLinecap="butt"
+                      strokeLinejoin="miter"
+                      strokeMiterlimit="10"
+                      fontFamily="none"
+                      fontWeight="none"
+                      fontSize="none"
+                      textAnchor="none"
+                      style={{ mixBlendMode: 'normal' }}
+                    >
+                      <g transform="scale(5.33333,5.33333)">
+                        <path d="M24,4c-11.02793,0 -20,8.97207 -20,20c0,11.02793 8.97207,20 20,20c11.02793,0 20,-8.97207 20,-20c0,-11.02793 -8.97207,-20 -20,-20zM24,7c9.40662,0 17,7.59339 17,17c0,9.40661 -7.59338,17 -17,17c-9.40661,0 -17,-7.59339 -17,-17c0,-9.40661 7.59339,-17 17,-17zM24,14c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM23.97656,20.97852c-0.82766,0.01293 -1.48843,0.69381 -1.47656,1.52148v11c-0.00765,0.54095 0.27656,1.04412 0.74381,1.31683c0.46725,0.27271 1.04514,0.27271 1.51238,0c0.46725,-0.27271 0.75146,-0.77588 0.74381,-1.31683v-11c0.00582,-0.40562 -0.15288,-0.7963 -0.43991,-1.08296c-0.28703,-0.28666 -0.67792,-0.44486 -1.08353,-0.43852z"></path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -610,7 +661,7 @@ export default function SendMessage() {
           {/* Секция с видео */}
           <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center">
             <video
-              src="/artillery/otstrel.MP4"
+              src="/artillery/otstrel.mp4"
               className="w-full h-full object-cover"
               autoPlay
               loop
@@ -619,6 +670,42 @@ export default function SendMessage() {
           </div>
         </div>
       </section>
+
+      {/* --- Тултип для QUICK --- */}
+      {showQuickTooltip && (
+        <div
+          className="
+            fixed
+            px-3 py-2 
+            bg-gray-700 text-white text-sm rounded shadow-lg
+            animate-fadeIn
+          "
+          style={{
+            top: quickTooltipCoords.y,
+            left: quickTooltipCoords.x + 15, // немного правее курсора
+          }}
+        >
+          {t('form.quickTitle')}
+        </div>
+      )}
+
+      {/* --- Тултип для VIDEO --- */}
+      {showVideoTooltip && (
+        <div
+          className="
+            fixed
+            px-3 py-2 
+            bg-gray-700 text-white text-sm rounded shadow-lg
+            animate-fadeIn
+          "
+          style={{
+            top: videoTooltipCoords.y,
+            left: videoTooltipCoords.x + 15, // немного правее курсора
+          }}
+        >
+          {t('form.videoTitle')}
+        </div>
+      )}
     </div>
   );
 }
