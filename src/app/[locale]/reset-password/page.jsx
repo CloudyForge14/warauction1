@@ -12,12 +12,11 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const router = useRouter();
-  const t = useTranslations('ResetPassword'); // Localization
+  const t = useTranslations('ResetPassword');
 
   useEffect(() => {
-    // Extract the access_token from the URL hash
     const hash = window.location.hash;
-    const params = new URLSearchParams(hash.substring(1)); // Remove '#' and parse
+    const params = new URLSearchParams(hash.substring(1));
     const token = params.get('access_token');
 
     if (!token) {
@@ -26,15 +25,15 @@ export default function ResetPassword() {
     }
 
     setAccessToken(token);
+
+    // Устанавливаем токен как текущую сессию
+    supabase.auth.setSession({ access_token: token }).catch(() => {
+      toast.error(t('invalidOrExpiredToken'));
+    });
   }, [t]);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-
-    if (!accessToken) {
-      toast.error(t('invalidOrExpiredToken'));
-      return;
-    }
 
     if (newPassword !== confirmPassword) {
       toast.error(t('passwordsDoNotMatch'));
@@ -42,8 +41,8 @@ export default function ResetPassword() {
     }
 
     try {
-      // Use the access token to update the password
-      const { data, error } = await supabase.auth.updateUser(accessToken, {
+      // Обновление пароля с активной сессией
+      const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
@@ -54,7 +53,7 @@ export default function ResetPassword() {
 
       toast.success(t('passwordResetSuccess'));
       setTimeout(() => {
-        router.push('/en/auction'); // Redirect to login page
+        router.push('/en/auction');
       }, 3000);
     } catch (err) {
       toast.error(t('errorUnexpected'));
