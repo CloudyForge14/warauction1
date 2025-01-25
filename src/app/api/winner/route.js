@@ -9,9 +9,9 @@ export async function POST(request) {
     const { data: endedAuctions, error: endedError } = await supabase
       .from("auction_items")
       .select("*")
-      .lte("time_left", 0)      // или другой критерий, например date_of_finishing < now()
+      .lt("time_left", 0)      // или другой критерий, например date_of_finishing < now()
       .eq("is_active", true);
-
+    console.log(endedAuctions);
     if (endedError) {
       return new Response(JSON.stringify({ error: endedError.message }), {
         status: 400,
@@ -33,7 +33,7 @@ export async function POST(request) {
         .from("bid_history")
         .select("*")
         .eq("auction_item_id", item.id)
-        .order("created_at", { ascending: false })
+        .order("bid_time", { ascending: false })
         .limit(1)
         .single();
 
