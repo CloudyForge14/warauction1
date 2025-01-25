@@ -56,10 +56,10 @@ type SymbolPosition = {
 
 const AuctionApp = () => {
     const t = useTranslations('HomePage');
-    const [days, setDays] = useState(10);
-    const [hours, setHours] = useState(21);
-    const [minutes, setMinutes] = useState(28);
-    const [seconds, setSeconds] = useState(10);
+    const [days, setDays] = useState(0);
+    const [hours, setHours] = useState(0);
+    const [minutes, setMinutes] = useState(0);
+    const [seconds, setSeconds] = useState(0);
     const [currentAuctionImageIndex, setCurrentAuctionImageIndex] = useState(0);
     const [currentArtilleryImageIndex, setCurrentArtilleryImageIndex] = useState(0);
     const [loading, setLoading] = useState(false); // Add this line
