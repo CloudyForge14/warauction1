@@ -5,24 +5,26 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { supabase } from "@/utils/supabase/client";
 import { useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query"; // <-- вот тут
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // если нужно тут
 
 export default function AuctionItems() {
   const [items, setItems] = useState([]);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // возможно уберём, заменим на isLoading из useQuery
   const [error, setError] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Новое состояние для типа оплаты:
   const [paymentType, setPaymentType] = useState("");
-
-  // Модалка с условиями
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const queryClient = new QueryClient();
 
   const t = useTranslations("AuctionItems");
 
+  // -----------------------
+  // 1) Авторизация / user
+  // -----------------------
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -41,12 +43,11 @@ export default function AuctionItems() {
     }
   }, []);
 
-  // Получаем user из Supabase
   useEffect(() => {
     const fetchUser = async () => {
       const {
         data: { user },
-        error
+        error,
       } = await supabase.auth.getUser();
       if (!error && user) {
         setUser(user);
@@ -56,7 +57,6 @@ export default function AuctionItems() {
     fetchUser();
   }, []);
 
-  // refreshSession
   useEffect(() => {
     const refreshSession = async () => {
       const { data, error } = await supabase.auth.refreshSession();
@@ -68,68 +68,105 @@ export default function AuctionItems() {
     refreshSession();
   }, []);
 
-  // Получаем лоты
+  // -----------------------
+  // 2) fetchAuctionItems
+  // -----------------------
+  const fetchAuctionItems = async () => {
+    console.log("Fetching auction items...");
+    queryClient.invalidateQueries("auctionItems");
+
+    const response = await fetch("/api/auction-items");
+    if (!response.ok) {
+      throw new Error("Failed to fetch auction items");
+    }
+    const data = await response.json();
+    console.log("Fetched data:", data);
+    return data;
+  };
+  
+
+  // -----------------------
+  // 3) Реактивный запрос через useQuery
+  //    refetch каждые 10 секунд (10,000 ms)
+  // -----------------------
+  const {
+    data: auctionItemsFromServer,
+    isLoading,
+    error: queryError,
+    // isFetching, isRefetching и т.д. — если надо
+  } = useQuery({
+    queryKey: ["auctionItems"],       // ключ, с которым кэшируются данные
+    queryFn: fetchAuctionItems,       // функция запроса
+    refetchInterval: 5000,           // каждые 10 секунд рефреш
+    staleTime: 0,                  // 10 секунд, пока данные "свежие"
+    //cacheTime: 300000,              // время хранения в кэше
+    onSuccess: (data) => {
+      // Когда пришли данные с сервера, сливаем с локальным стейтом (включая таймеры + плейсхолдеры)
+      // Но лучше делать это в useEffect, чтобы не смешивать
+    },
+  });
+
+  // -----------------------
+  // 4) Мержим данные из useQuery в стейт items
+  // -----------------------
   useEffect(() => {
-    const fetchAuctionItems = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/auction-items");
-        if (!response.ok) throw new Error("Failed to fetch auction items");
-        let auctionItems = await response.json();
+    // Если ещё грузится или ошибка, то пока ничего
+    if (!auctionItemsFromServer) return;
 
-        // Если меньше 5 лотов — placeholders
-        if (auctionItems.length < 5) {
-          const placeholders = Array.from(
-            { length: 5 - auctionItems.length },
-            (_, index) => ({
-              id: `placeholder-${index}`,
-              name: "Coming Soon",
-              description: "This item will be available soon!",
-              current_bid: 0,
-              min_raise: 0,
-              time_left: 0,
-              image_url: "/auction/comingsoon.jpg"
-            })
-          );
-          auctionItems = [...auctionItems, ...placeholders];
-        }
+    // Берём предыдущие items, обновляем их
+    setItems((prevItems) => {
+      // 1) Мапим все лоты, что пришли
+      const updatedItems = auctionItemsFromServer.map((serverItem) => {
+        const existingItem = prevItems.find((item) => item.id === serverItem.id);
+        return {
+          ...serverItem,
+          // Если такой лот уже есть, оставляем ему time_left
+          time_left: existingItem ? existingItem.time_left : serverItem.time_left,
+        };
+      });
 
-        setItems(auctionItems);
-      } catch (err) {
-        console.error("Error fetching auction items:", err);
-        setError("Failed to fetch items. Please try again.");
-      } finally {
-        setLoading(false);
+      // 2) Добавляем placeholders, если меньше 5
+      if (updatedItems.length < 5) {
+        const placeholders = Array.from({ length: 5 - updatedItems.length }, (_, index) => ({
+          id: `placeholder-${index}`,
+          name: "Coming Soon",
+          description: "This item will be available soon!",
+          current_bid: 0,
+          min_raise: 0,
+          time_left: 0,
+          image_url: "/auction/comingsoon.jpg",
+        }));
+        return [...updatedItems, ...placeholders];
       }
-    };
-    fetchAuctionItems();
-  }, []);
 
-  /**
-   * ВАЖНО: этот эффект запускает интервал,
-   * который каждую секунду уменьшает time_left у всех итемов.
-   */
+      return updatedItems;
+    });
+  }, [auctionItemsFromServer]);
+
+  // -----------------------
+  // 5) Локальный таймер для time_left
+  // -----------------------
   useEffect(() => {
-    // Запускаем только после того, как лоты подгрузились (loading === false).
-    if (loading) return;
+    // Если React Query еще что-то грузит — можно подождать,
+    // но в принципе, если items пустые, таймеру всё равно
+    if (isLoading) return;
 
+    // Запускаем интервал на 1с
     const intervalId = setInterval(() => {
       setItems((prevItems) =>
-        prevItems.map((item) => {
-          // Если time_left > 0 — уменьшаем. Если уже 0, оставляем 0 (или можешь не трогать).
-          if (item.time_left > 0) {
-            return { ...item, time_left: item.time_left - 1 };
-          }
-          return item;
-        })
+        prevItems.map((item) => ({
+          ...item,
+          time_left: Math.max(item.time_left - 1, 0),
+        }))
       );
     }, 1000);
 
-    // Чистим интервал при размонтировании
     return () => clearInterval(intervalId);
-  }, [loading]);
+  }, [isLoading]);
 
-  // Открыть модалку
+  // -----------------------
+  // 6) Открытие/закрытие модалок + Place Bid
+  // -----------------------
   const openModal = (item) => {
     if (!item) {
       toast.error("Invalid item.");
@@ -140,16 +177,13 @@ export default function AuctionItems() {
       bid: item.current_bid + item.min_raise,
     });
     setCurrentImageIndex(0);
-    // Когда выбираем новый лот, сбрасываем paymentType
     setPaymentType("");
   };
 
-  // Закрыть модалку
   const closeModal = () => {
     setSelectedItem(null);
   };
 
-  // Меняем ставку
   const handleBidChange = (change, minRaise) => {
     setSelectedItem((prevItem) => {
       if (!prevItem) return null;
@@ -159,20 +193,19 @@ export default function AuctionItems() {
       );
       return {
         ...prevItem,
-        bid: newBid
+        bid: newBid,
       };
     });
   };
 
   const formatTime = (seconds) => {
-    if (seconds < 0) seconds = 0; // чтоб не уходил в минус, если нужно
+    if (seconds < 0) seconds = 0;
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(secs).padStart(2, "0")}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(
+      secs
+    ).padStart(2, "0")}`;
   };
 
   // Place Bid
@@ -182,7 +215,6 @@ export default function AuctionItems() {
       return;
     }
 
-    // Проверяем, выбран ли способ оплаты
     if (!paymentType) {
       toast.error("Payment type not chosen!");
       return;
@@ -204,12 +236,12 @@ export default function AuctionItems() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           newBid: selectedItem.bid,
-          paymentType // сюда пихаем значение способа оплаты
-        })
+          paymentType,
+        }),
       });
 
       if (!response.ok) {
@@ -218,26 +250,33 @@ export default function AuctionItems() {
       }
 
       const updatedItem = await response.json();
+      // Обновим локальный стейт — нашли нужный item по id и заменили
       setItems((prevItems) =>
         prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
       );
 
       toast.success("Bid placed successfully!");
       closeModal();
+      fetchAuctionItems();
     } catch (err) {
       console.error("Error placing bid:", err);
       toast.error(err.message || "Failed to place bid. Try again.");
     }
   };
 
-  if (loading) {
+  // -----------------------
+  // 7) Рендер компонента
+  // -----------------------
+
+  // Если ещё грузим запрос через useQuery
+  if (isLoading) {
     return (
       <div
         className="flex items-center justify-center"
         style={{
           height: "calc(100vh - 64px)",
           backgroundColor: "#1a202c",
-          color: "white"
+          color: "white",
         }}
       >
         <div className="loader"></div>
@@ -264,7 +303,10 @@ export default function AuctionItems() {
     );
   }
 
-  if (error) return <div>{error}</div>;
+  // Если ошибка пришла из useQuery
+  if (queryError) {
+    return <div>{String(queryError)}</div>;
+  }
 
   return (
     <div className="bg-gray-900 text-white h-auto py-12 ">
@@ -282,7 +324,7 @@ export default function AuctionItems() {
           color: "#fff",
           border: "1px solid #374151",
           borderRadius: "8px",
-          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)"
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
         }}
         progressStyle={{ backgroundColor: "#2563eb" }}
       />
@@ -294,7 +336,7 @@ export default function AuctionItems() {
         style={{
           gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
           maxWidth: "1440px",
-          margin: "0 auto"
+          margin: "0 auto",
         }}
       >
         {items.map((item) => (
@@ -303,7 +345,7 @@ export default function AuctionItems() {
             onClick={() => openModal(item)}
             className="relative bg-gray-800 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:scale-105 hover:border-yellow-500 transition-transform duration-300"
             style={{
-              border: "2px solid transparent"
+              border: "2px solid transparent",
             }}
           >
             {/* Timer */}
@@ -321,7 +363,9 @@ export default function AuctionItems() {
             {/* Content */}
             <div className="p-4 bg-gray-900 text-white text-center">
               <h2 className="text-xl font-bold mb-2">{item.name}</h2>
-              <p className="text-gray-400 text-sm mb-4 truncate">{item.description}</p>
+              <p className="text-gray-400 text-sm mb-4 truncate">
+                {item.description}
+              </p>
               {/* Divider */}
               <hr className="border-t border-gray-600 mb-4" />
               {/* Current Bid */}
@@ -384,11 +428,15 @@ export default function AuctionItems() {
                 <p className="text-gray-400 mb-4">{selectedItem.description}</p>
                 <p className="font-semibold">
                   Current Bid:{" "}
-                  <span className="text-yellow-500">${selectedItem.current_bid}</span>
+                  <span className="text-yellow-500">
+                    ${selectedItem.current_bid}
+                  </span>
                 </p>
                 <p className="font-semibold mt-2">
                   Min Raise:{" "}
-                  <span className="text-yellow-500">${selectedItem.min_raise}</span>
+                  <span className="text-yellow-500">
+                    ${selectedItem.min_raise}
+                  </span>
                 </p>
               </div>
 
@@ -412,7 +460,7 @@ export default function AuctionItems() {
                       const newBid = parseFloat(e.target.value) || "";
                       setSelectedItem((prevItem) => ({
                         ...prevItem,
-                        bid: newBid
+                        bid: newBid,
                       }));
                     }}
                     onBlur={() => {
@@ -421,10 +469,7 @@ export default function AuctionItems() {
                           prevItem.current_bid + prevItem.min_raise;
                         return {
                           ...prevItem,
-                          bid:
-                            prevItem.bid >= minBid
-                              ? prevItem.bid
-                              : minBid
+                          bid: prevItem.bid >= minBid ? prevItem.bid : minBid,
                         };
                       });
                     }}
@@ -434,7 +479,7 @@ export default function AuctionItems() {
                       WebkitAppearance: "none",
                       MozAppearance: "textfield",
                       margin: 0,
-                      padding: 0
+                      padding: 0,
                     }}
                   />
                   <button
@@ -447,7 +492,10 @@ export default function AuctionItems() {
 
                 {/* Выбор типа оплаты */}
                 <div className="mb-4">
-                  <label htmlFor="paymentSelect" className="block mb-1 text-gray-300">
+                  <label
+                    htmlFor="paymentSelect"
+                    className="block mb-1 text-gray-300"
+                  >
                     Choose Payment Type:
                   </label>
                   <select
@@ -514,64 +562,75 @@ export default function AuctionItems() {
             <div className="max-h-96 overflow-y-auto space-y-4 text-sm leading-relaxed">
               <p className="text-gray-200 font-semibold">PUBLIC CONTRACT (OFFER)</p>
               <p className="text-gray-400">
-1.1 The Auction is part of the , has its own rules for transactions set out below, but in addition follows all the basic(general) Site Rules.
-
-
+                1.1 The Auction is part of the , has its own rules for
+                transactions set out below, but in addition follows all the
+                basic(general) Site Rules.
                 <br />
-                1.2 By bidding at the auction, you confirm that you have read and agree to the Auction Rules.
-
+                1.2 By bidding at the auction, you confirm that you have read
+                and agree to the Auction Rules.
                 <br />
-                1.3 Auction on the site is an auction of military themes, on which items (trophies) of military themes, equipment and military clothing can be bought.
+                1.3 Auction on the site is an auction of military themes, on
+                which items (trophies) of military themes, equipment and
+                military clothing can be bought.
                 <br />
                 1.4 All prices at the auction are indicated in dollars ($).
-
               </p>
               <p className="text-gray-400">
                 <strong>2. Duties of the auction participants</strong>
                 <br />
-
-                2.1 Bidders are obliged to enter their real and valid data in the settings of payment and delivery options.
+                2.1 Bidders are obliged to enter their real and valid data in
+                the settings of payment and delivery options.
                 <br />
-
-2.2 By creating a lot and specifying a minimum (starting) price for the lot, the seller undertakes to sell this lot to any user who wins it, even after one bid with a minimum step.
-<br />
-
-2.3 By placing a bid on a lot, the buyer agrees to buy the lot at the price he has indicated, without any additional requirements to the seller or specification of details of the lot. All questions about the lot must be clarified before placing a bid.
-
+                2.2 By creating a lot and specifying a minimum (starting) price
+                for the lot, the seller undertakes to sell this lot to any user
+                who wins it, even after one bid with a minimum step.
+                <br />
+                2.3 By placing a bid on a lot, the buyer agrees to buy the lot
+                at the price he has indicated, without any additional
+                requirements to the seller or specification of details of the
+                lot. All questions about the lot must be clarified before
+                placing a bid.
               </p>
               <p className="text-gray-400">
                 <strong>3. Prices, terms and conditions</strong>
                 <br />
                 3.1 Bidding is free of charge.
                 <br />
-
-3.2 After winning the lot, the buyer must pay the full amount of the lot to the seller's details + delivery costs, which will be specified on the lot page, within 2 days. If the lot is not paid within this time, the buyer loses the right to the lot, and depending on the choice of the seller, the lot either goes to the user who made the previous bid, or re-created.
-<br />
-
-3.2.1 Only after payment of the lot and delivery costs, the Seller undertakes to send the lot.
-<br />
-
-3.2.2 The price of delivery depends on the volume and weight of the item.
-<br />
-
-3.3 After receiving payment for the lot, the seller is obliged to actually dispatch the lot within 14 days.
-<br />
-
-3.4 If a bid on the lot was made less than 10 minutes before the end of the auction, the auction end time will be extended by another 10 minutes from the time of the last bid.
+                3.2 After winning the lot, the buyer must pay the full amount of
+                the lot to the seller's details + delivery costs, which will be
+                specified on the lot page, within 2 days. If the lot is not paid
+                within this time, the buyer loses the right to the lot, and
+                depending on the choice of the seller, the lot either goes to
+                the user who made the previous bid, or re-created.
+                <br />
+                3.2.1 Only after payment of the lot and delivery costs, the
+                Seller undertakes to send the lot.
+                <br />
+                3.2.2 The price of delivery depends on the volume and weight of
+                the item.
+                <br />
+                3.3 After receiving payment for the lot, the seller is obliged
+                to actually dispatch the lot within 14 days.
+                <br />
+                3.4 If a bid on the lot was made less than 10 minutes before the
+                end of the auction, the auction end time will be extended by
+                another 10 minutes from the time of the last bid.
               </p>
               <p className="text-gray-400">
                 <strong>
-                4. The first bid for a lot may be equal to the starting price.</strong> 
+                  4. The first bid for a lot may be equal to the starting price.
+                </strong>
               </p>
               <p className="text-gray-400">
-                <strong>5. Payment of the costs of the buying process by the auction participants</strong>
+                <strong>
+                  5. Payment of the costs of the buying process by the auction
+                  participants
+                </strong>
                 <br />
-
-                5.1 All costs of payment for the lot are the responsibility of the buyer.
+                5.1 All costs of payment for the lot are the responsibility of
+                the buyer.
                 <br />
-
-5.2 All shipping costs are the responsibility of the buyer
-
+                5.2 All shipping costs are the responsibility of the buyer
               </p>
             </div>
             <button
