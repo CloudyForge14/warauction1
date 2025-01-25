@@ -15,8 +15,11 @@ export default function AuctionItems() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Новые состояния
-  const [showTermsModal, setShowTermsModal] = useState(false); // модалка с правилами
+  // Новое состояние для типа оплаты:
+  const [paymentType, setPaymentType] = useState("");
+
+  // Модалка с условиями
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const t = useTranslations("AuctionItems");
 
@@ -38,10 +41,13 @@ export default function AuctionItems() {
     }
   }, []);
 
-  // получаем user из Supabase
+  // Получаем user из Supabase
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error
+      } = await supabase.auth.getUser();
       if (!error && user) {
         setUser(user);
         localStorage.setItem("user", JSON.stringify(user));
@@ -71,7 +77,7 @@ export default function AuctionItems() {
         if (!response.ok) throw new Error("Failed to fetch auction items");
         let auctionItems = await response.json();
 
-        // Если меньше 5 лотов — создаём placeholders
+        // Если меньше 5 лотов — placeholders
         if (auctionItems.length < 5) {
           const placeholders = Array.from(
             { length: 5 - auctionItems.length },
@@ -82,11 +88,12 @@ export default function AuctionItems() {
               current_bid: 0,
               min_raise: 0,
               time_left: 0,
-              image_url: "/auction/comingsoon.jpg",
+              image_url: "/auction/comingsoon.jpg"
             })
           );
           auctionItems = [...auctionItems, ...placeholders];
         }
+
         setItems(auctionItems);
       } catch (err) {
         console.error("Error fetching auction items:", err);
@@ -98,22 +105,51 @@ export default function AuctionItems() {
     fetchAuctionItems();
   }, []);
 
-  // Открытие модалки
+  /**
+   * ВАЖНО: этот эффект запускает интервал,
+   * который каждую секунду уменьшает time_left у всех итемов.
+   */
+  useEffect(() => {
+    // Запускаем только после того, как лоты подгрузились (loading === false).
+    if (loading) return;
+
+    const intervalId = setInterval(() => {
+      setItems((prevItems) =>
+        prevItems.map((item) => {
+          // Если time_left > 0 — уменьшаем. Если уже 0, оставляем 0 (или можешь не трогать).
+          if (item.time_left > 0) {
+            return { ...item, time_left: item.time_left - 1 };
+          }
+          return item;
+        })
+      );
+    }, 1000);
+
+    // Чистим интервал при размонтировании
+    return () => clearInterval(intervalId);
+  }, [loading]);
+
+  // Открыть модалку
   const openModal = (item) => {
     if (!item) {
       toast.error("Invalid item.");
       return;
     }
-    setSelectedItem(item);
+    setSelectedItem({
+      ...item,
+      bid: item.current_bid + item.min_raise,
+    });
     setCurrentImageIndex(0);
+    // Когда выбираем новый лот, сбрасываем paymentType
+    setPaymentType("");
   };
 
-  // Закрытие модалки
+  // Закрыть модалку
   const closeModal = () => {
     setSelectedItem(null);
   };
 
-  // Увеличиваем / уменьшаем ставку
+  // Меняем ставку
   const handleBidChange = (change, minRaise) => {
     setSelectedItem((prevItem) => {
       if (!prevItem) return null;
@@ -123,12 +159,13 @@ export default function AuctionItems() {
       );
       return {
         ...prevItem,
-        bid: newBid,
+        bid: newBid
       };
     });
   };
 
   const formatTime = (seconds) => {
+    if (seconds < 0) seconds = 0; // чтоб не уходил в минус, если нужно
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -138,13 +175,18 @@ export default function AuctionItems() {
     )}:${String(secs).padStart(2, "0")}`;
   };
 
-  // Кнопка Place Bid
+  // Place Bid
   const handlePlaceBid = async () => {
     if (!isAuthenticated) {
       toast.error("You must be logged in to place a bid");
       return;
     }
-    // проверяем, согласился ли с terms
+
+    // Проверяем, выбран ли способ оплаты
+    if (!paymentType) {
+      toast.error("Payment type not chosen!");
+      return;
+    }
 
     if (!selectedItem || !selectedItem.id || !selectedItem.bid) {
       toast.error("Invalid bid data");
@@ -162,21 +204,22 @@ export default function AuctionItems() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ newBid: selectedItem.bid }),
+        body: JSON.stringify({
+          newBid: selectedItem.bid,
+          paymentType // сюда пихаем значение способа оплаты
+        })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to place bid");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to place bid");
       }
 
       const updatedItem = await response.json();
       setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === updatedItem.id ? updatedItem : item
-        )
+        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
       );
 
       toast.success("Bid placed successfully!");
@@ -194,7 +237,7 @@ export default function AuctionItems() {
         style={{
           height: "calc(100vh - 64px)",
           backgroundColor: "#1a202c",
-          color: "white",
+          color: "white"
         }}
       >
         <div className="loader"></div>
@@ -239,7 +282,7 @@ export default function AuctionItems() {
           color: "#fff",
           border: "1px solid #374151",
           borderRadius: "8px",
-          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)"
         }}
         progressStyle={{ backgroundColor: "#2563eb" }}
       />
@@ -251,7 +294,7 @@ export default function AuctionItems() {
         style={{
           gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
           maxWidth: "1440px",
-          margin: "0 auto",
+          margin: "0 auto"
         }}
       >
         {items.map((item) => (
@@ -260,7 +303,7 @@ export default function AuctionItems() {
             onClick={() => openModal(item)}
             className="relative bg-gray-800 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:scale-105 hover:border-yellow-500 transition-transform duration-300"
             style={{
-              border: "2px solid transparent",
+              border: "2px solid transparent"
             }}
           >
             {/* Timer */}
@@ -273,19 +316,14 @@ export default function AuctionItems() {
               src={item.image_url}
               alt={item.name}
               className="w-full h-48 object-cover"
-              priority
             />
 
             {/* Content */}
             <div className="p-4 bg-gray-900 text-white text-center">
               <h2 className="text-xl font-bold mb-2">{item.name}</h2>
-              <p className="text-gray-400 text-sm mb-4 truncate">
-                {item.description}
-              </p>
-
+              <p className="text-gray-400 text-sm mb-4 truncate">{item.description}</p>
               {/* Divider */}
               <hr className="border-t border-gray-600 mb-4" />
-
               {/* Current Bid */}
               <p className="font-semibold text-lg">
                 Current Bid:{" "}
@@ -343,20 +381,14 @@ export default function AuctionItems() {
                 <h2 className="text-2xl lg:text-3xl font-bold mb-4">
                   {selectedItem.name}
                 </h2>
-                <p className="text-gray-400 mb-4">
-                  {selectedItem.description}
-                </p>
+                <p className="text-gray-400 mb-4">{selectedItem.description}</p>
                 <p className="font-semibold">
                   Current Bid:{" "}
-                  <span className="text-yellow-500">
-                    ${selectedItem.current_bid}
-                  </span>
+                  <span className="text-yellow-500">${selectedItem.current_bid}</span>
                 </p>
                 <p className="font-semibold mt-2">
                   Min Raise:{" "}
-                  <span className="text-yellow-500">
-                    ${selectedItem.min_raise}
-                  </span>
+                  <span className="text-yellow-500">${selectedItem.min_raise}</span>
                 </p>
               </div>
 
@@ -366,55 +398,68 @@ export default function AuctionItems() {
                 <div className="flex items-center mb-4">
                   <button
                     className="bg-gray-600 px-4 py-2 rounded-l"
-                    onClick={() =>
-                      handleBidChange(-1, selectedItem.min_raise)
-                    }
+                    onClick={() => handleBidChange(-1, selectedItem.min_raise)}
                   >
                     -
                   </button>
                   <input
-  type="number"
-  value={
-    selectedItem.bid ||
-    selectedItem.current_bid + selectedItem.min_raise
-  }
-  onChange={(e) => {
-    const newBid = parseFloat(e.target.value) || "";
-    setSelectedItem((prevItem) => ({
-      ...prevItem,
-      bid: newBid,
-    }));
-  }}
-  onBlur={() => {
-    setSelectedItem((prevItem) => {
-      const minBid =
-        prevItem.current_bid + prevItem.min_raise;
-      return {
-        ...prevItem,
-        bid:
-          prevItem.bid >= minBid ? prevItem.bid : minBid,
-      };
-    });
-  }}
-  className="w-24 text-center bg-gray-700"
-  style={{
-    appearance: "none", // Отключить стрелки для всех браузеров
-    WebkitAppearance: "none", // Для Chrome, Edge и Safari
-    MozAppearance: "textfield", // Для Firefox
-    margin: 0, // Убираем отступы
-    padding: 0,
-  }}
-/>
-
-
+                    type="number"
+                    value={
+                      selectedItem.bid ||
+                      selectedItem.current_bid + selectedItem.min_raise
+                    }
+                    onChange={(e) => {
+                      const newBid = parseFloat(e.target.value) || "";
+                      setSelectedItem((prevItem) => ({
+                        ...prevItem,
+                        bid: newBid
+                      }));
+                    }}
+                    onBlur={() => {
+                      setSelectedItem((prevItem) => {
+                        const minBid =
+                          prevItem.current_bid + prevItem.min_raise;
+                        return {
+                          ...prevItem,
+                          bid:
+                            prevItem.bid >= minBid
+                              ? prevItem.bid
+                              : minBid
+                        };
+                      });
+                    }}
+                    className="w-24 text-center bg-gray-700"
+                    style={{
+                      appearance: "none",
+                      WebkitAppearance: "none",
+                      MozAppearance: "textfield",
+                      margin: 0,
+                      padding: 0
+                    }}
+                  />
                   <button
                     className="bg-blue-600 px-4 py-2 rounded-r"
-                    onClick={() =>
-                      handleBidChange(1, selectedItem.min_raise)
-                    }
+                    onClick={() => handleBidChange(1, selectedItem.min_raise)}
                   >
                     +
                   </button>
+                </div>
+
+                {/* Выбор типа оплаты */}
+                <div className="mb-4">
+                  <label htmlFor="paymentSelect" className="block mb-1 text-gray-300">
+                    Choose Payment Type:
+                  </label>
+                  <select
+                    id="paymentSelect"
+                    value={paymentType}
+                    onChange={(e) => setPaymentType(e.target.value)}
+                    className="bg-gray-700 border border-gray-600 rounded py-2 px-3 w-full"
+                  >
+                    <option value="">-- Select --</option>
+                    <option value="Paypal">Paypal</option>
+                    <option value="Card">Card</option>
+                  </select>
                 </div>
 
                 {/* Чекбокс + кнопка (показать модалку с правилами) */}
@@ -433,8 +478,7 @@ export default function AuctionItems() {
 
                 <button
                   onClick={handlePlaceBid}
-                  className={`w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold 
-                  `}
+                  className={`w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold`}
                 >
                   Place Bid
                 </button>
@@ -470,7 +514,6 @@ export default function AuctionItems() {
             <div className="max-h-96 overflow-y-auto space-y-4 text-sm leading-relaxed">
               <p className="text-gray-200 font-semibold">PUBLIC CONTRACT (OFFER)</p>
               <p className="text-gray-400">
-                
 1.1 The Auction is part of the , has its own rules for transactions set out below, but in addition follows all the basic(general) Site Rules.
 
 

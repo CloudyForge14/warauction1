@@ -156,7 +156,33 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               className="w-full p-2 bg-gray-700 rounded-md"
             />
           </div>
-
+          <div>
+            <label className="block text-sm text-gray-300 mb-1" htmlFor="lotPaypal">
+              Paypal
+            </label>
+            <input
+              id="lotPaypal"
+              type="text"
+              name="paypal"
+              placeholder="Paypal Email"
+              value={formData.paypal || ''}
+              onChange={handleChange}
+              className="w-full p-2 bg-gray-700 rounded-md"
+            />
+          </div>          <div>
+            <label className="block text-sm text-gray-300 mb-1" htmlFor="card">
+              Card Number
+            </label>
+            <input
+              id="card"
+              type="text"
+              name="card"
+              placeholder="Card Number"
+              value={formData.card || ''}
+              onChange={handleChange}
+              className="w-full p-2 bg-gray-700 rounded-md"
+            />
+          </div>
           <button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded-md"

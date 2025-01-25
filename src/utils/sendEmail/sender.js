@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-    host: 'sandbox.smtp.mailtrap.io', // Обновленный хост
+    host: 'live.smtp.mailtrap.io', // Обновленный хост
     port: 587, // Рекомендуемый порт
     auth: {
       user: process.env.MAILTRAP_USER,
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 export async function sendEmail(to, subject, text, html) {
   try {
     await transporter.sendMail({
-      from: '"WarAuction" <hi@demomailtrap.com>',
+      from: '"CloudyForge" <support@cloudyforge.com>',
       to,
       subject,
       text,

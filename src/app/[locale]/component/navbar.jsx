@@ -52,7 +52,7 @@ export default function Navbar() {
     });
 
     return () => {
-      subscription?.unsubscribe();
+      subscription?.subscription?.();
     };
   }, []);
   // Проверяем, админ ли

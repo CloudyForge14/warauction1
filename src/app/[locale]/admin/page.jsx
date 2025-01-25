@@ -171,6 +171,8 @@ export default function AdminPanel() {
           date_of_finishing: updatedData.date_of_finishing,
           time_of_finishing: updatedData.time_of_finishing,
           image_url: updatedData.image_url,
+          paypal: updatedData.paypal,
+          card: updatedData.card,
         })
         .eq('id', updatedData.id);
       if (error) {
