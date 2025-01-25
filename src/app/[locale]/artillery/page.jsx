@@ -9,24 +9,6 @@ import { useTranslations } from 'next-intl';
 import { supabase } from '@/utils/supabase/client';
 import { useSwipeable } from 'react-swipeable';
 
-// 1) Если используешь Tailwind, можешь добавить в tailwind.config.js свои keyframes или
-// 2) В globals.css (если поддерживает) - вот пример стиля анимации:
-//
-// .animate-fadeIn {
-//   animation: fadeIn 0.15s ease-in-out forwards;
-// }
-// @keyframes fadeIn {
-//   0% {
-//     opacity: 0;
-//     transform: translateY(-5px);
-//   }
-//   100% {
-//     opacity: 1;
-//     transform: translateY(0);
-//   }
-// }
-//
-// Тогда просто юзаешь класс ".animate-fadeIn" на тултипе.
 
 export default function SendMessage() {
   const [options, setOptions] = useState([]);
@@ -35,7 +17,7 @@ export default function SendMessage() {
   const [payment, setPayment] = useState('paypal');
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
-
+  const [paymentDetails, setPaymentDetails] = useState(null);
   // Новые флаги
   const [isQuick, setIsQuick] = useState(false);
   const [includeVideo, setIncludeVideo] = useState(false);
@@ -99,7 +81,28 @@ export default function SendMessage() {
       fetchUser();
     }
   }, []);
+  useEffect(() => {
+    const fetchPaymentDetails = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('payment')
+          .select('*')
+          .single();
 
+        if (error) {
+          console.error('Error fetching payment details:', error.message);
+        } else {
+          setPaymentDetails(data);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching payment details:', err);
+        // If you have a translation key for an unexpected error, you can do:
+        // toast.error(t('errors.unexpected'));
+      }
+    };
+
+    fetchPaymentDetails();
+  }, [t]);
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -350,29 +353,32 @@ export default function SendMessage() {
               {payment === 'paypal' ? (
                 <>
                   <p className="text-sm text-gray-300">
-                    Отправьте оплату на PayPal:
+                   {t('sendPaymentToPayPal')}
                   </p>
                   <p className="mb-4 text-blue-400 font-semibold">
-                    example@paypal.com
-                  </p>
+                  {paymentDetails?.paypal || 'Not Available'}
+                  </p>  
                 </>
               ) : (
                 <>
                   <p className="text-sm text-gray-300">
-                    Отправьте оплату на карту:
+                  {t('sendPaymentToCard')}
+
                   </p>
                   <p className="mb-4 text-blue-400 font-semibold">
-                    1234 5678 9012 3456
+                  {paymentDetails?.card || 'Not Available'}
                   </p>
                   <p className="mb-4 text-sm text-gray-400">
-                    Имя держателя: JOHN DOE
+                  {t('cardHolderName')}
+
                   </p>
                 </>
               )}
             </div>
 
             <p className="text-center mb-4 text-gray-300">
-              Общая сумма: <span className="font-bold">${calculateTotalCost()}</span>
+            {t('totalAmount')}
+            <span className="font-bold">${calculateTotalCost()}</span>
             </p>
             
             <button

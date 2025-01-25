@@ -11,14 +11,17 @@ import { AddOptionModal } from './AddOptionModal';
 
 export default function AdminPanel() {
   const [lots, setLots] = useState([]);
-  const [lotHistories, setLotHistories] = useState({}); 
+  const [lotHistories, setLotHistories] = useState({});
   const [options, setOptions] = useState([]);
   const [optionMessages, setOptionMessages] = useState({});
   const [users, setUsers] = useState([]);
   const [modal, setModal] = useState({ type: '', data: null });
   const [isAdmin, setIsAdmin] = useState(false);
-
   const [activeTab, setActiveTab] = useState('lots');
+
+  // --- Payment info ---
+  const [paymentInfo, setPaymentInfo] = useState({ card: '', paypal: '' });
+  const [paymentId, setPaymentId] = useState(null);
 
   // ======== Fetch ========
   const fetchLots = async () => {
@@ -31,27 +34,28 @@ export default function AdminPanel() {
     try {
       const { data, error } = await supabase
         .from('bid_history')
-        .select(`
+        .select(
+          `
           *,
           users (
             username,
             email
           )
-        `)
+        `
+        )
         .eq('auction_item_id', lotId);
-  
+
       if (error) {
         toast.error('Error fetching bid history.');
         return [];
       }
-  
+
       return data;
     } catch (err) {
       console.error('Unexpected error fetching bid history:', err);
       return [];
     }
   };
-  
 
   const fetchOptions = async () => {
     const { data, error } = await supabase.from('options').select('*');
@@ -79,20 +83,22 @@ export default function AdminPanel() {
   const fetchUsers = async () => {
     const { data, error } = await supabase
       .from('users')
-      .select(`
+      .select(
+        `
         id,
         username,
         email,
         is_banned,
         admins (id)
-      `);
+      `
+      );
 
     if (error) {
       toast.error('Error fetching users.');
       console.error('Fetch users error:', error);
       return;
     }
-    // Возвращаем «прежний» вид — Admin / Ban
+    // Convert "admins" relation to boolean is_admin
     const enrichedUsers = data.map((user) => ({
       ...user,
       is_admin: user.admins.length > 0,
@@ -100,7 +106,27 @@ export default function AdminPanel() {
     setUsers(enrichedUsers);
   };
 
-  // ======== CRUD ========
+  // --- Fetch Payment row from DB ---
+  const fetchPaymentInfo = async () => {
+    try {
+      // We assume there's only one row or we want the first row:
+      // If you have multiple, adjust accordingly (select('*').eq('id', X).single())
+      const { data, error } = await supabase.from('payment').select('*').single();
+      if (error) {
+        toast.error('Error fetching payment data.');
+        console.error('Fetch payment error:', error);
+        return;
+      }
+      if (data) {
+        setPaymentInfo({ card: data.card || '', paypal: data.paypal || '' });
+        setPaymentId(data.id); // store the row ID
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching payment info:', err);
+    }
+  };
+
+  // ======== CRUD (Lots/Options) ========
   const handleAddLot = async (newData) => {
     try {
       if (!newData.name || !newData.date_of_finishing || !newData.time_of_finishing) {
@@ -211,7 +237,32 @@ export default function AdminPanel() {
     }
   };
 
-  // Бан / Разбан
+  // ====== Payment CRUD ======
+  const handleSavePaymentInfo = async () => {
+    if (!paymentId) {
+      toast.error('No payment record found to update.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('payment')
+        .update({ card: paymentInfo.card, paypal: paymentInfo.paypal })
+        .eq('id', paymentId);
+
+      if (error) {
+        toast.error('Error updating payment info.');
+        console.error('Payment update error:', error);
+      } else {
+        toast.success('Payment info updated successfully!');
+      }
+    } catch (err) {
+      console.error('Unexpected error updating payment info:', err);
+      toast.error('An unexpected error occurred while saving payment info.');
+    }
+  };
+
+  // ======== Ban / Unban ========
   const handleBanUser = async (userId, isBanned) => {
     const { error } = await supabase
       .from('users')
@@ -221,14 +272,12 @@ export default function AdminPanel() {
     if (error) {
       toast.error('Failed to update user ban status.');
     } else {
-      toast.success(
-        isBanned ? 'User banned successfully.' : 'User unbanned successfully.'
-      );
+      toast.success(isBanned ? 'User banned successfully.' : 'User unbanned successfully.');
       fetchUsers();
     }
   };
 
-  // Promote / Demote
+  // ======== Promote / Demote ========
   const handlePromoteUser = async (userId) => {
     const { error } = await supabase.from('admins').insert({ user_id: userId });
     if (error) {
@@ -278,7 +327,7 @@ export default function AdminPanel() {
     }
   };
 
-  // Проверяем, админ ли
+  // ======== Check Admin, fetch data on mount ========
   useEffect(() => {
     const checkAdmin = async () => {
       const {
@@ -301,14 +350,16 @@ export default function AdminPanel() {
     fetchLots();
     fetchOptions();
     fetchUsers();
+    fetchPaymentInfo(); // <--- fetch payment row
   }, []);
 
   if (!isAdmin) {
-    return <p className="text-red-500 text-center mt-10 bg-gray-700">Access denied. Admin only.</p>;
+    return (
+      <p className="text-red-500 text-center mt-10 bg-gray-700">Access denied. Admin only.</p>
+    );
   }
 
-  // =============== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ===============
-
+  // =============== HELPER COMPONENTS ===============
   const Section = ({ children }) => (
     <div className="bg-gray-800 p-4 rounded-lg shadow-md">{children}</div>
   );
@@ -337,7 +388,7 @@ export default function AdminPanel() {
     </div>
   );
 
-  // =============== LOTS ===============
+  // =============== LOTS TAB ===============
   const renderLotsTab = () => (
     <Section>
       <div className="flex justify-between items-center mb-4">
@@ -350,7 +401,6 @@ export default function AdminPanel() {
         </button>
       </div>
 
-      {/* Карточки лотов (5 штук на ряд на больших экранах) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {lots.map((lot) => {
           const showHistory = !!lotHistories[lot.id];
@@ -418,7 +468,7 @@ export default function AdminPanel() {
     </Section>
   );
 
-  // =============== OPTIONS ===============
+  // =============== OPTIONS TAB ===============
   const renderOptionsTab = () => (
     <Section>
       <div className="flex justify-between items-center mb-4">
@@ -431,7 +481,6 @@ export default function AdminPanel() {
         </button>
       </div>
 
-      {/* Карточки опций (2-3 на ряд в зависимости от экрана) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {options.map((option) => {
           const showMessages = !!optionMessages[option.id];
@@ -497,12 +546,10 @@ export default function AdminPanel() {
     </Section>
   );
 
-  // =============== USERS ===============
+  // =============== USERS TAB ===============
   const renderUsersTab = () => (
     <Section>
       <h2 className="text-xl font-bold mb-4">Users</h2>
-      
-      {/* Теперь тоже делаем сетку на 4-5 колонки */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {users.map((user) => (
           <div
@@ -511,13 +558,15 @@ export default function AdminPanel() {
           >
             <h3 className="text-lg font-semibold">{user.username}</h3>
             <h3 className="text-base text-gray-400">{user.email}</h3>
-            <p         className={`text-sm ${
-          user.is_admin
-            ? 'text-yellow-500 font-bold' // Yellow for admins
-            : user.is_banned
-            ? 'text-red-500' // Red for banned users
-            : 'text-gray-400' // Default for active users
-        }`}>
+            <p
+              className={`text-sm ${
+                user.is_admin
+                  ? 'text-yellow-500 font-bold'
+                  : user.is_banned
+                  ? 'text-red-500'
+                  : 'text-gray-400'
+              }`}
+            >
               {user.is_banned ? 'Banned' : user.is_admin ? 'Admin' : 'Active'}
             </p>
             <div className="mt-2 flex space-x-2">
@@ -551,14 +600,53 @@ export default function AdminPanel() {
     </Section>
   );
 
-  // ======== RENDER ========
+  // =============== PAYMENT TAB ===============
+  const renderPaymentTab = () => (
+    <Section>
+      <h2 className="text-xl font-bold mb-4">Payment Info</h2>
+      {paymentId ? (
+        <>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Card:</label>
+            <input
+              type="text"
+              value={paymentInfo.card}
+              onChange={(e) => setPaymentInfo({ ...paymentInfo, card: e.target.value })}
+              className="mt-1 p-2 w-full bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium">PayPal:</label>
+            <input
+              type="text"
+              value={paymentInfo.paypal}
+              onChange={(e) => setPaymentInfo({ ...paymentInfo, paypal: e.target.value })}
+              className="mt-1 p-2 w-full bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <button
+            onClick={handleSavePaymentInfo}
+            className="p-2 bg-blue-600 rounded-md hover:bg-blue-700"
+          >
+            Save Payment Info
+          </button>
+        </>
+      ) : (
+        <p className="text-gray-400">No payment record found in the database.</p>
+      )}
+    </Section>
+  );
+
+  // =============== RENDER ===============
   return (
     <div className="p-6 bg-gray-900 text-white min-h-screen">
       <ToastContainer />
 
       <h1 className="text-3xl font-bold mb-4">Admin Panel</h1>
 
-      {/* Вкладки */}
+      {/* Tabs */}
       <ul className="flex space-x-4 border-b border-gray-700 mb-6">
         <li>
           <button
@@ -596,14 +684,27 @@ export default function AdminPanel() {
             Users
           </button>
         </li>
+        <li>
+          <button
+            className={`pb-2 ${
+              activeTab === 'payment'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400'
+            }`}
+            onClick={() => setActiveTab('payment')}
+          >
+            Payment
+          </button>
+        </li>
       </ul>
 
-      {/* Контент вкладок */}
+      {/* Tab Content */}
       {activeTab === 'lots' && renderLotsTab()}
       {activeTab === 'options' && renderOptionsTab()}
       {activeTab === 'users' && renderUsersTab()}
+      {activeTab === 'payment' && renderPaymentTab()}
 
-      {/* Модалки */}
+      {/* Modals */}
       {modal.type === 'add-lot' && (
         <AddLotModal
           onSave={handleAddLot}

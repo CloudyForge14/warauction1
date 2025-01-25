@@ -102,6 +102,10 @@
               "title": "Send Your Message to Russian Invaders!",
               "subtitle": "But how it works?",
               "description": "Our defenders will write your message on the shell and send it to the Russian occupiers, and you will receive a photo confirmation!",
+              "totalAmount": "Total Amount:",
+              "cardHolderName": "Cardholder Name: Andrii Ostapchuk",
+              "sendPaymentToCard": "Send payment to the card:",
+              "sendPaymentToPayPal": "Send payment to PayPal:",
               "form": {
                 "message": "Message",
                 "messagePlaceholder": "Enter your message...",
