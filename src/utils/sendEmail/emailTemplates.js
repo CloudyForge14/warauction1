@@ -26,26 +26,35 @@ export const templates = {
             `<h1>Hi ${username},</h1>
             <p>Unfortunately, your bid on <em>${itemName}</em> has been outbid.</p>
             <p>The current highest bid is now <strong>$${currentBid}</strong>.</p>
-            <p><a href="https://CloudyForge.com/auction/${itemName}" style="color: blue; text-decoration: underline;">Place a new bid</a> to stay in the game!</p>
+            <p><a href="https://cloudyforge.com/auction" style="color: blue; text-decoration: underline;">Place a new bid</a> to stay in the game!</p>
             <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
         },
       
         // Шаблон 3: Сообщение по амуниции принято
         messageAccepted: {
-          subject: 'Your Ammunition Request Has Been Sent!',
-          text: (username, itemName, cost, userMessage) =>
-            `Hi ${username},\n\nYour message regarding the item "${itemName}" has been sent succesfully. You paid $${cost.toFixed(
-              2
-            )} for this item.\n\nYour message: "${userMessage}"\n\nPlease wait for further response or updates.\n\nThank you for your patience!\n\nBest regards,\nCloudyForge Team`,
-          html: (username, itemName, cost, userMessage) =>
+          subject: 'Your Ammunition Request Has Been Approved!',
+          textWithPayPal: (username, itemName, userMessage, paypalEmail) =>
+            `Hi ${username},\n\nYour message regarding the item "${itemName}" has been approved.\n\nYour message: "${userMessage}"\n\nConfirm your order - send payment to PayPal: ${paypalEmail}\n\nBest regards,\nCloudyForge Team`,
+          htmlWithPayPal: (username, itemName, userMessage, paypalEmail) =>
             `<h1>Hi ${username},</h1>
-             <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong> by an admin.</p>
-             <p>You paid <strong>$${cost.toFixed(2)}</strong> for this item.</p>
+             <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong>.</p>
              <p><strong>Your message:</strong> "${userMessage}"</p>
-             <p>Please wait for further response or updates.</p>
-             <p>Thank you for your patience!</p>
+             <p>Confirm your order - send payment to PayPal: <strong>${paypalEmail}</strong></p>
+             <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+        
+          textWithCard: (username, itemName, userMessage, cardNumber) =>
+            `Hi ${username},\n\nYour message regarding the item "${itemName}" has been approved.\n\nYour message: "${userMessage}"\n\nConfirm your order - use the following card credentials:\n\nCard Number: ${cardNumber}\n\nBest regards,\nCloudyForge Team`,
+          htmlWithCard: (username, itemName, userMessage, cardNumber) =>
+            `<h1>Hi ${username},</h1>
+             <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong>.</p>
+             <p><strong>Your message:</strong> "${userMessage}"</p>
+             <p>Confirm your order - use the following card credentials:</p>
+             <ul>
+               <li><strong>Card Number:</strong> ${cardNumber}</li>
+             </ul>
              <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
         },
+
         usernameChanged: {
           subject: 'Your username has been updated!',
           text: (oldName, newName) =>

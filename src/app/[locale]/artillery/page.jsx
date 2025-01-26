@@ -8,32 +8,22 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/utils/supabase/client';
 import { useSwipeable } from 'react-swipeable';
-
+import { useQuery } from '@tanstack/react-query'; // Import useQuery
 
 export default function SendMessage() {
-  const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [payment, setPayment] = useState('paypal');
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState(null);
-  // Новые флаги
   const [isQuick, setIsQuick] = useState(false);
   const [includeVideo, setIncludeVideo] = useState(false);
-
-  // Модалка
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-
-  // ---- Тултипы для quick ----
   const [showQuickTooltip, setShowQuickTooltip] = useState(false);
   const [quickTooltipCoords, setQuickTooltipCoords] = useState({ x: 0, y: 0 });
-
-  // ---- Тултипы для video ----
   const [showVideoTooltip, setShowVideoTooltip] = useState(false);
   const [videoTooltipCoords, setVideoTooltipCoords] = useState({ x: 0, y: 0 });
-
-  // Слайдер
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const t = useTranslations('SendMessage');
 
@@ -58,8 +48,32 @@ export default function SendMessage() {
       setCurrentImageIndex((prevIndex) =>
         prevIndex === 0 ? images.length - 1 : prevIndex - 1
       ),
-    trackMouse: true, // Enables mouse drag support
+    trackMouse: true,
   });
+
+  // Fetch options using React Query
+  const {
+    data: options = [],
+    isLoading: isOptionsLoading,
+    error: optionsError,
+  } = useQuery({
+    queryKey: ['artilleryOptions'],
+    queryFn: async () => {
+      const response = await fetch('/api/artillery');
+      if (!response.ok) throw new Error(t('errors.fetchOptions'));
+      return response.json();
+    },
+    staleTime: 1000*20, // 20 seconds
+    onError: (error) => {
+      toast.error(t('errors.fetchOptionsRetry'));
+    },
+  });
+
+  useEffect(() => {
+    if (options.length > 0 && !selectedOption) {
+      setSelectedOption(options[0]?.id);
+    }
+  }, [options, selectedOption]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -81,6 +95,7 @@ export default function SendMessage() {
       fetchUser();
     }
   }, []);
+
   useEffect(() => {
     const fetchPaymentDetails = async () => {
       try {
@@ -96,13 +111,12 @@ export default function SendMessage() {
         }
       } catch (err) {
         console.error('Unexpected error fetching payment details:', err);
-        // If you have a translation key for an unexpected error, you can do:
-        // toast.error(t('errors.unexpected'));
       }
     };
 
     fetchPaymentDetails();
   }, [t]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -110,25 +124,6 @@ export default function SendMessage() {
 
     return () => clearInterval(interval);
   }, [images.length]);
-
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const response = await fetch('/api/artillery');
-        if (!response.ok) throw new Error(t('errors.fetchOptions'));
-        const data = await response.json();
-        setOptions(data);
-
-        if (data.length > 0) {
-          setSelectedOption(data[0]?.id);
-        }
-      } catch (error) {
-        toast.error(t('errors.fetchOptionsRetry'));
-      }
-    };
-
-    fetchOptions();
-  }, [t]);
 
   const getUserFromLocalStorage = () => {
     if (typeof window !== 'undefined') {
@@ -146,9 +141,8 @@ export default function SendMessage() {
   const calculateMessageCost = () => {
     if (!message) return 0;
 
-    // Пример проверки на сложные языки
     const complexLanguagesRegex =
-      /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/; // Chinese, Japanese, Korean, Thai, Georgian
+      /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/;
     const isComplexLanguage = complexLanguagesRegex.test(message);
 
     let cost = 0;
@@ -156,14 +150,14 @@ export default function SendMessage() {
     if (isComplexLanguage) {
       const charCount = message.length;
       const additionalChars = Math.max(0, charCount - 7);
-      cost = additionalChars * 5; // После 7 символов +5$ за каждый
+      cost = additionalChars * 5;
     } else {
       const charCount = message.length;
       if (charCount <= 28) {
-        cost = (charCount - 18) * 2; // +2$ за каждый символ после 18
+        cost = (charCount - 18) * 2;
       } else {
         const additionalChars = Math.max(0, charCount - 28);
-        cost = 20 + additionalChars * 5; // 20$ +5$ за каждый символ после 28
+        cost = 20 + additionalChars * 5;
       }
     }
 
@@ -202,11 +196,11 @@ export default function SendMessage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const userData = getUserFromLocalStorage();
     const user_id = userData?.id;
     const username = userData?.user_metadata?.username || 'User';
-
+  
     if (!user_id) {
       toast.error('User ID not found. Please log in again.');
       return;
@@ -223,9 +217,50 @@ export default function SendMessage() {
       toast.error('Email cannot be empty.');
       return;
     }
-
+  
     const totalCost = calculateTotalCost();
-
+  
+    // Fetch payment details from the `payments` table in Supabase
+    let paymentDetails = {};
+    try {
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('payment')
+        .select('card, paypal')
+        .eq('id', 1) // Assuming `user_id` is stored in the `payments` table
+        .single();
+      console.log(paymentData);
+      if (paymentError) {
+        console.error('Error fetching payment details:', paymentError);
+        toast.error('Failed to fetch payment details. Please try again.');
+        return;
+      }
+  
+      if (payment === 'paypal') {
+        if (!paymentData.paypal) {
+          toast.error('PayPal email not found. Please update your payment details.');
+          return;
+        }
+        paymentDetails = {
+          paypalEmail: paymentData.paypal, // Use the `paypal` column value
+        };
+      } else if (payment === 'card') {
+        if (!paymentData.card) {
+          toast.error('Card details not found. Please update your payment details.');
+          return;
+        }
+        // Assuming `card` column stores a JSON string with card details
+        paymentDetails = {
+          cardNumber: paymentData.card, // Use the `card` column value
+        };
+        console.log("w");
+        console.log(paymentDetails);
+      }
+    } catch (error) {
+      console.error('Error fetching payment details:', error);
+      toast.error('Failed to fetch payment details. Please try again.');
+      return;
+    }
+  
     const messageData = {
       user_id,
       option_id: selectedOption,
@@ -236,8 +271,9 @@ export default function SendMessage() {
       username,
       quick: isQuick,
       video: includeVideo,
+      ...paymentDetails, // Include payment details in the message data
     };
-
+  
     try {
       const response = await fetch('/api/messages', {
         method: 'POST',
@@ -246,13 +282,13 @@ export default function SendMessage() {
         },
         body: JSON.stringify(messageData),
       });
-
+  
       if (!response.ok) {
         const errorResponse = await response.json();
         console.error('Error:', errorResponse.error);
         throw new Error(errorResponse.error || 'Failed to send the message');
       }
-
+  
       toast.success(`Message sent successfully! Total cost: $${totalCost}`);
       setMessage('');
       setShowPaymentModal(true);
@@ -262,7 +298,6 @@ export default function SendMessage() {
     }
   };
 
-  // Хендлеры для quick
   const handleQuickMouseMove = (e) => {
     setShowQuickTooltip(true);
     setQuickTooltipCoords({ x: e.clientX, y: e.clientY });
@@ -271,7 +306,6 @@ export default function SendMessage() {
     setShowQuickTooltip(false);
   };
 
-  // Хендлеры для video
   const handleVideoMouseMove = (e) => {
     setShowVideoTooltip(true);
     setVideoTooltipCoords({ x: e.clientX, y: e.clientY });
@@ -301,7 +335,6 @@ export default function SendMessage() {
         progressStyle={{ backgroundColor: '#2563eb' }}
       />
 
-      {/* Модальное окно с реквизитами */}
       {showPaymentModal && (
         <div
           className="
@@ -319,7 +352,6 @@ export default function SendMessage() {
               animate-scaleIn
             "
           >
-            {/* Иконка закрытия в правом верхнем углу */}
             <button
               onClick={() => setShowPaymentModal(false)}
               className="
@@ -395,10 +427,8 @@ export default function SendMessage() {
         </div>
       )}
 
-      {/* Основной контейнер */}
       <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-6 py-12 gap-6">
         
-        {/* Первый блок (Слайдер) */}
         <div className="w-full lg:w-2/3 bg-gray-800 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
             {t('title')}
@@ -429,7 +459,6 @@ export default function SendMessage() {
               ))}
             </div>
 
-            {/* Кнопки навигации */}
             <button
               onClick={() =>
                 setCurrentImageIndex((prevIndex) =>
@@ -451,7 +480,6 @@ export default function SendMessage() {
               ›
             </button>
 
-            {/* Индикаторы (точки) */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
               {images.map((_, index) => (
                 <div
@@ -465,7 +493,6 @@ export default function SendMessage() {
           </div>
         </div>
 
-        {/* Второй блок (форма) */}
         <div className="w-full lg:w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-9">
             <div>
@@ -513,14 +540,12 @@ export default function SendMessage() {
                   className="p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="paypal">{t('form.paymentPayPal')}</option>
-                  <option value="visa">{t('form.paymentCard')}</option>
+                  <option value="card">{t('form.paymentCard')}</option>
                 </select>
               </div>
             </div>
 
-            {/* Чекбоксы */}
             <div className="space-y-4">
-              {/* QUICK */}
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -533,7 +558,6 @@ export default function SendMessage() {
                   {t('form.quick')}
                 </label>
 
-                {/* Иконка для Quick (отслеживаем движение мыши) */}
                 <div
                   onMouseMove={handleQuickMouseMove}
                   onMouseLeave={handleQuickMouseLeave}
@@ -570,7 +594,6 @@ export default function SendMessage() {
                 </div>
               </div>
 
-              {/* VIDEO */}
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -583,7 +606,6 @@ export default function SendMessage() {
                   {t('form.video')}
                 </label>
 
-                {/* Иконка для Video (отслеживаем движение мыши) */}
                 <div
                   onMouseMove={handleVideoMouseMove}
                   onMouseLeave={handleVideoMouseLeave}
@@ -621,7 +643,6 @@ export default function SendMessage() {
               </div>
             </div>
 
-            {/* Сумма заказа */}
             <div className="p-4 bg-gray-700 rounded-md">
               <h2 className="text-lg font-semibold">{t('summary.title')}</h2>
               <p>
@@ -647,10 +668,8 @@ export default function SendMessage() {
         </div>
       </div>
 
-      {/* Третий блок (про проект + видео) */}
       <section className="py-20 bg-gray-800 text-gray-100 lg:-mt-32">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10">
-          {/* Текстовый блок */}
           <div className="w-full md:w-1/2">
             <h3 className="text-3xl font-bold mb-4">
               {t('about.title')}{' '}
@@ -664,7 +683,6 @@ export default function SendMessage() {
             <p className="text-gray-400 mt-4">{t('about.callToAction')}</p>
           </div>
 
-          {/* Секция с видео */}
           <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center">
             <video
               src="/artillery/otstrel.mp4"
@@ -677,7 +695,6 @@ export default function SendMessage() {
         </div>
       </section>
 
-      {/* --- Тултип для QUICK --- */}
       {showQuickTooltip && (
         <div
           className="
@@ -688,14 +705,13 @@ export default function SendMessage() {
           "
           style={{
             top: quickTooltipCoords.y,
-            left: quickTooltipCoords.x + 15, // немного правее курсора
+            left: quickTooltipCoords.x + 15,
           }}
         >
           {t('form.quickTitle')}
         </div>
       )}
 
-      {/* --- Тултип для VIDEO --- */}
       {showVideoTooltip && (
         <div
           className="
@@ -706,7 +722,7 @@ export default function SendMessage() {
           "
           style={{
             top: videoTooltipCoords.y,
-            left: videoTooltipCoords.x + 15, // немного правее курсора
+            left: videoTooltipCoords.x + 15,
           }}
         >
           {t('form.videoTitle')}

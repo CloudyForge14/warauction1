@@ -150,7 +150,25 @@ export default function AdminPanel() {
       toast.error('An unexpected error occurred. Please try again.');
     }
   };
-
+  const toggleLotActiveStatus = async (lotId, isActive) => {
+    try {
+      const { error } = await supabase
+        .from('auction_items')
+        .update({ is_active: isActive })
+        .eq('id', lotId);
+  
+      if (error) {
+        toast.error('Error updating lot status.');
+        console.error('Supabase error:', error);
+      } else {
+        fetchLots(); // Refresh the lots list
+        toast.success(`Lot ${isActive ? 'activated' : 'deactivated'} successfully.`);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('An unexpected error occurred. Please try again.');
+    }
+  };
   const handleEditLot = async (updatedData) => {
     try {
       if (!updatedData.name || !updatedData.date_of_finishing || !updatedData.time_of_finishing) {
@@ -162,19 +180,20 @@ export default function AdminPanel() {
         return;
       }
       const { error } = await supabase
-        .from('auction_items')
-        .update({
-          name: updatedData.name,
-          description: updatedData.description,
-          current_bid: updatedData.current_bid,
-          min_raise: updatedData.min_raise,
-          date_of_finishing: updatedData.date_of_finishing,
-          time_of_finishing: updatedData.time_of_finishing,
-          image_url: updatedData.image_url,
-          paypal: updatedData.paypal,
-          card: updatedData.card,
-        })
-        .eq('id', updatedData.id);
+      .from('auction_items')
+      .update({
+        name: updatedData.name,
+        description: updatedData.description,
+        current_bid: updatedData.current_bid,
+        min_raise: updatedData.min_raise,
+        date_of_finishing: updatedData.date_of_finishing,
+        time_of_finishing: updatedData.time_of_finishing,
+        image_url: updatedData.image_url,
+        paypal: updatedData.paypal,
+        card: updatedData.card,
+        time_left: -1, // Explicitly set time_left to -1
+      })
+      .eq('id', updatedData.id);
       if (error) {
         toast.error(`Error editing lot: ${error.message}`);
         console.error('Supabase error:', error);
@@ -402,7 +421,7 @@ export default function AdminPanel() {
           Add Lot
         </button>
       </div>
-
+  
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {lots.map((lot) => {
           const showHistory = !!lotHistories[lot.id];
@@ -421,7 +440,7 @@ export default function AdminPanel() {
                   className="w-full h-32 object-cover rounded-md mt-2"
                 />
               )}
-
+  
               <div className="flex items-center space-x-2 mt-2">
                 <button
                   type="button"
@@ -433,8 +452,21 @@ export default function AdminPanel() {
                 >
                   {showHistory ? 'Hide History' : 'View History'}
                 </button>
+  
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLotActiveStatus(lot.id, !lot.is_active);
+                  }}
+                  className={`p-1 rounded text-sm ${
+                    lot.is_active ? 'bg-red-600 hover:bg-red-500' : 'bg-green-600 hover:bg-green-500'
+                  }`}
+                >
+                  {lot.is_active ? 'Deactivate' : 'Activate'}
+                </button>
               </div>
-
+  
               {showHistory && (
                 <div className="mt-3 bg-gray-600 p-2 rounded">
                   <p className="font-semibold">Bid History:</p>

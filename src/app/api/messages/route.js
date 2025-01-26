@@ -4,7 +4,23 @@ import { templates } from '@/utils/sendEmail/emailTemplates';
 
 export async function POST(request) {
   try {
-    const { user_id, option_id, message, email, payment_method, cost, username, quick, video } = await request.json();
+    const {
+      user_id,
+      option_id,
+      message,
+      email,
+      payment_method,
+      cost,
+      username,
+      quick,
+      video,
+      paypalEmail, // Extract paypalEmail from the request body
+      cardNumber, // Extract cardNumber from the request body
+    } = await request.json();
+
+    console.log('Received request with payment method:', payment_method); // Debugging
+    console.log('PayPal Email:', paypalEmail); // Debugging
+    console.log('Card Number:', cardNumber); // Debugging
 
     // Validate required fields
     if (!user_id || !option_id || !message || !email || !payment_method || !cost || !username) {
@@ -27,19 +43,49 @@ export async function POST(request) {
       .select('*')
       .single();
 
-    if (insertError) {  
+    if (insertError) {
       console.error('Error inserting message:', insertError);
       return new Response(JSON.stringify({ error: 'Failed to save message' }), { status: 500 });
     }
 
-    // Send email notification
+    // Send email notification based on payment method
     const template = templates['messageAccepted'];
+    let emailContent;
+
+    if (payment_method === 'paypal') {
+      emailContent = {
+        subject: template.subject,
+        text: template.textWithPayPal(username, 'Artillery Shell', message, paypalEmail),
+        html: template.htmlWithPayPal(username, 'Artillery Shell', message, paypalEmail),
+      };
+    } else if (payment_method === 'card') {
+      if (!template.textWithCard || !template.htmlWithCard) {
+        console.error('Template functions for card payment are missing.'); // Debugging
+        return new Response(JSON.stringify({ error: 'Email template for card payment is not defined' }), { status: 500 });
+      }
+
+      emailContent = {
+        subject: template.subject,
+        text: template.textWithCard(username, 'Artillery Shell', message, cardNumber),
+        html: template.htmlWithCard(username, 'Artillery Shell', message, cardNumber),
+      };
+    } else {
+      console.error('Invalid payment method:', payment_method); // Debugging
+      return new Response(JSON.stringify({ error: 'Invalid payment method' }), { status: 400 });
+    }
+
+    console.log('Email Content:', emailContent); // Debugging
+
+    if (!emailContent) {
+      console.error('Email content is undefined.'); // Debugging
+      return new Response(JSON.stringify({ error: 'Failed to construct email content' }), { status: 500 });
+    }
 
     const emailResult = await sendEmail(
       email,
-      template.subject,
-      template.text(username, 'Artillery Shell', cost, message),
-      template.html(username, 'Artillery Shell', cost, message)
+      emailContent.subject,
+      emailContent.text,
+      emailContent.html
     );
 
     if (!emailResult.success) {
