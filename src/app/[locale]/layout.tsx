@@ -6,8 +6,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import Providers from "./provider"; // <-- импортируем Client Provider
+import Providers from "./provider";
+import Script from "next/script"; // <-- Импортируем next/script
 
 export const metadata: Metadata = {
   title: "CloudyForge",
@@ -42,16 +42,30 @@ export default async function LocaleLayout({
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+
+        {/* Google Analytics */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-KEBTZX90N8"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-KEBTZX90N8', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
       </head>
       <body className="flex flex-col min-h-screen bg-gray-900 text-white">
-        <SpeedInsights />
 
         {/* next-intl на клиенте */}
         <NextIntlClientProvider messages={messages}>
           {/* React Query на клиенте */}
           <Providers>
             <Navbar />
-
             <main className="flex-1">{children}</main>
             <Footer />
           </Providers>

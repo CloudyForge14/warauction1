@@ -148,19 +148,19 @@ export const templates = {
             <p><a href="https://cloudyforge.com/en/auction" style="color: blue; text-decoration: underline;">Place a bid right now!</a></p>
       <p>Good luck!</p>`,
   },
-
   auctionStarted: {
-    subject: 'New Opportunity to Participate in the Auction!',
+    subject: 'The Auction Has Started!',
     text: (username) =>
-      `DEAR ${username}!\n\nSome lots were not paid for by the previous winner, and they are being re-auctioned according to the rules.\n\nThis means you have a new opportunity to participate in the auction!\n\nDon't miss your chance! Visit CloudyForge and place your bid now.\n\nGood luck!`,
+      `DEAR ${username}!\n\n🔥 THE AUCTION HAS STARTED! 🔥\n\nThe bidding has begun! Don't miss your chance to win a unique military artifact while supporting the Ukrainian military.\n\nStart placing your bids now and secure your piece of history!\n\nGood luck!`,
     html: (username) =>
       `<h1>DEAR ${username}!</h1>
-      <p>Some lots were not paid for by the previous winner, and they are being re-auctioned according to the rules.</p>
-      <p>This means you have a new opportunity to participate in the auction!</p>
-      <p><a href="https://cloudyforge.com/en/" style="color: blue; text-decoration: underline;">Join the auction now!</a></p>
-      <p>Good luck!</p>`
+      <p>🔥 <strong>THE AUCTION HAS STARTED!</strong> 🔥</p>
+      <p>The bidding has begun! Don't miss your chance to win a unique military artifact while supporting the Ukrainian military.</p>
+      <p><a href="https://cloudyforge.com/en/auction" style="color: blue; text-decoration: underline;">Join the auction now!</a></p>
+      <p>Start placing your bids and secure your piece of history!</p>
+      <p>Good luck!</p>`,
   },
-
+  
       
       };
     

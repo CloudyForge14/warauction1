@@ -14,8 +14,8 @@ export async function POST(request) {
       username,
       quick,
       video,
-      paypalEmail, // Extract paypalEmail from the request body
-      cardNumber, // Extract cardNumber from the request body
+      paypalEmail,
+      cardNumber,
     } = await request.json();
 
     console.log('Received request with payment method:', payment_method); // Debugging
@@ -23,8 +23,18 @@ export async function POST(request) {
     console.log('Card Number:', cardNumber); // Debugging
 
     // Validate required fields
-    if (!user_id || !option_id || !message || !email || !payment_method || !cost || !username) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
+    if (
+      !user_id ||
+      !option_id ||
+      !message ||
+      !email ||
+      !payment_method ||
+      !cost ||
+      !username
+    ) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+      });
     }
 
     // Insert message into the database
@@ -37,18 +47,20 @@ export async function POST(request) {
         email,
         payment_method,
         cost,
-        quick, // Include quick option
-        video, // Include video option
+        quick,
+        video,
       })
       .select('*')
       .single();
 
     if (insertError) {
       console.error('Error inserting message:', insertError);
-      return new Response(JSON.stringify({ error: 'Failed to save message' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'Failed to save message' }), {
+        status: 500,
+      });
     }
 
-    // Send email notification based on payment method
+    // Отправляем письмо пользователю
     const template = templates['messageAccepted'];
     let emailContent;
 
@@ -60,8 +72,11 @@ export async function POST(request) {
       };
     } else if (payment_method === 'card') {
       if (!template.textWithCard || !template.htmlWithCard) {
-        console.error('Template functions for card payment are missing.'); // Debugging
-        return new Response(JSON.stringify({ error: 'Email template for card payment is not defined' }), { status: 500 });
+        console.error('Template functions for card payment are missing.');
+        return new Response(
+          JSON.stringify({ error: 'Email template for card payment is not defined' }),
+          { status: 500 }
+        );
       }
 
       emailContent = {
@@ -70,17 +85,23 @@ export async function POST(request) {
         html: template.htmlWithCard(username, 'Artillery Shell', message, cardNumber),
       };
     } else {
-      console.error('Invalid payment method:', payment_method); // Debugging
-      return new Response(JSON.stringify({ error: 'Invalid payment method' }), { status: 400 });
+      console.error('Invalid payment method:', payment_method);
+      return new Response(JSON.stringify({ error: 'Invalid payment method' }), {
+        status: 400,
+      });
     }
 
-    console.log('Email Content:', emailContent); // Debugging
+    console.log('Email Content:', emailContent);
 
     if (!emailContent) {
-      console.error('Email content is undefined.'); // Debugging
-      return new Response(JSON.stringify({ error: 'Failed to construct email content' }), { status: 500 });
+      console.error('Email content is undefined.');
+      return new Response(
+        JSON.stringify({ error: 'Failed to construct email content' }),
+        { status: 500 }
+      );
     }
 
+    // 1) Письмо пользователю
     const emailResult = await sendEmail(
       email,
       emailContent.subject,
@@ -89,8 +110,53 @@ export async function POST(request) {
     );
 
     if (!emailResult.success) {
-      console.error('Error sending email:', emailResult.error);
-      return new Response(JSON.stringify({ error: 'Email notification failed' }), { status: 500 });
+      console.error('Error sending email to user:', emailResult.error);
+      return new Response(JSON.stringify({ error: 'Email notification failed' }), {
+        status: 500,
+      });
+    }
+
+    // 2) Письмо админу (cloudyforge@gmail.com) с информацией о новом сообщении
+    const adminSubject = 'New Ammunition Request Received';
+    const adminText = `
+Hello, CloudyForge Team!
+
+A new request has been received.
+
+Username: ${username}
+User Email: ${email}
+Payment Method: ${payment_method}
+Message: ${message}
+Quick: ${quick}
+Video: ${video}
+Cost: ${cost}
+
+Check the "messages" table for more details.
+`;
+
+    const adminHtml = `
+<h1>New Ammunition Request Received</h1>
+<p><strong>Username:</strong> ${username}</p>
+<p><strong>User Email:</strong> ${email}</p>
+<p><strong>Payment Method:</strong> ${payment_method}</p>
+<p><strong>Message:</strong> ${message}</p>
+<p><strong>Quick:</strong> ${quick}</p>
+<p><strong>Video:</strong> ${video}</p>
+<p><strong>Cost:</strong> ${cost}</p>
+<p>Check the "messages" table for more details.</p>
+`;
+
+    const adminEmailResult = await sendEmail(
+      'cloudyforge@gmail.com',
+      adminSubject,
+      adminText,
+      adminHtml
+    );
+
+    if (!adminEmailResult.success) {
+      console.error('Error sending email to admin:', adminEmailResult.error);
+      // Возвращаем 200, чтобы пользователь не думал, что возникла ошибка.
+      // Можно, если нужно, вернуть 500, но тут оставим всё успешным для UX.
     }
 
     return new Response(

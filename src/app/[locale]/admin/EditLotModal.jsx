@@ -1,4 +1,4 @@
-'use client'; 
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
@@ -24,6 +24,7 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
     e.preventDefault();
     let imageUrl = formData.image_url;
 
+    // Загрузка файла, если выбран
     if (file) {
       const fileName = `${Date.now()}-${file.name}`;
       const { error } = await supabase.storage
@@ -50,17 +51,33 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
       imageUrl = publicUrlData.publicUrl;
     }
 
+    // Вызываем onSave с обновлёнными данными
     onSave({ ...formData, image_url: imageUrl });
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4">Edit Lot</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="lotName">
+    // Фон с отступами, чтобы на маленьких экранах был небольшой отступ
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 sm:p-6">
+      {/* Контейнер модального окна с max-h-[90vh] и overflow-y-auto для скроллинга */}
+      <div className="bg-gray-800 text-white w-full max-w-2xl p-6 sm:p-8 rounded-lg shadow-lg relative max-h-[90vh] overflow-y-auto">
+        {/* Кнопка-крестик для закрытия */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-300 hover:text-white transition text-2xl sm:text-3xl"
+        >
+          ✕
+        </button>
+
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 border-b border-gray-700 pb-2">
+          Edit Lot
+        </h2>
+
+        {/* Форма: одна колонка на маленьких экранах, две на md и выше */}
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Левая колонка */}
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotName">
               Lot Name
             </label>
             <input
@@ -70,26 +87,12 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               placeholder="e.g. Rare Artifact"
               value={formData.name || ''}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="lotDesc">
-              Description
-            </label>
-            <textarea
-              id="lotDesc"
-              name="description"
-              placeholder="Short description of the lot"
-              value={formData.description || ''}
-              onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="currentBid">
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="currentBid">
               Current Bid
             </label>
             <input
@@ -99,12 +102,13 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               placeholder="e.g. 50"
               value={formData.current_bid || 0}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="minRaise">
+          {/* Правая колонка */}
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="minRaise">
               Minimum Raise
             </label>
             <input
@@ -114,12 +118,42 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               placeholder="e.g. 10"
               value={formData.min_raise || 0}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="finishingDate">
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotOrder">
+              Order
+            </label>
+            <input
+              id="lotOrder"
+              type="number"
+              name="order"
+              placeholder="e.g. 1"
+              value={formData.order || 0}
+              onChange={handleChange}
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Полная ширина для Description */}
+          <div className="md:col-span-2 flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotDesc">
+              Description
+            </label>
+            <textarea
+              id="lotDesc"
+              name="description"
+              placeholder="Short description of the lot"
+              value={formData.description || ''}
+              onChange={handleChange}
+              className="p-2 bg-gray-700 rounded-md h-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="finishingDate">
               Finishing Date
             </label>
             <input
@@ -128,12 +162,12 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               name="date_of_finishing"
               value={formData.date_of_finishing || ''}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="finishingTime">
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="finishingTime">
               Finishing Time
             </label>
             <input
@@ -142,22 +176,25 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               name="time_of_finishing"
               value={formData.time_of_finishing || ''}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">
+          {/* Поле для загрузки новой картинки */}
+          <div className="flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1">
               Update Image (optional)
             </label>
             <input
               type="file"
               onChange={handleFileChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="lotPaypal">
+
+          {/* Поля PayPal и Card на всю ширину */}
+          <div className="md:col-span-2 flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotPaypal">
               Paypal
             </label>
             <input
@@ -167,10 +204,12 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               placeholder="Paypal Email"
               value={formData.paypal || ''}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="card">
+          </div>
+
+          <div className="md:col-span-2 flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="card">
               Card Number
             </label>
             <input
@@ -180,22 +219,26 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               placeholder="Card Number"
               value={formData.card || ''}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded-md"
-          >
-            Save Changes
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full bg-red-600 hover:bg-red-700 p-2 rounded-md mt-2"
-          >
-            Cancel
-          </button>
+
+          {/* Кнопки на всю ширину (col-span-2) */}
+          <div className="md:col-span-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-red-600 hover:bg-red-700 p-2 rounded-md w-full sm:w-1/2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 p-2 rounded-md w-full sm:w-1/2"
+            >
+              Save Changes
+            </button>
+          </div>
         </form>
       </div>
     </div>

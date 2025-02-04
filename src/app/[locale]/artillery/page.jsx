@@ -63,7 +63,7 @@ export default function SendMessage() {
       if (!response.ok) throw new Error(t('errors.fetchOptions'));
       return response.json();
     },
-    staleTime: 1000*20, // 20 seconds
+    staleTime: 500, // 20 seconds
     onError: (error) => {
       toast.error(t('errors.fetchOptionsRetry'));
     },
@@ -417,11 +417,11 @@ export default function SendMessage() {
               onClick={() => setShowPaymentModal(false)}
               className="
                 block mx-auto bg-blue-600 px-6 py-2 rounded-md 
-                text-white font-medium hover:bg-blue-700 
+                text-white  font-medium hover:bg-blue-700 
                 focus:outline-none focus:ring-2 focus:ring-blue-500
               "
             >
-              Закрыть
+              Close
             </button>
           </div>
         </div>

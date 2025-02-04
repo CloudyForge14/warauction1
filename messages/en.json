@@ -84,6 +84,7 @@
               "currentBid": "Current Bid",
               "minRaise":"Minimal Raise",
               "placeBid": "Place Bid",
+                "delivery":"Delivery fee: ",
               "close": "Close",
               "loading": "Loading...",
               "errors": {
@@ -95,7 +96,7 @@
               "success": {
                 "bidPlaced": "Bid placed successfully!"
               }
-            
+              
           },
           
             "SendMessage": {

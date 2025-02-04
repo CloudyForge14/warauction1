@@ -1,6 +1,6 @@
 'use client';  // <-- очень важно
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,8 +14,8 @@ export const AddLotModal = ({ onSave, onClose }) => {
     date_of_finishing: '',
     time_of_finishing: '',
     image_url: '',
-    paypal:'',
-    card:''
+    paypal: '',
+    card: '',
   });
   const [file, setFile] = useState(null);
 
@@ -61,11 +61,26 @@ export const AddLotModal = ({ onSave, onClose }) => {
   };
 
   return (
+    // Тёмный оверлей (цвета без изменений)
     <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4">Add Lot</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+      {/* Тёмный контейнер модалки (цвета тоже без изменений) */}
+      <div className="bg-gray-800 p-6 md:p-8 rounded-lg shadow-lg w-full max-w-2xl relative">
+        {/* Кнопка-крестик для закрытия в углу */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-300 hover:text-white transition"
+        >
+          ✕
+        </button>
+
+        <h2 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2">
+          Add Lot
+        </h2>
+        
+        {/* Используем grid для раскладки на две колонки на больших экранах */}
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Левая колонка */}
+          <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="lotName">
               Lot Name
             </label>
@@ -76,25 +91,25 @@ export const AddLotModal = ({ onSave, onClose }) => {
               placeholder="e.g. Rare Artifact"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="lotDesc">
-              Description
+          <div className="flex flex-col">
+            <label className="block text-sm text-gray-300 mb-1" htmlFor="finishingDate">
+              Finishing Date
             </label>
-            <textarea
-              id="lotDesc"
-              name="description"
-              placeholder="Short description of the lot"
-              value={formData.description}
+            <input
+              id="finishingDate"
+              type="date"
+              name="date_of_finishing"
+              value={formData.date_of_finishing}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
 
-          <div>
+          <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="currentBid">
               Current Bid
             </label>
@@ -105,11 +120,11 @@ export const AddLotModal = ({ onSave, onClose }) => {
               placeholder="e.g. 50"
               value={formData.current_bid}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
 
-          <div>
+          <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="minRaise">
               Minimum Raise
             </label>
@@ -120,25 +135,26 @@ export const AddLotModal = ({ onSave, onClose }) => {
               placeholder="e.g. 10"
               value={formData.min_raise}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="finishingDate">
-              Finishing Date
+          {/* Правая колонка */}
+          <div className="flex flex-col md:col-span-2">
+            <label className="block text-sm text-gray-300 mb-1" htmlFor="lotDesc">
+              Description
             </label>
-            <input
-              id="finishingDate"
-              type="date"
-              name="date_of_finishing"
-              value={formData.date_of_finishing}
+            <textarea
+              id="lotDesc"
+              name="description"
+              placeholder="Short description of the lot"
+              value={formData.description}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md h-24"
             />
           </div>
 
-          <div>
+          <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="finishingTime">
               Finishing Time
             </label>
@@ -148,21 +164,23 @@ export const AddLotModal = ({ onSave, onClose }) => {
               name="time_of_finishing"
               value={formData.time_of_finishing}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
 
-          <div>
+          <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1">
               Image (optional)
             </label>
             <input
               type="file"
               onChange={handleFileChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
-          <div>
+
+          {/* Поля PayPal и Card во всю ширину */}
+          <div className="md:col-span-2 flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="lotPaypal">
               Paypal
             </label>
@@ -172,10 +190,10 @@ export const AddLotModal = ({ onSave, onClose }) => {
               placeholder="Paypal email"
               value={formData.paypal}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
-          <div>
+          <div className="md:col-span-2 flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="lotCard">
               Card
             </label>
@@ -185,24 +203,30 @@ export const AddLotModal = ({ onSave, onClose }) => {
               placeholder="Card Number"
               value={formData.card}
               onChange={handleChange}
-              className="w-full p-2 bg-gray-700 rounded-md"
+              className="p-2 bg-gray-700 rounded-md"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded-md"
-          >
-            Add Lot
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full bg-red-600 hover:bg-red-700 p-2 rounded-md mt-2"
-          >
-            Cancel
-          </button>
+
+          {/* Кнопки "Add Lot" и "Cancel" на всю ширину (col-span-2) */}
+          <div className="md:col-span-2 flex justify-end space-x-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-red-600 hover:bg-red-700 p-2 rounded-md mt-2 w-1/2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 p-2 rounded-md mt-2 w-1/2"
+            >
+              Add Lot
+            </button>
+          </div>
         </form>
       </div>
+
+      <ToastContainer />
     </div>
   );
 };

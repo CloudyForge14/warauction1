@@ -6,7 +6,9 @@ export async function GET() {
     // Fetch specific fields from Supabase
     const { data: options, error } = await supabase
     .from('options') // Table name
-    .select('id, name, description, cost'); // Include 'id'
+    .select('id, name, description, cost,order')
+    .order('order', { ascending: true }); // Change to false for descending order
+
   
     if (error) {
       return new Response(JSON.stringify({ error: 'Failed to fetch options' }), { status: 500 });

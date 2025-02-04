@@ -1,3 +1,8 @@
+// 1) Убрал вызов queryClient.invalidateQueries из fetchAuctionItems,
+//    чтобы не было бесконечного цикла refetch.
+// 2) Поставил refetchInterval на 5000 (5сек).
+// 3) Локальный таймер по секунде плавно уменьшает time_left.
+
 "use client";
 import React, { useState, useEffect } from "react";
 import jwt from "jsonwebtoken";
@@ -5,14 +10,13 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { supabase } from "@/utils/supabase/client";
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query"; // <-- вот тут
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // если нужно тут
+import { useQuery } from "@tanstack/react-query"; 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function AuctionItems() {
   const [items, setItems] = useState([]);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); // возможно уберём, заменим на isLoading из useQuery
   const [error, setError] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -23,7 +27,7 @@ export default function AuctionItems() {
   const t = useTranslations("AuctionItems");
 
   // -----------------------
-  // 1) Авторизация / user
+  // Авторизация / user
   // -----------------------
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -69,11 +73,12 @@ export default function AuctionItems() {
   }, []);
 
   // -----------------------
-  // 2) fetchAuctionItems
+  // fetchAuctionItems
   // -----------------------
   const fetchAuctionItems = async () => {
     console.log("Fetching auction items...");
-    queryClient.invalidateQueries("auctionItems");
+    // Убираем вызов invalidateQueries, т.к. useQuery сам следит за обновлениями
+    // queryClient.invalidateQueries("auctionItems");
 
     const response = await fetch("/api/auction-items");
     if (!response.ok) {
@@ -83,49 +88,40 @@ export default function AuctionItems() {
     console.log("Fetched data:", data);
     return data;
   };
-  
 
   // -----------------------
-  // 3) Реактивный запрос через useQuery
-  //    refetch каждые 10 секунд (10,000 ms)
+  // Реактивный запрос через useQuery
+  // refetch каждые 5 секунд (5000 ms)
   // -----------------------
   const {
     data: auctionItemsFromServer,
     isLoading,
     error: queryError,
-    // isFetching, isRefetching и т.д. — если надо
   } = useQuery({
-    queryKey: ["auctionItems"],       // ключ, с которым кэшируются данные
-    queryFn: fetchAuctionItems,       // функция запроса
-    refetchInterval: 5000,           // каждые 10 секунд рефреш
-    staleTime: 0,                  // 10 секунд, пока данные "свежие"
-    //cacheTime: 300000,              // время хранения в кэше
-    onSuccess: (data) => {
-      // Когда пришли данные с сервера, сливаем с локальным стейтом (включая таймеры + плейсхолдеры)
-      // Но лучше делать это в useEffect, чтобы не смешивать
-    },
+    queryKey: ["auctionItems"],
+    queryFn: fetchAuctionItems,
+    refetchInterval: 5000, // <-- 5 секунд
+    staleTime: 0,
   });
 
   // -----------------------
-  // 4) Мержим данные из useQuery в стейт items
+  // Мержим данные из useQuery в стейт items
   // -----------------------
   useEffect(() => {
-    // Если ещё грузится или ошибка, то пока ничего
     if (!auctionItemsFromServer) return;
 
-    // Берём предыдущие items, обновляем их
     setItems((prevItems) => {
-      // 1) Мапим все лоты, что пришли
       const updatedItems = auctionItemsFromServer.map((serverItem) => {
         const existingItem = prevItems.find((item) => item.id === serverItem.id);
         return {
           ...serverItem,
-          // Если такой лот уже есть, оставляем ему time_left
-          time_left: existingItem ? existingItem.time_left : serverItem.time_left,
+          // Если раньше был лот в стейте, берем его time_left, иначе с сервера
+          time_left: serverItem.time_left
+
         };
       });
 
-      // 2) Добавляем placeholders, если меньше 5
+      // Добавляем плейсхолдеры (пример, если у тебя такая логика)
       if (updatedItems.length < 5) {
         const placeholders = Array.from({ length: 5 - updatedItems.length }, (_, index) => ({
           id: `placeholder-${index}`,
@@ -144,14 +140,11 @@ export default function AuctionItems() {
   }, [auctionItemsFromServer]);
 
   // -----------------------
-  // 5) Локальный таймер для time_left
+  // Локальный таймер для time_left (каждую секунду)
   // -----------------------
   useEffect(() => {
-    // Если React Query еще что-то грузит — можно подождать,
-    // но в принципе, если items пустые, таймеру всё равно
     if (isLoading) return;
 
-    // Запускаем интервал на 1с
     const intervalId = setInterval(() => {
       setItems((prevItems) =>
         prevItems.map((item) => ({
@@ -165,7 +158,7 @@ export default function AuctionItems() {
   }, [isLoading]);
 
   // -----------------------
-  // 6) Открытие/закрытие модалок + Place Bid
+  // Модалки, Bid-логика
   // -----------------------
   const openModal = (item) => {
     if (!item) {
@@ -208,7 +201,6 @@ export default function AuctionItems() {
     ).padStart(2, "0")}`;
   };
 
-  // Place Bid
   const handlePlaceBid = async () => {
     if (!isAuthenticated) {
       toast.error("You must be logged in to place a bid");
@@ -232,6 +224,8 @@ export default function AuctionItems() {
         return;
       }
 
+      const totalBid = selectedItem.bid;
+
       const response = await fetch(`/api/place-bid/${selectedItem.id}`, {
         method: "POST",
         headers: {
@@ -239,7 +233,7 @@ export default function AuctionItems() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          newBid: selectedItem.bid,
+          newBid: totalBid,
           paymentType,
         }),
       });
@@ -250,14 +244,14 @@ export default function AuctionItems() {
       }
 
       const updatedItem = await response.json();
-      // Обновим локальный стейт — нашли нужный item по id и заменили
       setItems((prevItems) =>
         prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
       );
 
       toast.success("Bid placed successfully!");
       closeModal();
-      fetchAuctionItems();
+      // После ставки можно рефетч вызвать:
+      queryClient.invalidateQueries(["auctionItems"]);
     } catch (err) {
       console.error("Error placing bid:", err);
       toast.error(err.message || "Failed to place bid. Try again.");
@@ -265,10 +259,10 @@ export default function AuctionItems() {
   };
 
   // -----------------------
-  // 7) Рендер компонента
+  // Рендер
   // -----------------------
 
-  // Если ещё грузим запрос через useQuery
+  // Если ещё грузим
   if (isLoading) {
     return (
       <div
@@ -289,7 +283,6 @@ export default function AuctionItems() {
             height: 40px;
             animation: spin 0.8s linear infinite;
           }
-
           @keyframes spin {
             0% {
               transform: rotate(0deg);
@@ -303,7 +296,7 @@ export default function AuctionItems() {
     );
   }
 
-  // Если ошибка пришла из useQuery
+  // Если ошибка
   if (queryError) {
     return <div>{String(queryError)}</div>;
   }
@@ -366,13 +359,11 @@ export default function AuctionItems() {
               <p className="text-gray-400 text-sm mb-4 truncate">
                 {item.description}
               </p>
-              {/* Divider */}
               <hr className="border-t border-gray-600 mb-4" />
-              {/* Current Bid */}
               <p className="font-semibold text-lg">
                 Current Bid:{" "}
                 <span className="text-yellow-500 font-bold">
-                  ${item.current_bid.toFixed(2)}
+                  ${item.current_bid?.toFixed(2) || "0.00"}
                 </span>
               </p>
             </div>
@@ -380,7 +371,7 @@ export default function AuctionItems() {
         ))}
       </div>
 
-      {/* Modal of selected item */}
+      {/* Modal */}
       {selectedItem && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -390,7 +381,6 @@ export default function AuctionItems() {
             className="bg-gray-800 text-white rounded-lg p-6 max-w-4xl w-full flex flex-col lg:flex-row gap-6"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Image gallery */}
             <div className="lg:w-1/2 w-full">
               <img
                 src={
@@ -419,7 +409,6 @@ export default function AuctionItems() {
               )}
             </div>
 
-            {/* Details + Bidding */}
             <div className="lg:w-1/2 w-full flex flex-col justify-between">
               <div>
                 <h2 className="text-2xl lg:text-3xl font-bold mb-4">
@@ -440,13 +429,13 @@ export default function AuctionItems() {
                 </p>
               </div>
 
-              {/* Bidding + "I agree with terms" */}
               <div className="mt-4">
-                {/* Секция изменения ставки */}
                 <div className="flex items-center mb-4">
                   <button
                     className="bg-gray-600 px-4 py-2 rounded-l"
-                    onClick={() => handleBidChange(-1, selectedItem.min_raise)}
+                    onClick={() =>
+                      handleBidChange(-1, selectedItem.min_raise)
+                    }
                   >
                     -
                   </button>
@@ -484,13 +473,14 @@ export default function AuctionItems() {
                   />
                   <button
                     className="bg-blue-600 px-4 py-2 rounded-r"
-                    onClick={() => handleBidChange(1, selectedItem.min_raise)}
+                    onClick={() =>
+                      handleBidChange(1, selectedItem.min_raise)
+                    }
                   >
                     +
                   </button>
                 </div>
 
-                {/* Выбор типа оплаты */}
                 <div className="mb-4">
                   <label
                     htmlFor="paymentSelect"
@@ -510,25 +500,13 @@ export default function AuctionItems() {
                   </select>
                 </div>
 
-                {/* Чекбокс + кнопка (показать модалку с правилами) */}
-                <div className="flex items-center mb-2 space-x-2">
-                  <label htmlFor="agree" className="text-xs text-gray-400">
-                    By clicking on button you agree with{" "}
-                    <button
-                      type="button"
-                      onClick={() => setShowTermsModal(true)}
-                      className="text-blue-400 underline"
-                    >
-                      terms
-                    </button>
-                  </label>
-                </div>
-
                 <button
                   onClick={handlePlaceBid}
                   className={`w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold`}
                 >
-                  Place Bid
+                  Place a bid: $
+                  {selectedItem.bid ||
+                    selectedItem.current_bid + selectedItem.min_raise}
                 </button>
                 <button
                   onClick={closeModal}
@@ -645,3 +623,5 @@ export default function AuctionItems() {
     </div>
   );
 }
+
+
