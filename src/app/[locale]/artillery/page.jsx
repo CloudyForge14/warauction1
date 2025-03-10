@@ -1,19 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import { useTranslations } from 'next-intl';
+import { useSwipeable } from 'react-swipeable';
 
 export default function SendMessage() {
   const [selectedOptions, setSelectedOptions] = useState([]); // Array of selected items
   const [payment, setPayment] = useState('paypal'); // Payment method
-  const [isQuick, setIsQuick] = useState(false); // Urgent order
-  const [includeVideo, setIncludeVideo] = useState(false); // Firing video
+  const [email, setEmail] = useState('');
+  const [user, setUser] = useState(null);
+  const [paymentDetails, setPaymentDetails] = useState(null);
   const [showCartModal, setShowCartModal] = useState(false); // Cart modal
   const [showTextModal, setShowTextModal] = useState(false); // Text input modal
   const [currentItem, setCurrentItem] = useState(null); // Current item for text input
   const [itemQuantity, setItemQuantity] = useState(1); // Quantity for current item
-  const [itemMessages, setItemMessages] = useState(['']); // Array of messages for current item
+  const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]); // Array of messages with options for current item
 
   // Array of artillery options
   const artilleryOptions = [
@@ -24,7 +28,42 @@ export default function SendMessage() {
     { id: 5, name: '155mm Howitzer Shell', image: '/artillery/3.jpg', cost: 250 },
   ];
 
-  // Add item to cart with messages
+  // For REVENGE slideshow
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const t = useTranslations('SendMessage');
+
+  const images = [
+    '/artillery/10.jpeg',
+    '/artillery/11.jpeg',
+    '/artillery/1.jpeg',
+    '/artillery/2.jpg',
+    '/artillery/3.jpg',
+    '/artillery/4.jpg',
+    '/artillery/5.jpg',
+    '/artillery/8.jpeg',
+    '/artillery/9.jpg',
+  ];
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () =>
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === images.length - 1 ? 0 : prevIndex + 1
+      ),
+    onSwipedRight: () =>
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? images.length - 1 : prevIndex - 1
+      ),
+    trackMouse: true,
+  });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+  // For REVENGE slideshow END
+
+  // Add item to cart with messages and options
   const addToCartWithMessages = (option, messages, quantity) => {
     setSelectedOptions((prev) => {
       const isAlreadyAdded = prev.some((item) => item.id === option.id);
@@ -64,15 +103,12 @@ export default function SendMessage() {
 
   // Calculate total cost of items in cart
   const calculateTotalCartCost = () => {
-    return selectedOptions.reduce((total, item) => total + item.cost * item.quantity, 0);
-  };
-
-  // Calculate total order cost
-  const calculateTotalCost = () => {
-    const cartCost = calculateTotalCartCost();
-    const quickCost = isQuick ? 30 : 0; // Urgent order
-    const videoCost = includeVideo ? 100 : 0; // Firing video
-    return cartCost + quickCost + videoCost;
+    return selectedOptions.reduce((total, item) => {
+      const baseCost = item.cost * item.quantity;
+      const urgentCost = item.messages.reduce((sum, message) => sum + (message.urgent ? 30 : 0), 0);
+      const videoCost = item.messages.reduce((sum, message) => sum + (message.video ? 100 : 0), 0);
+      return total + baseCost + urgentCost + videoCost;
+    }, 0);
   };
 
   // Handle payment
@@ -86,7 +122,7 @@ export default function SendMessage() {
   const handleItemClick = (option) => {
     setCurrentItem(option);
     setItemQuantity(1);
-    setItemMessages(['']); // Reset messages
+    setItemMessages([{ text: '', urgent: false, video: false }]); // Reset messages
     setShowTextModal(true);
   };
 
@@ -95,7 +131,7 @@ export default function SendMessage() {
     setItemQuantity(newQuantity);
     // Adjust the number of messages based on the new quantity
     if (newQuantity > itemMessages.length) {
-      setItemMessages([...itemMessages, ...Array(newQuantity - itemMessages.length).fill('')]);
+      setItemMessages([...itemMessages, ...Array(newQuantity - itemMessages.length).fill({ text: '', urgent: false, video: false })]);
     } else if (newQuantity < itemMessages.length) {
       setItemMessages(itemMessages.slice(0, newQuantity));
     }
@@ -149,7 +185,7 @@ export default function SendMessage() {
           <div
             className="
               bg-gray-800 relative rounded-lg shadow-lg 
-              max-w-md w-full p-6 
+              max-w-md w-full p-6 mx-4 lg:mx-0
               transform transition-transform duration-300 
               animate-scaleIn
             "
@@ -182,7 +218,7 @@ export default function SendMessage() {
             <h2 className="text-xl font-bold mb-4 text-center">Cart</h2>
 
             {/* Scrollable cart content */}
-            <div className="max-h-[40vh] overflow-y-auto pr-2">
+            <div className="max-h-[60vh] overflow-y-auto pr-2">
               {/* List of items in cart */}
               <div className="space-y-4">
                 {selectedOptions.map((option) => (
@@ -216,16 +252,54 @@ export default function SendMessage() {
                     </div>
                     {/* Messages for each item */}
                     {option.messages.map((message, index) => (
-                      <textarea
-                        key={index}
-                        value={message}
-                        onChange={(e) => {
-                          const newMessages = [...option.messages];
-                          newMessages[index] = e.target.value;
-                          updateMessages(option.id, newMessages);
-                        }}
-                        className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-                      />
+                      <div key={index} className="flex flex-col gap-2">
+                        <textarea
+                          value={message.text}
+                          onChange={(e) => {
+                            const newMessages = [...option.messages];
+                            newMessages[index].text = e.target.value;
+                            updateMessages(option.id, newMessages);
+                          }}
+                          className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                        />
+                        {/* Urgent and Video options for each message */}
+                        <div className="mt-2 space-y-2">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`urgent-${option.id}-${index}`}
+                                checked={message.urgent}
+                                onChange={(e) => {
+                                  const newMessages = [...option.messages];
+                                  newMessages[index].urgent = e.target.checked;
+                                  updateMessages(option.id, newMessages);
+                                }}
+                                className="mr-2"
+                              />
+                              <label htmlFor={`urgent-${option.id}-${index}`} className="flex items-center">
+                                Urgent order: $30
+                              </label>
+                            </div>
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`video-${option.id}-${index}`}
+                                checked={message.video}
+                                onChange={(e) => {
+                                  const newMessages = [...option.messages];
+                                  newMessages[index].video = e.target.checked;
+                                  updateMessages(option.id, newMessages);
+                                }}
+                                className="mr-2"
+                              />
+                              <label htmlFor={`video-${option.id}-${index}`} className="flex items-center">
+                                Firing video: $100
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ))}
@@ -236,46 +310,6 @@ export default function SendMessage() {
             <div className="mt-6">
               <p className="text-lg font-semibold">
                 Subtotal: ${calculateTotalCartCost()}
-              </p>
-            </div>
-
-            {/* Additional options */}
-            <div className="mt-4 space-y-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="quick"
-                  checked={isQuick}
-                  onChange={(e) => setIsQuick(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="quick" className="flex items-center">
-                  Urgent order: $30
-                </label>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="video"
-                  checked={includeVideo}
-                  onChange={(e) => setIncludeVideo(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="video" className="flex items-center">
-                  Firing video: $100
-                </label>
-              </div>
-            </div>
-
-            {/* Cost summary */}
-            <div className="mt-6 p-4 bg-gray-700 rounded-md">
-              <h2 className="text-lg font-semibold">Cost Summary</h2>
-              {isQuick && <p>Urgent order: $30</p>}
-              {includeVideo && <p>Firing video: $100</p>}
-              <hr className="my-2 border-gray-600" />
-              <p className="font-bold">
-                Total: ${calculateTotalCost()}
               </p>
             </div>
 
@@ -307,7 +341,7 @@ export default function SendMessage() {
           <div
             className="
               bg-gray-800 relative rounded-lg shadow-lg 
-              max-w-md w-full p-6 
+              max-w-md w-full p-6 mx-4 lg:mx-0
               transform transition-transform duration-300 
               animate-scaleIn
             "
@@ -340,7 +374,7 @@ export default function SendMessage() {
             <h2 className="text-xl font-bold mb-4 text-center">Add Text</h2>
 
             {/* Quantity input */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4"> Quantity
               <button
                 onClick={() => handleQuantityChange(Math.max(1, itemQuantity - 1))}
                 className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
@@ -358,17 +392,55 @@ export default function SendMessage() {
 
             {/* Text inputs for each message */}
             {itemMessages.map((message, index) => (
-              <textarea
-                key={index}
-                placeholder={`Message ${index + 1}`}
-                value={message}
-                onChange={(e) => {
-                  const newMessages = [...itemMessages];
-                  newMessages[index] = e.target.value;
-                  setItemMessages(newMessages);
-                }}
-                className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-              />
+              <div key={index} className="flex flex-col gap-2">
+                <textarea
+                  placeholder={`Message ${index + 1}`}
+                  value={message.text}
+                  onChange={(e) => {
+                    const newMessages = [...itemMessages];
+                    newMessages[index].text = e.target.value;
+                    setItemMessages(newMessages);
+                  }}
+                  className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                />
+                {/* Urgent and Video options for each message */}
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`urgent-${index}`}
+                        checked={message.urgent}
+                        onChange={(e) => {
+                          const newMessages = [...itemMessages];
+                          newMessages[index].urgent = e.target.checked;
+                          setItemMessages(newMessages);
+                        }}
+                        className="mr-2"
+                      />
+                      <label htmlFor={`urgent-${index}`} className="flex items-center">
+                        Urgent order: $30
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`video-${index}`}
+                        checked={message.video}
+                        onChange={(e) => {
+                          const newMessages = [...itemMessages];
+                          newMessages[index].video = e.target.checked;
+                          setItemMessages(newMessages);
+                        }}
+                        className="mr-2"
+                      />
+                      <label htmlFor={`video-${index}`} className="flex items-center">
+                        Firing video: $100
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
 
             {/* Submit button */}
@@ -386,8 +458,74 @@ export default function SendMessage() {
         </div>
       )}
 
+      {/* for REVENGE slideshow */}
+
+      <div className=" bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
+            {t('title')}
+          </h1>
+
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">
+            {t('subtitle')}
+          </h3>
+          <p className="text-xs md:text-sm lg:text-base text-gray-400 mt-4 text-center">
+            {t('description')}
+          </p>
+
+          <div
+            {...swipeHandlers}
+            className="mt-6 w-full lg:w-3/4 mx-auto relative rounded-lg overflow-hidden bg-gray-700 aspect-video"
+          >
+            <div
+              className="flex h-full transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+            >
+              {images.map((src, index) => (
+                <img
+                  key={index}
+                  src={src}
+                  alt={`Slide ${index}`}
+                  className="w-full h-full object-cover flex-shrink-0"
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() =>
+                setCurrentImageIndex((prevIndex) =>
+                  prevIndex === 0 ? images.length - 1 : prevIndex - 1
+                )
+              }
+              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() =>
+                setCurrentImageIndex((prevIndex) =>
+                  prevIndex === images.length - 1 ? 0 : prevIndex + 1
+                )
+              }
+              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
+            >
+              ›
+            </button>
+
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              {images.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-3 h-3 rounded-full ${
+                    index === currentImageIndex ? 'bg-white' : 'bg-gray-400'
+                  }`}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
       {/* Artillery grid */}
-      <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-6 py-12 gap-6">
+      <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-4 lg:px-6 py-12 gap-6">
         <div className="w-full lg:w-2/3 bg-gray-800 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
             Choose Artillery
@@ -419,6 +557,34 @@ export default function SendMessage() {
           </div>
         </div>
       </div>
+      {/* OTSTREL */}
+      <section className="py-20 bg-gray-800 text-gray-100 lg:-mt-32">
+        <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10">
+          <div className="w-full md:w-1/2">
+            <h3 className="text-3xl font-bold mb-4">
+              {t('about.title')}{' '}
+              <span className="text-blue-500 text-4xl">
+                {t('about.projectName')}
+              </span>
+            </h3>
+            <p className="text-gray-400 leading-relaxed">
+              {t('about.description')}
+            </p>
+            <p className="text-gray-400 mt-4">{t('about.callToAction')}</p>
+          </div>
+
+          <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center">
+            <video
+              src="/artillery/otstrel.mp4"
+              className="w-full h-full object-cover"
+              autoPlay
+              loop
+              muted
+            ></video>
+          </div>
+        </div>
+      </section>
+      {/* OTSTREL END */}
     </div>
   );
 }

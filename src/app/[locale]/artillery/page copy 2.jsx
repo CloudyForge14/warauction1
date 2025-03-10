@@ -667,7 +667,7 @@ export default function SendMessage() {
           </form>
         </div>
       </div>
-
+      
       <section className="py-20 bg-gray-800 text-gray-100 lg:-mt-32">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10">
           <div className="w-full md:w-1/2">
