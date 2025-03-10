@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 import { useTranslations } from 'next-intl';
 import { useSwipeable } from 'react-swipeable';
+import { supabase } from '@/utils/supabase/client';
 
 export default function SendMessage() {
   const [selectedOptions, setSelectedOptions] = useState([]); // Array of selected items
@@ -15,9 +15,13 @@ export default function SendMessage() {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [showCartModal, setShowCartModal] = useState(false); // Cart modal
   const [showTextModal, setShowTextModal] = useState(false); // Text input modal
+  const [showPaymentModal, setShowPaymentModal] = useState(false); // Payment modal
   const [currentItem, setCurrentItem] = useState(null); // Current item for text input
   const [itemQuantity, setItemQuantity] = useState(1); // Quantity for current item
   const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]); // Array of messages with options for current item
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  const t = useTranslations('SendMessage');
 
   // Array of artillery options
   const artilleryOptions = [
@@ -30,8 +34,6 @@ export default function SendMessage() {
 
   // For REVENGE slideshow
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const t = useTranslations('SendMessage');
-
   const images = [
     '/artillery/10.jpeg',
     '/artillery/11.jpeg',
@@ -43,6 +45,7 @@ export default function SendMessage() {
     '/artillery/8.jpeg',
     '/artillery/9.jpg',
   ];
+
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () =>
       setCurrentImageIndex((prevIndex) =>
@@ -54,6 +57,7 @@ export default function SendMessage() {
       ),
     trackMouse: true,
   });
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -61,7 +65,32 @@ export default function SendMessage() {
 
     return () => clearInterval(interval);
   }, [images.length]);
-  // For REVENGE slideshow END
+
+  useEffect(() => {
+    setTotalPrice(calculateTotalCartCost());
+  }, [selectedOptions]);
+
+  // Fetch payment details from Supabase
+  useEffect(() => {
+    const fetchPaymentDetails = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('payment')
+          .select('*')
+          .single();
+
+        if (error) {
+          console.error('Error fetching payment details:', error.message);
+        } else {
+          setPaymentDetails(data);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching payment details:', err);
+      }
+    };
+
+    fetchPaymentDetails();
+  }, []);
 
   // Add item to cart with messages and options
   const addToCartWithMessages = (option, messages, quantity) => {
@@ -113,9 +142,9 @@ export default function SendMessage() {
 
   // Handle payment
   const handlePayment = () => {
-    toast.success('Payment successful!');
-    setShowCartModal(false); // Close cart modal
-    setSelectedOptions([]); // Clear cart
+    setTotalPrice(calculateTotalCartCost()); // Обновляем итоговую цену
+    setShowCartModal(false); // Закрываем корзину
+    setShowPaymentModal(true); // Открываем модальное окно оплаты
   };
 
   // Handle item click
@@ -328,6 +357,98 @@ export default function SendMessage() {
         </div>
       )}
 
+      {/* Payment modal */}
+      {showPaymentModal && (
+        <div
+          className="
+            fixed inset-0 z-50 flex items-center justify-center
+            bg-black bg-opacity-50 
+            transition-opacity duration-300 
+            animate-fadeIn
+          "
+        >
+          <div
+            className="
+              bg-gray-800 relative rounded-lg shadow-lg 
+              max-w-md w-full p-6 mx-4 lg:mx-0
+              transform transition-transform duration-300 
+              animate-scaleIn
+            "
+          >
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="
+                absolute right-4 top-4 text-gray-400 hover:text-gray-200 
+                transition-colors duration-200
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <h2 className="text-xl font-bold mb-4 text-center">
+              {payment === 'paypal' ? 'PayPal Details' : 'Card Details'}
+            </h2>
+
+            <div className="text-center">
+              {payment === 'paypal' ? (
+                <>
+                  <p className="text-sm text-gray-300">
+                    {t('sendPaymentToPayPal')}
+                  </p>
+                  <p className="mb-4 text-blue-400 font-semibold">
+                    {paymentDetails?.paypal || 'Not Available'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-300">
+                    {t('sendPaymentToCard')}
+                  </p>
+                  <p className="mb-4 text-blue-400 font-semibold">
+                    {paymentDetails?.card || 'Not Available'}
+                  </p>
+                  <p className="mb-4 text-sm text-gray-400">
+                    {t('cardHolderName')}
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Используем переменную totalPrice */}
+            <p className="text-center mb-4 text-gray-300">
+              {t('totalAmount')}
+              <span className="font-bold">${totalPrice}</span>
+            </p>
+
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="
+                block mx-auto bg-blue-600 px-6 py-2 rounded-md 
+                text-white font-medium hover:bg-blue-700 
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Text input modal */}
       {showTextModal && (
         <div
@@ -374,7 +495,8 @@ export default function SendMessage() {
             <h2 className="text-xl font-bold mb-4 text-center">Add Text</h2>
 
             {/* Quantity input */}
-            <div className="flex items-center gap-2 mb-4"> Quantity
+            <div className="flex items-center gap-2 mb-4">
+              Quantity
               <button
                 onClick={() => handleQuantityChange(Math.max(1, itemQuantity - 1))}
                 className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
@@ -459,70 +581,69 @@ export default function SendMessage() {
       )}
 
       {/* for REVENGE slideshow */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
+          {t('title')}
+        </h1>
 
-      <div className=" bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
-            {t('title')}
-          </h1>
+        <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">
+          {t('subtitle')}
+        </h3>
+        <p className="text-xs md:text-sm lg:text-base text-gray-400 mt-4 text-center">
+          {t('description')}
+        </p>
 
-          <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">
-            {t('subtitle')}
-          </h3>
-          <p className="text-xs md:text-sm lg:text-base text-gray-400 mt-4 text-center">
-            {t('description')}
-          </p>
-
+        <div
+          {...swipeHandlers}
+          className="mt-6 w-full lg:w-3/4 mx-auto relative rounded-lg overflow-hidden bg-gray-700 aspect-video"
+        >
           <div
-            {...swipeHandlers}
-            className="mt-6 w-full lg:w-3/4 mx-auto relative rounded-lg overflow-hidden bg-gray-700 aspect-video"
+            className="flex h-full transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
           >
-            <div
-              className="flex h-full transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
-            >
-              {images.map((src, index) => (
-                <img
-                  key={index}
-                  src={src}
-                  alt={`Slide ${index}`}
-                  className="w-full h-full object-cover flex-shrink-0"
-                />
-              ))}
-            </div>
+            {images.map((src, index) => (
+              <img
+                key={index}
+                src={src}
+                alt={`Slide ${index}`}
+                className="w-full h-full object-cover flex-shrink-0"
+              />
+            ))}
+          </div>
 
-            <button
-              onClick={() =>
-                setCurrentImageIndex((prevIndex) =>
-                  prevIndex === 0 ? images.length - 1 : prevIndex - 1
-                )
-              }
-              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() =>
-                setCurrentImageIndex((prevIndex) =>
-                  prevIndex === images.length - 1 ? 0 : prevIndex + 1
-                )
-              }
-              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
-            >
-              ›
-            </button>
+          <button
+            onClick={() =>
+              setCurrentImageIndex((prevIndex) =>
+                prevIndex === 0 ? images.length - 1 : prevIndex - 1
+              )
+            }
+            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
+          >
+            ‹
+          </button>
+          <button
+            onClick={() =>
+              setCurrentImageIndex((prevIndex) =>
+                prevIndex === images.length - 1 ? 0 : prevIndex + 1
+              )
+            }
+            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
+          >
+            ›
+          </button>
 
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {images.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-3 h-3 rounded-full ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-gray-400'
-                  }`}
-                ></div>
-              ))}
-            </div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index === currentImageIndex ? 'bg-white' : 'bg-gray-400'
+                }`}
+              ></div>
+            ))}
           </div>
         </div>
+      </div>
 
       {/* Artillery grid */}
       <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-4 lg:px-6 py-12 gap-6">
@@ -557,6 +678,7 @@ export default function SendMessage() {
           </div>
         </div>
       </div>
+
       {/* OTSTREL */}
       <section className="py-20 bg-gray-800 text-gray-100 lg:-mt-32">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10">
