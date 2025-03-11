@@ -8,28 +8,51 @@ import { useSwipeable } from 'react-swipeable';
 import { supabase } from '@/utils/supabase/client';
 
 export default function SendMessage() {
-  const [selectedOptions, setSelectedOptions] = useState([]); // Array of selected items
-  const [payment, setPayment] = useState('paypal'); // Payment method
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [payment, setPayment] = useState('paypal');
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState(null);
-  const [showCartModal, setShowCartModal] = useState(false); // Cart modal
-  const [showTextModal, setShowTextModal] = useState(false); // Text input modal
-  const [showPaymentModal, setShowPaymentModal] = useState(false); // Payment modal
-  const [currentItem, setCurrentItem] = useState(null); // Current item for text input
-  const [itemQuantity, setItemQuantity] = useState(1); // Quantity for current item
-  const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]); // Array of messages with options for current item
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [showTextModal, setShowTextModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [itemQuantity, setItemQuantity] = useState(1);
+  const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]);
   const [totalPrice, setTotalPrice] = useState(0);
 
   const t = useTranslations('SendMessage');
 
+  // Добавляем useEffect для получения пользователя
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const fetchUser = async () => {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
+        if (error) {
+          console.error('Error fetching user:', error.message);
+          toast.error('Failed to fetch user data. Please try again.');
+        } else {
+          setUser(user);
+          setEmail(user?.email || ''); // Устанавливаем email, если он есть
+          localStorage.setItem('user', JSON.stringify(user)); // Сохраняем пользователя в localStorage
+        }
+      };
+
+      fetchUser();
+    }
+  }, []);
+
   // Array of artillery options
   const artilleryOptions = [
-    { id: 1, name: '12mm Artillery Shell', image: '/artillery/10.jpeg', cost: 100 },
-    { id: 2, name: '123mm Tank Shell', image: '/artillery/11.jpeg', cost: 150 },
-    { id: 3, name: '123mm Artillery Shell', image: '/artillery/1.jpeg', cost: 200 },
-    { id: 4, name: '123mm Mortar Shell', image: '/artillery/2.jpg', cost: 120 },
-    { id: 5, name: '155mm Howitzer Shell', image: '/artillery/3.jpg', cost: 250 },
+    { id: 18, name: '120mm Mortar Shells', image: '/artillery/10.jpeg', cost: 30 },
+    { id: 19, name: '82mm Mortar Shell', image: '/artillery/11.jpeg', cost: 25 },
+    { id: 20, name: '125mm Tank Shell', image: '/artillery/1.jpeg', cost: 40 },
+    { id: 21, name: '155mm Artillery Shell', image: '/artillery/2.jpg', cost: 40 },
+    { id: 22, name: '122mm Artillery Shell', image: '/artillery/3.jpg', cost: 35 },
   ];
 
   // For REVENGE slideshow
@@ -141,11 +164,64 @@ export default function SendMessage() {
   };
 
   // Handle payment
-  const handlePayment = () => {
-    setTotalPrice(calculateTotalCartCost()); // Обновляем итоговую цену
-    setShowCartModal(false); // Закрываем корзину
-    setShowPaymentModal(true); // Открываем модальное окно оплаты
+  const handlePayment = async () => {
+    if (!email) {
+      toast.error('Please provide a valid email address.');
+      return;
+    }
+  
+    const totalCost = calculateTotalCartCost(); // Get the total cost
+    setTotalPrice(totalCost); // Update the totalPrice state
+  
+    // Prepare data for the backend
+    const orderData = {
+      user_id: user?.id, // Ensure user_id is provided
+      option_id: selectedOptions[0]?.id, // ID of the selected option
+      messages: selectedOptions.flatMap((item) => item.messages), // All messages
+      email: email, // Ensure email is provided
+      payment_method: payment, // Payment method
+      cost: totalCost, // Total cost
+      quick: selectedOptions.some((item) => item.messages.some((msg) => msg.urgent)), // Check for urgent messages
+      video: selectedOptions.some((item) => item.messages.some((msg) => msg.video)), // Check for video messages
+    };
+  
+    try {
+      // Send data to the backend
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+  
+      const result = await response.json();
+      console.log('Order created:', result);
+  
+      // Show success notification
+      toast.success('Order created successfully!');
+  
+      // Close the cart modal and open the payment modal
+      setShowCartModal(false);
+      setShowPaymentModal(true);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error('Failed to create order. Please try again.');
+    }
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+  
+    fetchUser();
+  }, []);
 
   // Handle item click
   const handleItemClick = (option) => {

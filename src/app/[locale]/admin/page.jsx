@@ -15,7 +15,7 @@ export default function AdminPanel() {
   const [lotHistories, setLotHistories] = useState({});
   const [options, setOptions] = useState([]);
   const [optionMessages, setOptionMessages] = useState({});
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState({ active: [], banned: [] });
   const [modal, setModal] = useState({ type: "", data: null });
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("lots");
@@ -95,10 +95,14 @@ export default function AdminPanel() {
       console.error("Fetch users error:", error);
       return;
     }
+  
+    // Обогащаем данные (добавляем поле is_admin)
     const enrichedUsers = data.map((user) => ({
       ...user,
       is_admin: user.admins.length > 0,
     }));
+  
+    // Сохраняем в состоянии
     setUsers(enrichedUsers);
   };
 
@@ -314,11 +318,19 @@ export default function AdminPanel() {
       .from("users")
       .update({ is_banned: isBanned })
       .eq("id", userId);
+  
     if (error) {
+      console.error("Error updating ban status:", error);
       toast.error("Failed to update user ban status.");
     } else {
       toast.success(isBanned ? "User banned successfully." : "User unbanned successfully.");
-      fetchUsers();
+  
+      // Обновляем состояние
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, is_banned: isBanned } : user
+        )
+      );
     }
   };
 
@@ -604,55 +616,79 @@ export default function AdminPanel() {
   );
 
   // =============== USERS TAB ===============
-  const renderUsersTab = () => (
-    <Section>
-      <h2 className="text-xl font-bold mb-4">Users</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {users.map((user) => (
-          <div
-            key={user.id}
-            className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer"
-          >
-            <h3 className="text-lg font-semibold">{user.username}</h3>
-            <h3 className="text-base text-gray-400">{user.email}</h3>
-            <p
-              className={`text-sm ${
-                user.is_admin
-                  ? "text-yellow-500 font-bold"
-                  : user.is_banned
-                  ? "text-red-500"
-                  : "text-gray-400"
-              }`}
+  const renderUsersTab = () => {
+    // Фильтруем пользователей на активных и забаненных
+    const activeUsers = users.filter((user) => !user.is_banned);
+    const bannedUsers = users.filter((user) => user.is_banned);
+  
+    return (
+      <Section>
+        <h2 className="text-xl font-bold mb-4">Active Users</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {activeUsers.map((user) => (
+            <div
+              key={user.id}
+              className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer"
             >
-              {user.is_banned ? "Banned" : user.is_admin ? "Admin" : "Active"}
-            </p>
-            <div className="mt-2 flex space-x-2">
-              <button
-                onClick={() => handleBanUser(user.id, !user.is_banned)}
-                className={`p-1 rounded-md ${
-                  user.is_banned ? "bg-green-600" : "bg-red-600"
-                } text-sm`}
+              <h3 className="text-lg font-semibold">{user.username}</h3>
+              <h3 className="text-base text-gray-400">{user.email}</h3>
+              <p
+                className={`text-sm ${
+                  user.is_admin
+                    ? "text-yellow-500 font-bold"
+                    : "text-gray-400"
+                }`}
               >
-                {user.is_banned ? "Unban" : "Ban"}
-              </button>
-              {!user.is_banned && (
+                {user.is_admin ? "Admin" : "Active"}
+              </p>
+              <div className="mt-2 flex space-x-2">
                 <button
-                  onClick={() =>
-                    user.is_admin ? handleDemoteUser(user.id) : handlePromoteUser(user.id)
-                  }
-                  className={`p-1 rounded-md ${
-                    user.is_admin ? "bg-gray-600" : "bg-blue-600"
-                  } text-sm`}
+                  onClick={() => handleBanUser(user.id, !user.is_banned)}
+                  className={`p-1 rounded-md bg-red-600 text-sm`}
                 >
-                  {user.is_admin ? "Demote" : "Promote"}
+                  Ban
                 </button>
-              )}
+                {!user.is_banned && (
+                  <button
+                    onClick={() =>
+                      user.is_admin ? handleDemoteUser(user.id) : handlePromoteUser(user.id)
+                    }
+                    className={`p-1 rounded-md ${
+                      user.is_admin ? "bg-gray-600" : "bg-blue-600"
+                    } text-sm`}
+                  >
+                    {user.is_admin ? "Demote" : "Promote"}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
+          ))}
+        </div>
+  
+        <h2 className="text-xl font-bold mb-4">Banned Users</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {bannedUsers.map((user) => (
+            <div
+              key={user.id}
+              className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer"
+            >
+              <h3 className="text-lg font-semibold">{user.username}</h3>
+              <h3 className="text-base text-gray-400">{user.email}</h3>
+              <p className="text-sm text-red-500">Banned</p>
+              <div className="mt-2 flex space-x-2">
+                <button
+                  onClick={() => handleBanUser(user.id, !user.is_banned)}
+                  className={`p-1 rounded-md bg-green-600 text-sm`}
+                >
+                  Unban
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+    );
+  };
 
   // =============== PAYMENT TAB ===============
   const renderPaymentTab = () => (
