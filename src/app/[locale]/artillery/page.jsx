@@ -87,14 +87,14 @@ export default function SendMessage() {
   // For REVENGE slideshow
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
-    '/artillery/10.jpeg',
-    '/artillery/11.jpeg',
-    '/artillery/1.jpeg',
+    '/artillery/10.jpg',
+    '/artillery/11.jpg',
+    '/artillery/1.jpg',
     '/artillery/2.jpg',
     '/artillery/3.jpg',
     '/artillery/4.jpg',
     '/artillery/5.jpg',
-    '/artillery/8.jpeg',
+    '/artillery/8.jpg',
     '/artillery/9.jpg',
   ];
 
@@ -802,7 +802,7 @@ export default function SendMessage() {
 
           <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center">
             <video
-              src="/artillery/otstrel.mp4"
+              src="/artillery/otstrel.MP4"
               className="w-full h-full object-cover"
               autoPlay
               loop
