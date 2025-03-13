@@ -20,8 +20,24 @@ export default function SendMessage() {
   const [itemQuantity, setItemQuantity] = useState(1);
   const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [artilleryOptions, setArtilleryOptions] = useState([]); // Состояние для артиллерии из базы данных
 
   const t = useTranslations('SendMessage');
+
+  // Массив фоток для артиллерии
+  const artilleryImages = [
+    '/artillery/1.jpg',
+    '/artillery/2.jpg',
+    '/artillery/3.jpg',
+    '/artillery/4.jpg',
+    '/artillery/5.jpg',
+    '/artillery/6.jpg',
+    '/artillery/7.jpg',
+    '/artillery/8.jpg',
+    '/artillery/9.jpg',
+    '/artillery/10.jpg',
+    '/artillery/11.jpg',
+  ];
 
   // Добавляем useEffect для получения пользователя
   useEffect(() => {
@@ -46,14 +62,27 @@ export default function SendMessage() {
     }
   }, []);
 
-  // Array of artillery options
-  const artilleryOptions = [
-    { id: 18, name: '120mm Mortar Shells', image: '/artillery/10.jpeg', cost: 30 },
-    { id: 19, name: '82mm Mortar Shell', image: '/artillery/11.jpeg', cost: 25 },
-    { id: 20, name: '125mm Tank Shell', image: '/artillery/1.jpeg', cost: 40 },
-    { id: 21, name: '155mm Artillery Shell', image: '/artillery/2.jpg', cost: 40 },
-    { id: 22, name: '122mm Artillery Shell', image: '/artillery/3.jpg', cost: 35 },
-  ];
+  // Загрузка артиллерии из базы данных
+  useEffect(() => {
+    const fetchArtilleryOptions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('options') // Предположим, что таблица называется 'options'
+          .select('*');
+
+        if (error) {
+          console.error('Error fetching artillery options:', error.message);
+          toast.error('Failed to fetch artillery options. Please try again.');
+        } else {
+          setArtilleryOptions(data); // Устанавливаем данные в состояние
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching artillery options:', err);
+      }
+    };
+
+    fetchArtilleryOptions();
+  }, []);
 
   // For REVENGE slideshow
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -730,7 +759,7 @@ export default function SendMessage() {
 
           {/* Grid of artillery options */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {artilleryOptions.map((option) => (
+            {artilleryOptions.map((option, index) => (
               <div
                 key={option.id}
                 className={`p-4 bg-gray-700 rounded-lg shadow-md cursor-pointer transition-all duration-300 ${
@@ -742,7 +771,7 @@ export default function SendMessage() {
               >
                 <div className="w-full h-48 overflow-hidden rounded-md mb-4">
                   <img
-                    src={option.image}
+                    src={artilleryImages[index]} // Используем фотки из массива
                     alt={option.name}
                     className="w-full h-full object-cover"
                   />
