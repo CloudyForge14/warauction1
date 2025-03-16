@@ -87,7 +87,7 @@ export default function SendMessage() {
   // For REVENGE slideshow
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
-    '/artillery/10.jpg',
+    '/artillery/1.jpg',
     '/artillery/11.jpg',
     '/artillery/1.jpg',
     '/artillery/2.jpg',
@@ -307,6 +307,7 @@ export default function SendMessage() {
       </div>
 
       {/* Cart modal */}
+      
       {showCartModal && (
         <div
           className="
@@ -445,6 +446,24 @@ export default function SendMessage() {
               <p className="text-lg font-semibold">
                 Subtotal: ${calculateTotalCartCost()}
               </p>
+            </div>
+
+            {/* Payment method selection */}
+            <div className="mt-4">
+              <div className='flex items-center gap-2'>
+                <label htmlFor="paymentMethod" className="text-base font-medium whitespace-nowrap">
+                  Payment Method
+                </label>
+                <select
+                  id="paymentMethod"
+                  value={payment} // Используем существующее состояние `payment`
+                  onChange={(e) => setPayment(e.target.value)} // Используем существующий сеттер `setPayment`
+                  className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="paypal">PayPal</option>
+                  <option value="card">Card</option>
+                </select>
+              </div>
             </div>
 
             {/* Payment button */}
