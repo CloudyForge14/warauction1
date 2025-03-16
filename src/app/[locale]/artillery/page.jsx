@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTranslations } from 'next-intl';
 import { useSwipeable } from 'react-swipeable';
 import { supabase } from '@/utils/supabase/client';
+import { FaTimes } from "react-icons/fa";
 
 export default function SendMessage() {
   const [selectedOptions, setSelectedOptions] = useState([]);
@@ -163,13 +164,55 @@ export default function SendMessage() {
     setSelectedOptions((prev) => prev.filter((item) => item.id !== optionId));
   };
 
-  // Update item quantity in cart
-  const updateQuantity = (optionId, quantity) => {
-    if (quantity < 1) return; // Minimum quantity is 1
+  const removeMessage = (optionId, messageIndex) => {
     setSelectedOptions((prev) =>
       prev.map((item) =>
-        item.id === optionId ? { ...item, quantity: quantity } : item
+        item.id === optionId
+          ? {
+              ...item,
+              messages: item.messages.filter((_, index) => index !== messageIndex),
+            }
+          : item
       )
+    );
+  };
+
+  // Update item quantity in cart
+  const updateQuantity = (optionId, newQuantity) => {
+    if (newQuantity < 1) return; // Минимальное количество - 1
+  
+    setSelectedOptions((prev) =>
+      prev.map((item) => {
+        if (item.id === optionId) {
+          // Копируем текущие сообщения
+          const currentMessages = item.messages;
+  
+          // Если новое количество больше текущего, добавляем пустые сообщения
+          if (newQuantity > currentMessages.length) {
+            const additionalMessages = Array(newQuantity - currentMessages.length)
+              .fill()
+              .map(() => ({ text: '', urgent: false, video: false }));
+            return {
+              ...item,
+              quantity: newQuantity,
+              messages: [...currentMessages, ...additionalMessages],
+            };
+          }
+          // Если новое количество меньше текущего, удаляем лишние сообщения
+          else if (newQuantity < currentMessages.length) {
+            return {
+              ...item,
+              quantity: newQuantity,
+              messages: currentMessages.slice(0, newQuantity),
+            };
+          }
+          // Если количество не изменилось, просто обновляем quantity
+          else {
+            return { ...item, quantity: newQuantity };
+          }
+        }
+        return item;
+      })
     );
   };
 
@@ -300,10 +343,10 @@ export default function SendMessage() {
 
       {/* Cart icon with item count */}
       <div
-        className="fixed bottom-4 right-4 bg-blue-600 p-3 rounded-full cursor-pointer hover:bg-blue-700 transition-colors z-50"
+        className="fixed bottom-4 right-4 bg-blue-600 p-3 rounded-md cursor-pointer hover:bg-blue-700 transition-colors z-50"
         onClick={() => setShowCartModal(true)}
       >
-        <span className="text-white font-semibold">🛒 {selectedOptions.length}</span>
+        <span className="text-white font-semibold text-2xl">🛒 {selectedOptions.length}</span>
       </div>
 
       {/* Cart modal */}
@@ -387,7 +430,7 @@ export default function SendMessage() {
                     </div>
                     {/* Messages for each item */}
                     {option.messages.map((message, index) => (
-                      <div key={index} className="flex flex-col gap-2">
+                      <div key={index} className="flex flex-col gap-2 relative"> {/* Добавлен relative */}
                         <textarea
                           value={message.text}
                           onChange={(e) => {
@@ -397,7 +440,14 @@ export default function SendMessage() {
                           }}
                           className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                         />
-                        {/* Urgent and Video options for each message */}
+                        {/* Красная кнопка с крестиком, позиционированная поверх textarea */}
+                        <button
+                          onClick={() => removeMessage(option.id, index)}
+                          className="absolute top-3 right-2 p-2 text-red-600 hover:text-red-400 rounded-xl flex items-center justify-center"
+                        >
+                          <FaTimes className="w-4 h-4" /> {/* Иконка крестика */}
+                        </button>
+                        {/* Urgent и Video опции */}
                         <div className="mt-2 space-y-2">
                           <div className="flex items-center gap-4">
                             <div className="flex items-center">
