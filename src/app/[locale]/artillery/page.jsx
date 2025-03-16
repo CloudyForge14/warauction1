@@ -168,17 +168,24 @@ export default function SendMessage() {
 
   const removeMessage = (optionId, messageIndex) => {
     setSelectedOptions((prev) =>
-      prev.map((item) =>
-        item.id === optionId
-          ? {
-              ...item,
-              messages: item.messages.filter((_, index) => index !== messageIndex),
-            }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id === optionId) {
+          // Удаляем сообщение
+          const updatedMessages = item.messages.filter((_, index) => index !== messageIndex);
+          
+          // Если количество сообщений меньше quantity, обновляем quantity
+          const updatedQuantity = Math.max(updatedMessages.length, 1); // Минимум 1
+  
+          return {
+            ...item,
+            messages: updatedMessages,
+            quantity: updatedQuantity,
+          };
+        }
+        return item;
+      })
     );
   };
-
   // Update item quantity in cart
   const updateQuantity = (optionId, newQuantity) => {
     if (newQuantity < 1) return; // Минимальное количество - 1
