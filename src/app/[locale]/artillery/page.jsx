@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import { useSwipeable } from 'react-swipeable';
 import { supabase } from '@/utils/supabase/client';
 import { FaTimes } from "react-icons/fa";
+// import { useRouter } from 'next/router'; // Импортируем useRouter
+
 
 export default function SendMessage() {
   const [selectedOptions, setSelectedOptions] = useState([]);
@@ -22,7 +24,7 @@ export default function SendMessage() {
   const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [artilleryOptions, setArtilleryOptions] = useState([]); // Состояние для артиллерии из базы данных
-
+  // const router = useRouter(); // Используем useRouter для перенаправления
   const t = useTranslations('SendMessage');
 
   // Массив фоток для артиллерии
@@ -50,8 +52,8 @@ export default function SendMessage() {
         } = await supabase.auth.getUser();
 
         if (error) {
-          console.error('Error fetching user:', error.message);
-          toast.error('Failed to fetch user data. Please try again.');
+          console.log('No user:', error.message);
+          // toast.error('Failed to fetch user data. Please try again.');
         } else {
           setUser(user);
           setEmail(user?.email || ''); // Устанавливаем email, если он есть
@@ -237,6 +239,13 @@ export default function SendMessage() {
 
   // Handle payment
   const handlePayment = async () => {
+    // const router = useRouter
+    if (!user) {
+      toast.error('You need to be logged in to proceed with payment.');
+      // router.push('/login'); // Перенаправляем на страницу входа
+      return;
+    }
+
     if (!email) {
       toast.error('Please provide a valid email address.');
       return;
@@ -255,8 +264,12 @@ export default function SendMessage() {
       cost: totalCost, // Total cost
       quick: selectedOptions.some((item) => item.messages.some((msg) => msg.urgent)), // Check for urgent messages
       video: selectedOptions.some((item) => item.messages.some((msg) => msg.video)), // Check for video messages
+      paypalEmail: paymentDetails.paypal,
+      cardNumber: paymentDetails.card
     };
-  
+    
+    console.log(paymentDetails)
+
     try {
       // Send data to the backend
       const response = await fetch('/api/messages', {
