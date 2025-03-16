@@ -46,7 +46,10 @@ export async function POST() {
     
     console.log(timeLeftHours);
     
-    
+    if (timeLeftHours === 24) {
+      await notifyUsers(item, templates.auctionLastDay);
+      console.log("4");
+    }
 
     // Если осталось примерно 4 часа, отправляем email
     if (timeLeftHours === 4) {
