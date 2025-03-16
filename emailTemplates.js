@@ -160,7 +160,17 @@ export const templates = {
       <p>Start placing your bids and secure your piece of history!</p>
       <p>Good luck!</p>`,
   },
-  
-      
-      };
+
+  auctionLastDay: {
+    subject: 'The Last 24 Hours Before the End of the Auction!',
+    text: (username) =>
+      `DEAR ${username}!\n\n❗️THE LAST 24 HOURS BEFORE THE END OF THE AUCTION.\n\nThis is your last chance to win a truly unique lot and support the legendary Brigades!\n\nPlace a bid right now!\n\nGood luck!`,
+    html: (username) =>
+      `<h1>DEAR ${username}!</h1>
+      <p>❗️<strong>THE LAST 24 HOURS BEFORE THE END OF THE AUCTION.</strong></p>
+      <p>This is your last chance to win a truly unique lot and support the legendary Brigades!</p>
+      <p><a href="https://cloudyforge.com/en/auction" style="color: blue; text-decoration: underline;">Place a bid right now!</a></p>
+      <p>Good luck!</p>`,
+  },
+}
     
