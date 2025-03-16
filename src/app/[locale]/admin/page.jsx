@@ -623,7 +623,10 @@ export default function AdminPanel() {
   
     return (
       <Section>
-        <h2 className="text-xl font-bold mb-4">Active Users</h2>
+        {/* Секция активных пользователей */}
+        <h2 className="text-xl font-bold mb-4">
+          Active Users ({activeUsers.length})
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           {activeUsers.map((user) => (
             <div
@@ -651,7 +654,9 @@ export default function AdminPanel() {
                 {!user.is_banned && (
                   <button
                     onClick={() =>
-                      user.is_admin ? handleDemoteUser(user.id) : handlePromoteUser(user.id)
+                      user.is_admin
+                        ? handleDemoteUser(user.id)
+                        : handlePromoteUser(user.id)
                     }
                     className={`p-1 rounded-md ${
                       user.is_admin ? "bg-gray-600" : "bg-blue-600"
@@ -665,7 +670,10 @@ export default function AdminPanel() {
           ))}
         </div>
   
-        <h2 className="text-xl font-bold mb-4">Banned Users</h2>
+        {/* Секция забаненных пользователей */}
+        <h2 className="text-xl font-bold mb-4">
+          Banned Users ({bannedUsers.length})
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {bannedUsers.map((user) => (
             <div
