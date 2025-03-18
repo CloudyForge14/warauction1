@@ -363,12 +363,36 @@ export default function SendMessage() {
 
       {/* Cart icon with item count */}
       <div
-        className="fixed bottom-4 right-4 bg-blue-600 p-3 rounded-md cursor-pointer hover:bg-blue-700 transition-colors z-50"
+        className="fixed bottom-6 right-6 cursor-pointer z-50"
         onClick={() => setShowCartModal(true)}
       >
-        <span className="text-white font-semibold text-2xl">🛒 {selectedOptions.length}</span>
+        <div className="relative">
+          {/* Увеличенная кнопка корзины */}
+          <div className="bg-blue-600 py-3 pr-3 pl-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-lg">
+            {/* Увеличенная SVG иконка корзины */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="48" // Увеличиваем размер иконки
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="feather feather-shopping-cart"
+            >
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          {/* Красная надпись с количеством товаров */}
+          <span className="absolute -top-3 -right-3 bg-red-500 text-white text-sm rounded-full px-3 py-1.5 font-semibold shadow-sm">
+            {selectedOptions.length}
+          </span>
+        </div>
       </div>
-
       {/* Cart modal */}
       
       {showCartModal && (
@@ -840,7 +864,7 @@ export default function SendMessage() {
       </div>
 
       {/* Artillery grid */}
-      <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-4 lg:px-6 py-12 gap-6">
+      <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-4 lg:px-6 py-12 gap-6 mb-20">
         <div className="w-full lg:w-2/3 bg-gray-800 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
             Choose Artillery
@@ -875,7 +899,7 @@ export default function SendMessage() {
 
       {/* OTSTREL */}
       <section className="py-20 bg-gray-800 text-gray-100 lg:-mt-32">
-        <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10">
+        <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10 ">
           <div className="w-full md:w-1/2">
             <h3 className="text-3xl font-bold mb-4">
               {t('about.title')}{' '}

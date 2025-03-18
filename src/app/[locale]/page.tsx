@@ -65,14 +65,14 @@ const AuctionApp = () => {
     const [loading, setLoading] = useState(false); // Add this line
 
     const artilleryImages = [
-      '/artillery/10.jpeg',
-      '/artillery/11.jpeg',
-      '/artillery/1.jpeg',
+      '/artillery/10.jpg',
+      '/artillery/11.jpg',
+      '/artillery/1.jpg',
       '/artillery/2.jpg',
       '/artillery/3.jpg',
       '/artillery/4.jpg',
       '/artillery/5.jpg',
-      '/artillery/8.jpeg',
+      '/artillery/8.jpg',
       '/artillery/9.jpg',
     ];
     const auctionImages = [

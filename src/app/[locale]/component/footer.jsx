@@ -23,14 +23,6 @@ export default function Footer() {
           <ul>
             <li>
               <a
-                href="mailto:support@cloudyforge.com"
-                className="text-gray-400 hover:text-white transition"
-              >
-                {t('support.email')}
-              </a>
-            </li>
-            <li>
-              <a
                 href="https://x.com/GloOouD "
                 target="_blank"
                 rel="noopener noreferrer"
