@@ -2,16 +2,21 @@ import { supabase } from "@/utils/supabase/client";
 import { sendEmail } from "@/utils/sendEmail/sender";
 import { templates } from "@/utils/sendEmail/emailTemplates";
 
-// Теперь функция принимает второй аргумент с параметрами из URL (например, timeleft)
-export async function POST(request: Request, { params }: { params: { timeleft?: string } }) {
+export async function POST(request) {
   try {
-    // Если в URL передали параметр, то переопределяем вычисленное время
-    let overrideTime: number | undefined;
-    if (params?.timeleft) {
-      overrideTime = parseInt(params.timeleft, 10);
+    // Пробуем распарсить тело запроса, если оно пришло
+    let overrideTime;
+    try {
+      const body = await request.json();
+      if (body && body.timeleft) {
+        overrideTime = parseInt(body.timeleft, 10);
+        console.log(`Переопределённое время из body: ${overrideTime}`);
+      }
+    } catch (err) {
+      console.log("Нет валидного JSON в body, считаем время автоматически");
     }
 
-    // Получаем текущее время в часовом поясе Киева
+    // Получаем текущее время по Киеву
     const kyivTime = new Date(
       new Date().toLocaleString("en-US", { timeZone: "Europe/Kiev" })
     );
@@ -24,20 +29,22 @@ export async function POST(request: Request, { params }: { params: { timeleft?: 
       .limit(1);
 
     if (fetchError) {
-      console.error("Error fetching auction items:", fetchError);
-      return new Response(JSON.stringify({ error: fetchError.message }), { status: 500 });
+      console.error("Ошибка получения аукционных лотов:", fetchError);
+      return new Response(JSON.stringify({ error: fetchError.message }), {
+        status: 500,
+      });
     }
 
     if (!item || item.length === 0) {
       return new Response(
-        JSON.stringify({ message: "No active auction items found." }),
+        JSON.stringify({ message: "Активные аукционные лоты не найдены." }),
         { status: 200 }
       );
     }
 
     const auctionItem = item[0];
 
-    // Получаем время окончания аукциона
+    // Формируем дату окончания аукциона
     const finishTime = new Date(
       `${auctionItem.date_of_finishing}T${auctionItem.time_of_finishing}`
     );
@@ -45,15 +52,14 @@ export async function POST(request: Request, { params }: { params: { timeleft?: 
     console.log("Finish Time:", finishTime);
     console.log("Kyiv Time:", kyivTime);
 
-    let timeLeftHours: number;
+    let timeLeftHours;
     if (overrideTime !== undefined) {
       timeLeftHours = overrideTime;
-      console.log(`Переопределённое время: ${timeLeftHours} час(а/ов)`);
     } else {
       const timeDiffMs = finishTime.getTime() - kyivTime.getTime();
       timeLeftHours = Math.round(timeDiffMs / (1000 * 60 * 60));
-      console.log(`Вычисленное время: ${timeLeftHours} час(а/ов)`);
     }
+    console.log(`Оставшееся время: ${timeLeftHours} часов`);
 
     // Выбираем нужный шаблон уведомления в зависимости от оставшегося времени
     let templateToUse = null;
@@ -69,7 +75,7 @@ export async function POST(request: Request, { params }: { params: { timeleft?: 
 
     if (templateToUse) {
       await notifyUsers(auctionItem, templateToUse);
-      console.log(`Уведомление отправлено для ${timeLeftHours} час(а/ов)`);
+      console.log(`Уведомление отправлено для ${timeLeftHours} часов`);
     } else {
       console.log("Уведомление не отправлено, т.к. время не соответствует шаблонам.");
     }
@@ -77,19 +83,19 @@ export async function POST(request: Request, { params }: { params: { timeleft?: 
     return new Response(
       JSON.stringify({
         message: "Notification process completed.",
-        timeLeftHours: timeLeftHours
+        timeLeftHours: timeLeftHours,
       }),
       { status: 200 }
     );
   } catch (error) {
-    console.error("Failed to process auction notifications:", error);
+    console.error("Ошибка в процессе уведомлений:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
     });
   }
 }
 
-// Функция для рассылки email всем пользователям
+// Вспомогательная функция для рассылки email всем пользователям
 async function notifyUsers(item, template) {
   try {
     const { data: users, error: fetchUsersError } = await supabase
@@ -97,12 +103,12 @@ async function notifyUsers(item, template) {
       .select("email, username");
 
     if (fetchUsersError) {
-      console.error("Error fetching users:", fetchUsersError);
+      console.error("Ошибка получения пользователей:", fetchUsersError);
       return;
     }
 
     if (!users || users.length === 0) {
-      console.log("No users found to notify.");
+      console.log("Пользователи не найдены для уведомления.");
       return;
     }
 
@@ -119,6 +125,6 @@ async function notifyUsers(item, template) {
       `Emails sent to all users for auction item: ${item.name} (${template.subject})`
     );
   } catch (error) {
-    console.error("Failed to notify users:", error);
+    console.error("Ошибка при отправке уведомлений:", error);
   }
 }
