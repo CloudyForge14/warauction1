@@ -84,7 +84,7 @@ export async function POST(request) {
       emailContent = {
         subject: template.subject,
         text: template.textWithPayPal(email, 'Artillery Shell', messages[0].text, paypalEmail),
-        html: template.htmlWithPayPal(email, 'Artillery Shell', messages[0].text, paypalEmail),
+        html: template.htmlWithPayPal(email, 'Artillery Shell', messages[0].text.replace(/\n/g, '<br />'), paypalEmail),
       };
     } else if (payment_method === 'card') {
       if (!template.textWithCard || !template.htmlWithCard) {
@@ -94,11 +94,11 @@ export async function POST(request) {
           { status: 500 }
         );
       }
-
+    
       emailContent = {
         subject: template.subject,
         text: template.textWithCard(email, 'Artillery Shell', messages[0].text, cardNumber),
-        html: template.htmlWithCard(email, 'Artillery Shell', messages[0].text, cardNumber),
+        html: template.htmlWithCard(email, 'Artillery Shell', messages[0].text.replace(/\n/g, '<br />'), cardNumber),
       };
     } else {
       console.error('Invalid payment method:', payment_method);
@@ -155,7 +155,7 @@ Check the "messages" table for more details.
 <p><strong>Username:</strong> ${username}</p>
 <p><strong>User Email:</strong> ${email}</p>
 <p><strong>Payment Method:</strong> ${payment_method}</p>
-<p><strong>Messages:</strong> ${messages.map((msg) => msg.text).join(', ')}</p>
+<p><strong>Messages:</strong> ${messages.map((msg) => msg.text.replace(/\n/g, '<br />')).join(', ')}</p>
 <p><strong>Quick:</strong> ${quick}</p>
 <p><strong>Video:</strong> ${video}</p>
 <p><strong>Cost:</strong> ${cost}</p>

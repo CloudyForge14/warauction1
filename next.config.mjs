@@ -4,6 +4,12 @@ const withNextIntl = createNextIntlPlugin();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Настройка для next/image
+  images: {
+    domains: ['xerkmpqjygwvwzgiysep.supabase.co'], // Добавьте домен Supabase
+  },
+
+  // Настройка заголовков Cache-Control
   async headers() {
     return [
       {

@@ -24,6 +24,36 @@ export default function AuctionItems() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const queryClient = new QueryClient();
 
+  const [viewImageModal, setViewImageModal] = useState({
+    isOpen: false,
+    imageUrl: "",
+  });
+
+  const ViewImageModal = ({ imageUrl, onClose }) => {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+        onClick={onClose} // Закрыть модальное окно при клике вне изображения
+      >
+        <div className="relative max-w-[90vw] max-h-[90vh] p-4">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={imageUrl}
+              alt="Enlarged lot image"
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const t = useTranslations("AuctionItems");
 
   // -----------------------
@@ -323,6 +353,13 @@ export default function AuctionItems() {
       />
       <h1 className="text-3xl font-bold text-center mb-8">Auction Items</h1>
 
+      {viewImageModal.isOpen && (
+        <ViewImageModal
+          imageUrl={viewImageModal.imageUrl}
+          onClose={() => setViewImageModal({ isOpen: false, imageUrl: "" })}
+        />
+      )}
+
       {/* Grid of items */}
       <div
         className="grid gap-6 px-6"
@@ -350,13 +387,17 @@ export default function AuctionItems() {
             <img
               src={item.image_url}
               alt={item.name}
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-cover cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation(); // Останавливаем всплытие, чтобы не открывалось основное модальное окно
+                setViewImageModal({ isOpen: true, imageUrl: item.image_url });
+              }}
             />
 
             {/* Content */}
             <div className="p-4 bg-gray-900 text-white text-center">
               <h2 className="text-xl font-bold mb-2">{item.name}</h2>
-              <p className="text-gray-400 text-sm mb-4 truncate">
+              <p className="text-gray-400 text-sm mb-4 whitespace-pre-line">
                 {item.description}
               </p>
               <hr className="border-t border-gray-600 mb-4" />

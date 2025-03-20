@@ -9,6 +9,7 @@ import { AddLotModal } from "./AddLotModal";
 import { EditLotModal } from "./EditLotModal";
 import { EditOptionModal } from "./EditOptionModal";
 import { AddOptionModal } from "./AddOptionModal";
+import Image from 'next/image';
 
 export default function AdminPanel() {
   const [lots, setLots] = useState([]);
@@ -32,6 +33,51 @@ export default function AdminPanel() {
       .order("order", { ascending: true });
     if (error) toast.error("Error fetching lots.");
     else setLots(data);
+  };
+
+  const calculateTotalBids = (lots) => {
+    return lots.reduce((total, lot) => total + (lot.current_bid || 0), 0);
+  };
+
+  useEffect(() => {
+    fetchLots();
+  }, []);
+  
+  useEffect(() => {
+    const totalBids = calculateTotalBids(lots);
+    // Можно сохранить это значение в состоянии, если нужно использовать его в других компонентах
+  }, [lots]);
+
+  const ViewImageModal = ({ imageUrl, onClose }) => {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+        onClick={onClose} // Закрыть модальное окно при клике вне изображения
+      >
+        <div className="relative max-w-[90vw] max-h-[90vh] p-4">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Image
+              src={imageUrl}
+              alt="Enlarged lot image"
+              width={800} // Ширина изображения
+              height={600} // Высота изображения
+              style={{
+                objectFit: 'contain', // Сохраняем пропорции
+                maxWidth: '100%', // Ограничиваем ширину
+                maxHeight: '90vh', // Ограничиваем высоту
+              }}
+              quality={100} // Максимальное качество
+            />
+          </div>
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const fetchLotHistory = async (lotId) => {
@@ -446,43 +492,63 @@ export default function AdminPanel() {
   );
 
   // =============== New Design for Lots Tab ===============
-  const renderLotsTab = () => (
+  const renderLotsTab = () => {
+  const totalBids = calculateTotalBids(lots);
+
+  return (
     <Section>
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Lots</h2>
         <div>
-        <button
-          onClick={notifyAuctionStart}
-          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 mr-2 rounded-md"
-        >
-          Notify "Auction Start"
-        </button>
-        <button
-          onClick={() => setModal({ type: "add-lot", data: null })}
-          className="p-2 bg-blue-600 rounded-md hover:bg-blue-700 mt-2 sm:mt-0"
-        >
-          Add Lot
-        </button>
+          <h2 className="text-xl font-bold">Lots</h2>
+          <p className="text-sm text-gray-400">
+            Total Bids: ${totalBids.toFixed(2)}
+          </p>
+        </div>
+        <div>
+          <button
+            onClick={notifyAuctionStart}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 mr-2 rounded-md"
+          >
+            Notify "Auction Start"
+          </button>
+          <button
+            onClick={() => setModal({ type: "add-lot", data: null })}
+            className="p-2 bg-blue-600 rounded-md hover:bg-blue-700 mt-2 sm:mt-0"
+          >
+            Add Lot
+          </button>
         </div>
       </div>
-      
+
+      {/* Остальной код для отображения лотов */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {lots.map((lot) => (
-          <div
+          <div 
             key={lot.id}
             className="bg-gray-700 rounded-lg shadow-md overflow-hidden flex flex-col"
           >
             {lot.image_url && (
-              <img
-                src={lot.image_url}
-                alt={lot.name}
-                className="w-full h-48 object-cover"
-              />
+              <div 
+                className="w-full h-48 relative cursor-pointer" // Добавляем cursor-pointer
+                onClick={() => setModal({ type: "view-image", data: lot.image_url })}
+              >
+                <Image
+                  src={lot.image_url}
+                  alt={lot.name}
+                  fill
+                  style={{ objectFit: 'contain' }}
+                  quality={75}
+                  loading="lazy"
+                />
+              </div>
             )}
             <div className="p-4 flex-grow flex flex-col">
               <h3 className="text-lg font-bold text-white">{lot.name}</h3>
               <p className="text-sm text-gray-300">Order: {lot.order || 0}</p>
               <p className="text-sm text-gray-300">Current Bid: ${lot.current_bid}</p>
+              <p className="text-sm text-gray-300 whitespace-pre-line">
+                {lot.description}
+              </p>
               <div className="mt-auto pt-4 border-t border-gray-600">
                 <div className="flex justify-between">
                   <button
@@ -523,6 +589,7 @@ export default function AdminPanel() {
       </div>
     </Section>
   );
+};
 
   // =============== OPTIONS TAB ===============
   const renderOptionsTab = () => (
@@ -837,6 +904,12 @@ export default function AdminPanel() {
         <EditOptionModal
           option={modal.data}
           onSave={handleEditOption}
+          onClose={() => setModal({ type: "", data: null })}
+        />
+      )}
+      {modal.type === "view-image" && (
+        <ViewImageModal
+          imageUrl={modal.data}
           onClose={() => setModal({ type: "", data: null })}
         />
       )}
