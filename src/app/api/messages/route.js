@@ -36,6 +36,22 @@ export async function POST(request) {
       });
     }
 
+    // Fetch the username from the users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('username')
+      .eq('id', user_id)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch user data' }), {
+        status: 500,
+      });
+    }
+
+    const username = userData.username;
+
     // Вставка сообщений в базу данных
     const { data: newMessages, error: insertError } = await supabase
       .from('messages')
@@ -123,7 +139,7 @@ Hello, CloudyForge Team!
 
 A new request has been received.
 
-Username: ${email}
+Username: ${username}
 User Email: ${email}
 Payment Method: ${payment_method}
 Messages: ${messages.map((msg) => msg.text).join(', ')}
@@ -136,7 +152,7 @@ Check the "messages" table for more details.
 
     const adminHtml = `
 <h1>New Ammunition Request Received</h1>
-<p><strong>Username:</strong> ${email}</p>
+<p><strong>Username:</strong> ${username}</p>
 <p><strong>User Email:</strong> ${email}</p>
 <p><strong>Payment Method:</strong> ${payment_method}</p>
 <p><strong>Messages:</strong> ${messages.map((msg) => msg.text).join(', ')}</p>
@@ -171,11 +187,10 @@ Check the "messages" table for more details.
   }
 }
 
-// GET запрос остается без изменений
 export async function GET() {
   try {
     const { data: options, error } = await supabase
-      .from('options') // Таблица в Supabase
+      .from('options')
       .select('id, name, description, cost, order')
       .order('order', { ascending: true });
 

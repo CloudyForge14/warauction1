@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useSwipeable } from 'react-swipeable';
 import { supabase } from '@/utils/supabase/client';
 import { FaTimes } from "react-icons/fa";
+import Image from 'next/image';
 // import { useRouter } from 'next/router'; // Импортируем useRouter
 
 
@@ -820,13 +821,15 @@ export default function SendMessage() {
             style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
           >
             {images.map((src, index) => (
-              <img
+              <Image
                 key={index}
                 src={src}
                 alt={`Slide ${index}`}
+                width={800} // Укажите ширину изображения
+                height={450} // Укажите высоту изображения
                 className="w-full h-full object-cover flex-shrink-0"
               />
-            ))}
+          ))}
           </div>
 
           <button
@@ -883,11 +886,13 @@ export default function SendMessage() {
                 onClick={() => handleItemClick(option)}
               >
                 <div className="w-full h-48 overflow-hidden rounded-md mb-4">
-                  <img
-                    src={artilleryImages[index]} // Используем фотки из массива
-                    alt={option.name}
-                    className="w-full h-full object-cover"
-                  />
+                <Image
+                  src={artilleryImages[index]}
+                  alt={option.name}
+                  width={300} // Укажите ширину изображения
+                  height={200} // Укажите высоту изображения
+                  className="w-full h-full object-cover"
+                />
                 </div>
                 <h3 className="text-lg font-semibold">{option.name}</h3>
                 <p className="text-gray-400">${option.cost}</p>

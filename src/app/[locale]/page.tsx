@@ -191,13 +191,13 @@ const AuctionApp = () => {
 
   <div className="absolute z-0 inset-0">
   <Image
-  src="/back.avif"
-  alt="Background Image"
-  layout="fill"
-  objectFit="cover"
-  priority // Ensures it loads faster for above-the-fold content
-/>
-  </div>
+    src="/back.avif"
+    alt="Background Image"
+    layout="fill"
+    objectFit="cover"
+    priority // Убедитесь, что фоновое изображение загружается быстро
+  />
+</div>
 
   <section className="relative z-10 w-full bg-gray-900/60 text-white py-20">
     <motion.div
@@ -336,10 +336,12 @@ const AuctionApp = () => {
               style={{ transform: `translateX(-${currentAuctionImageIndex * 100}%)` }}
             >
               {auctionImages.map((src, index) => (
-                <img
-                  key={index}
+                <Image
                   src={src}
                   alt={`Auction Slide ${index}`}
+                  key={index}
+                  width={800} // Укажите ширину изображения
+                  height={450} // Укажите высоту изображения
                   className="w-full h-full object-contain flex-shrink-0"
                 />
               ))}
@@ -415,16 +417,19 @@ const AuctionApp = () => {
       className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative"
     >
       <div
+        key={currentArtilleryImageIndex} // Добавьте key для контейнера
         className="w-full h-full flex transition-transform duration-500 ease-in-out"
         style={{
           transform: `translateX(-${currentArtilleryImageIndex * 100}%)`,
         }}
       >
         {artilleryImages.map((src, index) => (
-          <img
-            key={index}
+          <Image
+            key={index} // Убедитесь, что key уникален для каждого изображения
             src={src}
             alt={`Artillery Slide ${index}`}
+            width={800} // Укажите ширину
+            height={450} // Укажите высоту
             className="w-full h-full object-cover flex-shrink-0"
           />
         ))}
