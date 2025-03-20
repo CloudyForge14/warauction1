@@ -387,9 +387,9 @@ export default function AuctionItems() {
             <img
               src={item.image_url}
               alt={item.name}
-              className="w-full h-48 object-cover cursor-pointer"
+              className="w-full h-48 object-contain cursor-pointer"
               onClick={(e) => {
-                e.stopPropagation(); // Останавливаем всплытие, чтобы не открывалось основное модальное окно
+                e.stopPropagation();
                 setViewImageModal({ isOpen: true, imageUrl: item.image_url });
               }}
             />
@@ -429,7 +429,7 @@ export default function AuctionItems() {
                   selectedItem.image_url
                 }
                 alt={selectedItem.name}
-                className="w-full h-64 lg:h-96 object-cover rounded-lg"
+                className="w-full h-64 lg:h-96 object-contain rounded-lg"
               />
               {selectedItem.images && selectedItem.images.length > 1 && (
                 <div className="flex space-x-2 mt-4 overflow-x-auto">
@@ -438,7 +438,7 @@ export default function AuctionItems() {
                       key={index}
                       src={img}
                       alt={`Thumbnail ${index}`}
-                      className={`w-16 h-16 object-cover rounded cursor-pointer ${
+                      className={`w-16 h-16 object-contain rounded cursor-pointer ${
                         index === currentImageIndex
                           ? "border-2 border-yellow-500"
                           : ""
