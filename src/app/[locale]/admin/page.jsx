@@ -297,34 +297,45 @@ export default function AdminPanel() {
   };
 
   const handleAddOption = async (newData) => {
-    const { error } = await supabase.from("options").insert(newData);
-    if (error) {
-      toast.error("Error adding option.");
-      console.error(error);
-    } else {
-      fetchOptions();
-      toast.success("Option added successfully.");
+    try {
+      const { error } = await supabase.from("options").insert(newData);
+      if (error) {
+        toast.error("Error adding option.");
+        console.error(error);
+      } else {
+        fetchOptions(); // Обновляем список опций
+        toast.success("Option added successfully.");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 
   const handleEditOption = async (updatedData) => {
-    const { error } = await supabase
-      .from("options")
-      .update({
-        name: updatedData.name,
-        cost: updatedData.cost,
-        description: updatedData.description,
-        order: updatedData.order,
-      })
-      .eq("id", updatedData.id);
-    if (error) {
-      toast.error("Error editing option.");
-    } else {
-      fetchOptions();
-      setModal({ type: "", data: null });
-      toast.success("Option updated successfully.");
+    try {
+      const { error } = await supabase
+        .from("options")
+        .update({
+          name: updatedData.name,
+          cost: updatedData.cost,
+          description: updatedData.description,
+          order: updatedData.order,
+          image_url: updatedData.image_url, // Обновляем URL изображения
+        })
+        .eq("id", updatedData.id);
+  
+      if (error) {
+        toast.error("Error editing option.");
+      } else {
+        fetchOptions(); // Обновляем список опций
+        toast.success("Option updated successfully.");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("An unexpected error occurred. Please try again.");
     }
-  };
+  };1
 
   const handleDeleteOption = async (optionId) => {
     const { error } = await supabase.from("options").delete().eq("id", optionId);
@@ -615,6 +626,17 @@ export default function AdminPanel() {
               subtitle={`Order: ${option.order || 0} | Cost: $${option.cost}`}
               onDelete={() => handleDeleteOption(option.id)}
             >
+              {option.image_url && (
+                <div className="w-full h-32 relative mb-2">
+                  <Image
+                    src={option.image_url}
+                    alt={option.name}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    className="rounded-md"
+                  />
+                </div>
+              )}
               <div className="flex flex-col items-start space-y-2 mt-2">
                 <div className="flex items-center space-x-2">
                   <button

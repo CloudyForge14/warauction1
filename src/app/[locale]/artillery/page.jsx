@@ -875,7 +875,7 @@ export default function SendMessage() {
 
           {/* Grid of artillery options */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {artilleryOptions.map((option, index) => (
+            {artilleryOptions.map((option) => (
               <div
                 key={option.id}
                 className={`p-4 bg-gray-700 rounded-lg shadow-md cursor-pointer transition-all duration-300 ${
@@ -885,14 +885,15 @@ export default function SendMessage() {
                 }`}
                 onClick={() => handleItemClick(option)}
               >
+                {/* Используем image_url из данных Supabase */}
                 <div className="w-full h-48 overflow-hidden rounded-md mb-4">
-                <Image
-                  src={artilleryImages[index]}
-                  alt={option.name}
-                  width={300} // Укажите ширину изображения
-                  height={200} // Укажите высоту изображения
-                  className="w-full h-full object-cover"
-                />
+                  <Image
+                    src={option.image_url} // Используем image_url из данных
+                    alt={option.name}
+                    width={300} // Укажите ширину изображения
+                    height={200} // Укажите высоту изображения
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <h3 className="text-lg font-semibold">{option.name}</h3>
                 <p className="text-gray-400">${option.cost}</p>
