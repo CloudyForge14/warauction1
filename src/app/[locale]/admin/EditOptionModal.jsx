@@ -1,13 +1,11 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export const EditOptionModal = ({ option, onSave, onClose }) => {
+export const EditOptionModal = ({ option, onSave, onClose, onMoveUp, onMoveDown }) => {
   const [formData, setFormData] = useState(option);
-  const [isUploading, setIsUploading] = useState(false); // Состояние загрузки файла
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (option) setFormData(option);
@@ -18,7 +16,6 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Обработка загрузки файла
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -26,24 +23,17 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
     setIsUploading(true);
 
     try {
-      // Генерируем уникальное имя файла
       const fileName = `${Date.now()}-${file.name}`;
-
-      // Загружаем файл в Supabase Storage
       const { data, error } = await supabase.storage
-        .from('options-images') // Название бакета в Supabase Storage
+        .from('options-images')
         .upload(fileName, file);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Получаем публичный URL загруженного файла
       const { data: publicUrl } = supabase.storage
         .from('options-images')
         .getPublicUrl(data.path);
 
-      // Обновляем состояние с URL изображения
       setFormData((prev) => ({ ...prev, image_url: publicUrl.publicUrl }));
       toast.success('Image uploaded successfully!');
     } catch (error) {
@@ -63,19 +53,13 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
       <div className="bg-gray-800 text-white w-full max-w-2xl p-8 rounded-lg shadow-lg relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-300 hover:text-white transition"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-300 hover:text-white transition">
           ✕
         </button>
 
-        <h2 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2">
-          Edit Option
-        </h2>
+        <h2 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2">Edit Option</h2>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Поле "Option Name" */}
           <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="optionName">
               Option Name
@@ -91,7 +75,6 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             />
           </div>
 
-          {/* Поле "Cost" */}
           <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="optionCost">
               Cost
@@ -107,7 +90,6 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             />
           </div>
 
-          {/* Поле "Description" на всю ширину */}
           <div className="md:col-span-2 flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="optionDesc">
               Description
@@ -122,7 +104,6 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             />
           </div>
 
-          {/* Поле "Order" */}
           <div className="flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="optionOrder">
               Order
@@ -138,7 +119,6 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             />
           </div>
 
-          {/* Поле для загрузки файла */}
           <div className="md:col-span-2 flex flex-col">
             <label className="block text-sm text-gray-300 mb-1" htmlFor="optionImage">
               Upload Image
@@ -146,7 +126,7 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             <input
               id="optionImage"
               type="file"
-              accept="image/*" // Только изображения
+              accept="image/*"
               onChange={handleFileUpload}
               className="p-2 bg-gray-700 rounded-md"
               disabled={isUploading}
@@ -163,7 +143,6 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             )}
           </div>
 
-          {/* Кнопки Save и Cancel на всю ширину */}
           <div className="md:col-span-2 flex justify-end space-x-2 mt-2">
             <button
               type="button"
@@ -181,6 +160,21 @@ export const EditOptionModal = ({ option, onSave, onClose }) => {
             </button>
           </div>
         </form>
+
+        <div className="mt-4 flex justify-between">
+          <button
+            onClick={onMoveUp}
+            className="bg-green-600 hover:bg-green-700 p-2 rounded-md"
+          >
+            Move Up
+          </button>
+          <button
+            onClick={onMoveDown}
+            className="bg-yellow-600 hover:bg-yellow-700 p-2 rounded-md"
+          >
+            Move Down
+          </button>
+        </div>
       </div>
     </div>
   );

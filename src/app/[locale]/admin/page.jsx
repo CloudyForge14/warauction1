@@ -20,6 +20,8 @@ export default function AdminPanel() {
   const [modal, setModal] = useState({ type: "", data: null });
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("lots");
+  const [movedOptionId, setMovedOptionId] = useState(null);
+
 
   // --- Payment info ---
   const [paymentInfo, setPaymentInfo] = useState({ card: "", paypal: "" });
@@ -103,8 +105,12 @@ export default function AdminPanel() {
   };
 
   const fetchOptions = async () => {
-    const { data, error } = await supabase.from("options").select("*");
-    if (error) toast.error("Error fetching options.");
+    const { data, error } = await supabase
+      .from('options')
+      .select('*')
+      .order('order', { ascending: true });
+  
+    if (error) toast.error('Error fetching options.');
     else setOptions(data);
   };
 
@@ -293,6 +299,86 @@ export default function AdminPanel() {
     } else {
       toast.success("Lot deleted successfully.");
       fetchLots();
+    }
+  };
+
+
+
+  // Добавим useEffect для автоматической сортировки опций
+  useEffect(() => {
+    // Проверяем, нужно ли сортировать
+    const isSorted = options.every((option, index, array) => 
+      index === 0 || option.order >= array[index - 1].order
+    );
+  
+    // Если массив не отсортирован, сортируем и обновляем состояние
+    if (!isSorted) {
+      const sortedOptions = [...options].sort((a, b) => a.order - b.order);
+      setOptions(sortedOptions);
+    }
+  }, [options]); // Эффект срабатывает при изменении options
+
+  const handleMoveUp = async (optionId) => {
+    const optionIndex = options.findIndex((opt) => opt.id === optionId);
+    if (optionIndex <= 0) return;
+  
+    const updatedOptions = [...options];
+    const prevOption = updatedOptions[optionIndex - 1];
+    const currentOption = updatedOptions[optionIndex];
+  
+    const newOrder = prevOption.order;
+    prevOption.order = currentOption.order;
+    currentOption.order = newOrder;
+  
+    try {
+      await supabase
+        .from('options')
+        .update({ order: currentOption.order })
+        .eq('id', currentOption.id);
+  
+      await supabase
+        .from('options')
+        .update({ order: prevOption.order })
+        .eq('id', prevOption.id);
+  
+      setOptions(updatedOptions);
+      setMovedOptionId(optionId); // Устанавливаем ID перемещенной опции
+      setTimeout(() => setMovedOptionId(null), 1000); // Сбрасываем через 1 секунду
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Failed to update order.');
+    }
+  };
+  
+  const handleMoveDown = async (optionId) => {
+    const optionIndex = options.findIndex((opt) => opt.id === optionId);
+    if (optionIndex >= options.length - 1) return;
+  
+    const updatedOptions = [...options];
+    const nextOption = updatedOptions[optionIndex + 1];
+    const currentOption = updatedOptions[optionIndex];
+  
+    const newOrder = nextOption.order;
+    nextOption.order = currentOption.order;
+    currentOption.order = newOrder;
+  
+    try {
+      await supabase
+        .from('options')
+        .update({ order: currentOption.order })
+        .eq('id', currentOption.id);
+  
+      await supabase
+        .from('options')
+        .update({ order: nextOption.order })
+        .eq('id', nextOption.id);
+  
+      setOptions(updatedOptions);
+      setMovedOptionId(optionId); // Устанавливаем ID перемещенной опции
+      setTimeout(() => setMovedOptionId(null), 1000); // Сбрасываем через 1 секунду
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Failed to update order.');
     }
   };
 
@@ -660,6 +746,29 @@ export default function AdminPanel() {
                     Edit Option
                   </button>
                 </div>
+                {/* Кнопки для перемещения вверх и вниз */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveUp(option.id);
+                    }}
+                    className="p-1 bg-green-600 hover:bg-green-500 rounded text-sm"
+                  >
+                    Move Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveDown(option.id);
+                    }}
+                    className="p-1 bg-yellow-600 hover:bg-yellow-500 rounded text-sm"
+                  >
+                    Move Down
+                  </button>
+                </div>
                 {showMessages && (
                   <div className="mt-3 bg-gray-600 p-2 rounded w-full">
                     <p className="font-semibold">Messages:</p>
@@ -927,6 +1036,8 @@ export default function AdminPanel() {
           option={modal.data}
           onSave={handleEditOption}
           onClose={() => setModal({ type: "", data: null })}
+          onMoveUp={() => handleMoveUp(modal.data.id)}
+          onMoveDown={() => handleMoveDown(modal.data.id)}
         />
       )}
       {modal.type === "view-image" && (
