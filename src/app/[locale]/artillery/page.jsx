@@ -607,6 +607,8 @@ export default function SendMessage() {
                     newMessages[index].text = e.target.value;
                     setItemMessages(newMessages);
                   }}
+                  maxLength={35}
+                  required
                   className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 />
                 {/* Цена сообщения */}
