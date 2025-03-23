@@ -24,20 +24,7 @@ export default function SendMessage() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [artilleryOptions, setArtilleryOptions] = useState([]);
   const t = useTranslations('SendMessage');
-
-  const artilleryImages = [
-    '/artillery/1.jpg',
-    '/artillery/2.jpg',
-    '/artillery/3.jpg',
-    '/artillery/4.jpg',
-    '/artillery/5.jpg',
-    '/artillery/6.jpg',
-    '/artillery/7.jpg',
-    '/artillery/8.jpg',
-    '/artillery/9.jpg',
-    '/artillery/10.jpg',
-    '/artillery/11.jpg',
-  ];
+  const [viewImageModal, setViewImageModal] = useState({ isOpen: false, imageUrl: "" });
 
   // Fetch user data
   useEffect(() => {
@@ -65,11 +52,8 @@ export default function SendMessage() {
           console.error('Error fetching artillery options:', error.message);
           toast.error('Failed to fetch artillery options. Please try again.');
         } else {
-          const sortedData = data.sort((a, b) => {
-            const caliberA = parseInt(a.name.match(/\d+/)[0]);
-            const caliberB = parseInt(b.name.match(/\d+/)[0]);
-            return caliberB - caliberA;
-          });
+          // Сортируем данные по полю order
+          const sortedData = data.sort((a, b) => a.order - b.order);
           setArtilleryOptions(sortedData);
         }
       } catch (err) {
@@ -83,12 +67,14 @@ export default function SendMessage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
     '/artillery/1.jpg',
+    '/artillery/999.jpg',
     '/artillery/11.jpg',
-    '/artillery/1.jpg',
     '/artillery/2.jpg',
+    '/artillery/998.jpg',
     '/artillery/3.jpg',
     '/artillery/4.jpg',
     '/artillery/5.jpg',
+    '/artillery/997.jpg',
     '/artillery/8.jpg',
     '/artillery/9.jpg',
   ];
@@ -105,6 +91,33 @@ export default function SendMessage() {
     }, 4000);
     return () => clearInterval(interval);
   }, [images.length]);
+
+
+  const ViewImageModal = ({ imageUrl, onClose }) => {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+        onClick={onClose} // Закрыть модальное окно при клике вне изображения
+      >
+        <div className="relative max-w-[90vw] max-h-[90vh] p-4">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={imageUrl}
+              alt="Enlarged image"
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+    );
+  };
+
 
   // Calculate total cart cost
   const calculateMessageCost = (message) => {
@@ -323,6 +336,14 @@ export default function SendMessage() {
         }}
         progressStyle={{ backgroundColor: '#2563eb' }}
       />
+
+
+      {viewImageModal.isOpen && (
+        <ViewImageModal
+          imageUrl={viewImageModal.imageUrl}
+          onClose={() => setViewImageModal({ isOpen: false, imageUrl: "" })}
+        />
+      )}
 
       {/* Cart icon */}
       <div className="fixed bottom-6 right-6 cursor-pointer z-50" onClick={() => setShowCartModal(true)}>
@@ -721,19 +742,37 @@ export default function SendMessage() {
                 className={`p-4 bg-gray-700 rounded-lg shadow-md cursor-pointer transition-all duration-300 ${
                   selectedOptions.some((item) => item.id === option.id) ? 'ring-2 ring-blue-500' : 'hover:bg-gray-600'
                 }`}
-                onClick={() => handleItemClick(option)}
               >
-                <div className="w-full h-48 overflow-hidden rounded-md mb-4">
+                <div
+                  className="w-full h-48 overflow-hidden rounded-md mb-4"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    setViewImageModal({ isOpen: true, imageUrl: option.image_url });
+                  }}
+                >
                   <Image
                     src={option.image_url}
                     alt={option.name}
                     width={300}
                     height={200}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover cursor-pointer"
                   />
                 </div>
-                <h3 className="text-lg font-semibold">{option.name}</h3>
-                <p className="text-gray-400">${option.cost}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-semibold">{option.name}</h3>
+                    <p className="text-gray-400">${option.cost}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Останавливаем всплытие события
+                      handleItemClick(option);
+                    }}
+                    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md whitespace-nowrap"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             ))}
           </div>
