@@ -93,7 +93,7 @@ export default function SendMessage() {
   const ViewImageModal = ({ imageUrl, onClose }) => {
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90"
         onClick={onClose} // Закрыть модальное окно при клике вне изображения
       >
         <div className="relative max-w-[90vw] max-h-[90vh] p-4">
@@ -116,38 +116,36 @@ export default function SendMessage() {
   };
 
 
-  // Calculate total cart cost
   const calculateMessageCost = (message) => {
-    if (!message?.text) return 0;
-
-    const complexLanguagesRegex = /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/;
-    const isComplexLanguage = complexLanguagesRegex.test(message.text);
-
     let cost = 0;
-
-    if (isComplexLanguage) {
+  
+    // Считаем стоимость текста (минимум 0)
+    if (message?.text) {
       const charCount = message.text.length;
-      const additionalChars = Math.max(0, charCount - 7);
-      cost = additionalChars * 5;
-    } else {
-      const charCount = message.text.length;
-      if (charCount <= 28) {
-        cost = (charCount - 18) * 2;
+      const complexLanguagesRegex = /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/;
+      const isComplexLanguage = complexLanguagesRegex.test(message.text);
+  
+      if (isComplexLanguage) {
+        cost = Math.max(0, (charCount - 7) * 5);  // Минимум 0
       } else {
-        const additionalChars = Math.max(0, charCount - 28);
-        cost = 20 + additionalChars * 5;
+        if (charCount <= 28) {
+          cost = Math.max(0, (charCount - 18) * 2);  // Минимум 0
+        } else {
+          cost = 20 + (charCount - 28) * 5;
+        }
       }
     }
-
+  
+    // Добавляем фиксированные стоимости
     if (message.urgent) cost += 30;
     if (message.video) cost += 100;
-
-    return cost < 0 ? 0 : cost;
+  
+    return cost;
   };
 
   const calculateTotalCartCost = (selectedOptions) => {
     if (!Array.isArray(selectedOptions)) return 0;
-
+  
     return selectedOptions.reduce((total, item) => {
       const baseCost = item.cost * item.quantity;
       const messagesCost = item.messages.reduce((sum, message) => sum + calculateMessageCost(message), 0);
@@ -370,61 +368,88 @@ export default function SendMessage() {
       </div>
 
       {/* Cart modal */}
-      {showCartModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 animate-fadeIn">
-          <div className="bg-gray-800 relative rounded-lg shadow-lg max-w-md w-full p-6 mx-4 lg:mx-0 transform transition-transform duration-300 animate-scaleIn">
-            <button
+    {showCartModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Your Cart</h2>
+            <button 
               onClick={() => setShowCartModal(false)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-200 transition-colors duration-200"
+              className="text-gray-400 hover:text-white text-xl"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <FaTimes />
             </button>
+          </div>
 
-            <h2 className="text-xl font-bold mb-4 text-center">Cart</h2>
+          {/* Items - scrollable area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {selectedOptions.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">Your cart is empty</div>
+            ) : (
+              selectedOptions.map((option) => (
+                <div key={option.id} className="bg-gray-700 rounded-lg p-4">
+                  <div className="relative w-full h-48 mb-4 rounded-3xl overflow-hidden bg-gray-700">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Image
+                        src={option.image_url}
+                        alt={option.name}
+                        width={400}
+                        height={300}
+                        className="max-w-full max-h-full object-contain rounded-3xl"
+                        onClick={() => setViewImageModal({ isOpen: true, imageUrl: option.image_url })}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Product info and controls in one row */}
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">{option.name}</h3>
+                      {/* <span className="text-gray-400 text-lg">${option.cost}</span> */}
+                    </div>
 
-            <div className="max-h-[60vh] overflow-y-auto pr-2">
-              <div className="space-y-4">
-                {selectedOptions.map((option) => (
-                  <div key={option.id} className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">{option.name}</h3>
-                        <p className="text-gray-400">${option.cost} (x{option.quantity})</p>
-                      </div>
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                      {/* Quantity controls */}
+                      <div className="flex items-cente rounded text-lg">
                         <button
                           onClick={() => updateQuantity(option.id, option.quantity - 1)}
-                          className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+                          className="px-3 py-1 hover:bg-gray-500 rounded-l bg-gray-600"
                         >
-                          -
+                          —
                         </button>
-                        <span>{option.quantity}</span>
+                        <span className="px-3 py-1 min-w-[20px] text-center bg-gray-600">
+                          {option.quantity}
+                        </span>
                         <button
                           onClick={() => updateQuantity(option.id, option.quantity + 1)}
-                          className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+                          className="px-3 py-1 hover:bg-gray-500 rounded-r bg-gray-600"
                         >
                           +
                         </button>
-                        <button
-                          onClick={() => removeFromCart(option.id)}
-                          className="text-red-500 hover:text-red-400"
-                        >
-                          Remove
-                        </button>
                       </div>
+
+                      {/* Remove button */}
+                      <button 
+                        onClick={() => removeFromCart(option.id)}
+                        className="text-red-500 hover:text-red-400 p-1"
+                      >
+                        <FaTimes className="w-5 h-5" />
+                      </button>
                     </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="mt-3 space-y-3">
                     {option.messages.map((message, index) => (
-                      <div key={index} className="flex flex-col gap-2 relative">
+                      <div key={index} className="bg-gray-800 rounded-md p-3 pt-4 relative">
+                        <button
+                          onClick={() => removeMessage(option.id, index)}
+                          className="absolute top-6 right-5 text-red-500 hover:text-red-400"
+                        >
+                          <FaTimes className="w-4 h-4" />
+                        </button>
+                        
                         <textarea
                           value={message.text}
                           onChange={(e) => {
@@ -432,148 +457,81 @@ export default function SendMessage() {
                             newMessages[index].text = e.target.value;
                             updateMessages(option.id, newMessages);
                           }}
-                          className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-2 bg-gray-700 rounded text-base mb-2"
+                          rows={3}
+                          maxLength={35}
                         />
-                        {/* Кнопка удаления сообщения */}
-                        <button
-                          onClick={() => removeMessage(option.id, index)}
-                          className="absolute top-3 right-2 p-2 text-red-600 hover:text-red-400 rounded-xl flex items-center justify-center"
-                        >
-                          <FaTimes className="w-4 h-4" />
-                        </button>
-                        {/* Цена сообщения */}
-                        <div className="text-sm text-gray-400">
-                          Message cost: ${calculateMessageCost(message)}
-                        </div>
-                        {/* Urgent и Video опции */}
-                        <div className="mt-2 space-y-2">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center">
-                              <input
-                                type="checkbox"
-                                id={`urgent-${option.id}-${index}`}
-                                checked={message.urgent}
-                                onChange={(e) => {
-                                  const newMessages = [...option.messages];
-                                  newMessages[index].urgent = e.target.checked;
-                                  updateMessages(option.id, newMessages);
-                                }}
-                                className="mr-2"
-                              />
-                              <label htmlFor={`urgent-${option.id}-${index}`} className="flex items-center">
-                                Urgent order: $30
-                              </label>
-                            </div>
-                            <div className="flex items-center">
-                              <input
-                                type="checkbox"
-                                id={`video-${option.id}-${index}`}
-                                checked={message.video}
-                                onChange={(e) => {
-                                  const newMessages = [...option.messages];
-                                  newMessages[index].video = e.target.checked;
-                                  updateMessages(option.id, newMessages);
-                                }}
-                                className="mr-2"
-                              />
-                              <label htmlFor={`video-${option.id}-${index}`} className="flex items-center">
-                                Firing video: $100
-                              </label>
-                            </div>
+                        
+                        <div className="flex flex-wrap gap-4 items-center">
+                          <label className="flex items-center text-base">
+                            <input
+                              type="checkbox"
+                              checked={message.urgent}
+                              onChange={(e) => {
+                                const newMessages = [...option.messages];
+                                newMessages[index].urgent = e.target.checked;
+                                updateMessages(option.id, newMessages);
+                              }}
+                              className="mr-2"
+                            />
+                            Urgent order (+$30)
+                          </label>
+                          <label className="flex items-center text-base">
+                            <input
+                              type="checkbox"
+                              checked={message.video}
+                              onChange={(e) => {
+                                const newMessages = [...option.messages];
+                                newMessages[index].video = e.target.checked;
+                                updateMessages(option.id, newMessages);
+                              }}
+                              className="mr-2"
+                            />
+                            Firing video (+$100)
+                          </label>
+                          <div className="text-base font-semibold ml-auto">
+                            Price: ${option.cost + calculateMessageCost(message)}
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                ))}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          {selectedOptions.length > 0 && (
+            <div className="border-t border-gray-700 p-4">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-lg font-semibold">Subtotal:</span>
+                <span className="text-xl font-bold">${calculateTotalCartCost(selectedOptions)}</span>
               </div>
-            </div>
-
-            <div className="mt-6">
-              <p className="text-lg font-semibold">Subtotal: ${calculateTotalCartCost(selectedOptions)}</p>
-            </div>
-
-            <div className="mt-4">
-              <div className="flex items-center gap-2">
-                <label htmlFor="paymentMethod" className="text-base font-medium whitespace-nowrap">
-                  Payment Method
-                </label>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Payment Method</label>
                 <select
-                  id="paymentMethod"
                   value={payment}
                   onChange={(e) => setPayment(e.target.value)}
-                  className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 bg-gray-700 rounded border border-gray-600"
                 >
                   <option value="paypal">PayPal</option>
-                  <option value="card">Card</option>
+                  <option value="card">Credit Card</option>
                 </select>
               </div>
-            </div>
-
-            <button
-              onClick={handlePayment}
-              className="w-full mt-4 p-3 bg-blue-600 rounded-md font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Pay Now
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Payment modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 animate-fadeIn">
-          <div className="bg-gray-800 relative rounded-lg shadow-lg max-w-md w-full p-6 mx-4 lg:mx-0 transform transition-transform duration-300 animate-scaleIn">
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-200 transition-colors duration-200"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6"
+              
+              <button
+                onClick={handlePayment}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <h2 className="text-xl font-bold mb-4 text-center">
-              {payment === 'paypal' ? 'PayPal Details' : 'Card Details'}
-            </h2>
-
-            <div className="text-center">
-              {payment === 'paypal' ? (
-                <>
-                  <p className="text-sm text-gray-300">{t('sendPaymentToPayPal')}</p>
-                  <p className="mb-4 text-blue-400 font-semibold">{paymentDetails?.paypal || 'Not Available'}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-300">{t('sendPaymentToCard')}</p>
-                  <p className="mb-4 text-blue-400 font-semibold">{paymentDetails?.card || 'Not Available'}</p>
-                  <p className="mb-4 text-sm text-gray-400">{t('cardHolderName')}</p>
-                </>
-              )}
+                Proceed to Payment (${calculateTotalCartCost(selectedOptions)})
+              </button>
             </div>
-
-            <p className="text-center mb-4 text-gray-300">
-              {t('totalAmount')}
-              <span className="font-bold">${totalPrice}</span>
-            </p>
-
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="block mx-auto bg-blue-600 px-6 py-2 rounded-md text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Close
-            </button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
+    )}
 
       {/* Text input modal */}
       {showTextModal && (
@@ -596,7 +554,13 @@ export default function SendMessage() {
               </svg>
             </button>
 
-            <h2 className="text-xl font-bold mb-4 text-center">Add Text</h2>
+            <h2 className="text-xl font-bold mb-2 text-center">Add to Cart</h2>
+            
+            {/* Отображаем название и базовую цену товара */}
+            <div className="mb-4 p-3 bg-gray-700 rounded-md">
+              <h3 className="text-lg font-semibold">{currentItem?.name}</h3>
+              <p className="text-gray-300">Base price: <span className="font-bold">${currentItem?.cost}</span></p>
+            </div>
 
             <div className="flex items-center gap-2 mb-4">
               Quantity
@@ -616,7 +580,7 @@ export default function SendMessage() {
             </div>
 
             {itemMessages.map((message, index) => (
-              <div key={index} className="flex flex-col gap-2">
+              <div key={index} className="flex flex-col gap-2 mb-4 p-3 bg-gray-700 rounded-md">
                 <textarea
                   placeholder={`Message ${index + 1}`}
                   value={message.text}
@@ -627,14 +591,10 @@ export default function SendMessage() {
                   }}
                   maxLength={35}
                   required
-                  className="mt-1 p-2 w-full bg-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 p-2 w-full bg-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 />
-                {/* Цена сообщения */}
-                <div className="text-sm text-gray-400">
-                  Message cost: ${calculateMessageCost(message)}
-                </div>
-                {/* Urgent и Video опции */}
-                <div className="mt-2 space-y-2">
+                
+                <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center">
                       <input
@@ -648,8 +608,8 @@ export default function SendMessage() {
                         }}
                         className="mr-2"
                       />
-                      <label htmlFor={`urgent-${index}`} className="flex items-center">
-                        Urgent order: $30
+                      <label htmlFor={`urgent-${index}`} className="text-sm">
+                        Urgent (+$30)
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -664,14 +624,31 @@ export default function SendMessage() {
                         }}
                         className="mr-2"
                       />
-                      <label htmlFor={`video-${index}`} className="flex items-center">
-                        Firing video: $100
+                      <label htmlFor={`video-${index}`} className="text-sm">
+                        Video (+$100)
                       </label>
                     </div>
+                  </div>
+                  <div className="text-sm font-semibold">
+                    Price: ${currentItem?.cost + calculateMessageCost(message)}
                   </div>
                 </div>
               </div>
             ))}
+
+            {/* Блок с итоговой ценой */}
+            <div className="mt-4 p-3 bg-blue-900 rounded-md">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-lg">TOTAL:</span>
+                <span className="font-bold text-xl">
+                  ${(currentItem?.cost * itemQuantity) + 
+                    itemMessages.reduce((sum, message) => sum + calculateMessageCost(message), 0)}
+                </span>
+              </div>
+              <div className="text-sm text-blue-200 mt-1">
+                (Base: ${currentItem?.cost} × {itemQuantity} + Messages & Options)
+              </div>
+            </div>
 
             <button
               onClick={handleTextSubmit}
