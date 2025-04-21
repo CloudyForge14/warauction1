@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { useTranslations } from 'next-intl';
-import { useSwipeable } from 'react-swipeable';
-import { supabase } from '@/utils/supabase/client';
+import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useTranslations } from "next-intl";
+import { useSwipeable } from "react-swipeable";
+import { supabase } from "@/utils/supabase/client";
 import { FaTimes } from "react-icons/fa";
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function SendMessage() {
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [payment, setPayment] = useState('paypal');
-  const [email, setEmail] = useState('');
+  const [payment, setPayment] = useState("paypal");
+  const [email, setEmail] = useState("");
   const [user, setUser] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [showCartModal, setShowCartModal] = useState(false);
@@ -20,23 +20,31 @@ export default function SendMessage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [itemQuantity, setItemQuantity] = useState(1);
-  const [itemMessages, setItemMessages] = useState([{ text: '', urgent: false, video: false }]);
+  const [itemMessages, setItemMessages] = useState([
+    { text: "", urgent: false, video: false },
+  ]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [artilleryOptions, setArtilleryOptions] = useState([]);
-  const t = useTranslations('SendMessage');
-  const [viewImageModal, setViewImageModal] = useState({ isOpen: false, imageUrl: "" });
+  const t = useTranslations("SendMessage");
+  const [viewImageModal, setViewImageModal] = useState({
+    isOpen: false,
+    imageUrl: "",
+  });
 
   // Fetch user data
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const fetchUser = async () => {
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
         if (error) {
-          console.log('No user:', error.message);
+          console.log("No user:", error.message);
         } else {
           setUser(user);
-          setEmail(user?.email || '');
-          localStorage.setItem('user', JSON.stringify(user));
+          setEmail(user?.email || "");
+          localStorage.setItem("user", JSON.stringify(user));
         }
       };
       fetchUser();
@@ -47,17 +55,17 @@ export default function SendMessage() {
   useEffect(() => {
     const fetchArtilleryOptions = async () => {
       try {
-        const { data, error } = await supabase.from('options').select('*');
+        const { data, error } = await supabase.from("options").select("*");
         if (error) {
-          console.error('Error fetching artillery options:', error.message);
-          toast.error('Failed to fetch artillery options. Please try again.');
+          console.error("Error fetching artillery options:", error.message);
+          toast.error("Failed to fetch artillery options. Please try again.");
         } else {
           // Сортируем данные по полю order
           const sortedData = data.sort((a, b) => a.order - b.order);
           setArtilleryOptions(sortedData);
         }
       } catch (err) {
-        console.error('Unexpected error fetching artillery options:', err);
+        console.error("Unexpected error fetching artillery options:", err);
       }
     };
     fetchArtilleryOptions();
@@ -66,19 +74,25 @@ export default function SendMessage() {
   // Slideshow logic
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
-    '/artillery/1.jpg',
-    '/artillery/999.jpg',
-    '/artillery/11.jpg',
-    '/artillery/998.jpg',
-    '/artillery/4.jpg',
-    '/artillery/997.jpg',
-    '/artillery/8.jpg',
-    '/artillery/9.jpg',
+    "/artillery/1.jpg",
+    "/artillery/999.jpg",
+    "/artillery/11.jpg",
+    "/artillery/998.jpg",
+    "/artillery/4.jpg",
+    "/artillery/997.jpg",
+    "/artillery/8.jpg",
+    "/artillery/9.jpg",
   ];
 
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => setCurrentImageIndex((prevIndex) => (prevIndex === images.length - 1 ? 0 : prevIndex + 1)),
-    onSwipedRight: () => setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? images.length - 1 : prevIndex - 1)),
+    onSwipedLeft: () =>
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === images.length - 1 ? 0 : prevIndex + 1
+      ),
+    onSwipedRight: () =>
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? images.length - 1 : prevIndex - 1
+      ),
     trackMouse: true,
   });
 
@@ -88,7 +102,6 @@ export default function SendMessage() {
     }, 4000);
     return () => clearInterval(interval);
   }, [images.length]);
-
 
   const ViewImageModal = ({ imageUrl, onClose }) => {
     return (
@@ -115,40 +128,43 @@ export default function SendMessage() {
     );
   };
 
-
   const calculateMessageCost = (message) => {
     let cost = 0;
-  
+
     // Считаем стоимость текста (минимум 0)
     if (message?.text) {
       const charCount = message.text.length;
-      const complexLanguagesRegex = /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/;
+      const complexLanguagesRegex =
+        /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u10A0-\u10FF]/;
       const isComplexLanguage = complexLanguagesRegex.test(message.text);
-  
+
       if (isComplexLanguage) {
-        cost = Math.max(0, (charCount - 7) * 5);  // Минимум 0
+        cost = Math.max(0, (charCount - 7) * 5); // Минимум 0
       } else {
         if (charCount <= 28) {
-          cost = Math.max(0, (charCount - 18) * 2);  // Минимум 0
+          cost = Math.max(0, (charCount - 18) * 2); // Минимум 0
         } else {
           cost = 20 + (charCount - 28) * 5;
         }
       }
     }
-  
+
     // Добавляем фиксированные стоимости
     if (message.urgent) cost += 30;
     if (message.video) cost += 100;
-  
+
     return cost;
   };
 
   const calculateTotalCartCost = (selectedOptions) => {
     if (!Array.isArray(selectedOptions)) return 0;
-  
+
     return selectedOptions.reduce((total, item) => {
       const baseCost = item.cost * item.quantity;
-      const messagesCost = item.messages.reduce((sum, message) => sum + calculateMessageCost(message), 0);
+      const messagesCost = item.messages.reduce(
+        (sum, message) => sum + calculateMessageCost(message),
+        0
+      );
       return total + baseCost + messagesCost;
     }, 0);
   };
@@ -161,14 +177,17 @@ export default function SendMessage() {
   useEffect(() => {
     const fetchPaymentDetails = async () => {
       try {
-        const { data, error } = await supabase.from('payment').select('*').single();
+        const { data, error } = await supabase
+          .from("payment")
+          .select("*")
+          .single();
         if (error) {
-          console.error('Error fetching payment details:', error.message);
+          console.error("Error fetching payment details:", error.message);
         } else {
           setPaymentDetails(data);
         }
       } catch (err) {
-        console.error('Unexpected error fetching payment details:', err);
+        console.error("Unexpected error fetching payment details:", err);
       }
     };
     fetchPaymentDetails();
@@ -180,7 +199,9 @@ export default function SendMessage() {
       const isAlreadyAdded = prev.some((item) => item.id === option.id);
       if (isAlreadyAdded) {
         return prev.map((item) =>
-          item.id === option.id ? { ...item, quantity: item.quantity + quantity, messages } : item
+          item.id === option.id
+            ? { ...item, quantity: item.quantity + quantity, messages }
+            : item
         );
       } else {
         return [...prev, { ...option, quantity, messages }];
@@ -198,9 +219,15 @@ export default function SendMessage() {
     setSelectedOptions((prev) =>
       prev.map((item) => {
         if (item.id === optionId) {
-          const updatedMessages = item.messages.filter((_, index) => index !== messageIndex);
+          const updatedMessages = item.messages.filter(
+            (_, index) => index !== messageIndex
+          );
           const updatedQuantity = Math.max(updatedMessages.length, 1);
-          return { ...item, messages: updatedMessages, quantity: updatedQuantity };
+          return {
+            ...item,
+            messages: updatedMessages,
+            quantity: updatedQuantity,
+          };
         }
         return item;
       })
@@ -216,12 +243,22 @@ export default function SendMessage() {
         if (item.id === optionId) {
           const currentMessages = item.messages;
           if (newQuantity > currentMessages.length) {
-            const additionalMessages = Array(newQuantity - currentMessages.length)
+            const additionalMessages = Array(
+              newQuantity - currentMessages.length
+            )
               .fill()
-              .map(() => ({ text: '', urgent: false, video: false }));
-            return { ...item, quantity: newQuantity, messages: [...currentMessages, ...additionalMessages] };
+              .map(() => ({ text: "", urgent: false, video: false }));
+            return {
+              ...item,
+              quantity: newQuantity,
+              messages: [...currentMessages, ...additionalMessages],
+            };
           } else if (newQuantity < currentMessages.length) {
-            return { ...item, quantity: newQuantity, messages: currentMessages.slice(0, newQuantity) };
+            return {
+              ...item,
+              quantity: newQuantity,
+              messages: currentMessages.slice(0, newQuantity),
+            };
           } else {
             return { ...item, quantity: newQuantity };
           }
@@ -241,12 +278,12 @@ export default function SendMessage() {
   // Handle payment
   const handlePayment = async () => {
     if (!user) {
-      toast.error('You need to be logged in to proceed with payment.');
+      toast.error("You need to be logged in to proceed with payment.");
       return;
     }
 
     if (!email) {
-      toast.error('Please provide a valid email address.');
+      toast.error("Please provide a valid email address.");
       return;
     }
 
@@ -260,30 +297,34 @@ export default function SendMessage() {
       email: email,
       payment_method: payment,
       cost: totalCost,
-      quick: selectedOptions.some((item) => item.messages.some((msg) => msg.urgent)),
-      video: selectedOptions.some((item) => item.messages.some((msg) => msg.video)),
+      quick: selectedOptions.some((item) =>
+        item.messages.some((msg) => msg.urgent)
+      ),
+      video: selectedOptions.some((item) =>
+        item.messages.some((msg) => msg.video)
+      ),
       paypalEmail: paymentDetails?.paypal,
       cardNumber: paymentDetails?.card,
     };
 
     try {
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData),
       });
 
-      if (!response.ok) throw new Error('Failed to create order');
+      if (!response.ok) throw new Error("Failed to create order");
 
       const result = await response.json();
-      console.log('Order created:', result);
+      console.log("Order created:", result);
 
-      toast.success('Order created successfully!');
+      toast.success("Order created successfully!");
       setShowCartModal(false);
       setShowPaymentModal(true);
     } catch (error) {
-      console.error('Error creating order:', error);
-      toast.error('Failed to create order. Please try again.');
+      console.error("Error creating order:", error);
+      toast.error("Failed to create order. Please try again.");
     }
   };
 
@@ -291,7 +332,7 @@ export default function SendMessage() {
   const handleItemClick = (option) => {
     setCurrentItem(option);
     setItemQuantity(1);
-    setItemMessages([{ text: '', urgent: false, video: false }]);
+    setItemMessages([{ text: "", urgent: false, video: false }]);
     setShowTextModal(true);
   };
 
@@ -299,7 +340,14 @@ export default function SendMessage() {
   const handleQuantityChange = (newQuantity) => {
     setItemQuantity(newQuantity);
     if (newQuantity > itemMessages.length) {
-      setItemMessages([...itemMessages, ...Array(newQuantity - itemMessages.length).fill({ text: '', urgent: false, video: false })]);
+      setItemMessages([
+        ...itemMessages,
+        ...Array(newQuantity - itemMessages.length).fill({
+          text: "",
+          urgent: false,
+          video: false,
+        }),
+      ]);
     } else if (newQuantity < itemMessages.length) {
       setItemMessages(itemMessages.slice(0, newQuantity));
     }
@@ -322,16 +370,15 @@ export default function SendMessage() {
         draggable
         theme="dark"
         toastStyle={{
-          marginTop: '60px',
-          backgroundColor: '#1f2937',
-          color: '#fff',
-          border: '1px solid #374151',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+          marginTop: "60px",
+          backgroundColor: "#1f2937",
+          color: "#fff",
+          border: "1px solid #374151",
+          borderRadius: "8px",
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
         }}
-        progressStyle={{ backgroundColor: '#2563eb' }}
+        progressStyle={{ backgroundColor: "#2563eb" }}
       />
-
 
       {viewImageModal.isOpen && (
         <ViewImageModal
@@ -341,7 +388,10 @@ export default function SendMessage() {
       )}
 
       {/* Cart icon */}
-      <div className="fixed bottom-6 right-6 cursor-pointer z-50" onClick={() => setShowCartModal(true)}>
+      <div
+        className="fixed bottom-6 right-6 cursor-pointer z-50"
+        onClick={() => setShowCartModal(true)}
+      >
         <div className="relative">
           <div className="bg-blue-600 py-3 pr-3 pl-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-lg">
             <svg
@@ -368,170 +418,190 @@ export default function SendMessage() {
       </div>
 
       {/* Cart modal */}
-    {showCartModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Your Cart</h2>
-            <button 
-              onClick={() => setShowCartModal(false)}
-              className="text-gray-400 hover:text-white text-xl"
-            >
-              <FaTimes />
-            </button>
-          </div>
-
-          {/* Items - scrollable area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {selectedOptions.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">Your cart is empty</div>
-            ) : (
-              selectedOptions.map((option) => (
-                <div key={option.id} className="bg-gray-700 rounded-lg p-4">
-                  <div className="relative w-full h-48 mb-4 rounded-3xl overflow-hidden bg-gray-700">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Image
-                        src={option.image_url}
-                        alt={option.name}
-                        width={400}
-                        height={300}
-                        className="max-w-full max-h-full object-contain rounded-3xl"
-                        onClick={() => setViewImageModal({ isOpen: true, imageUrl: option.image_url })}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Product info and controls in one row */}
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold">{option.name}</h3>
-                      {/* <span className="text-gray-400 text-lg">${option.cost}</span> */}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {/* Quantity controls */}
-                      <div className="flex items-cente rounded text-lg">
-                        <button
-                          onClick={() => updateQuantity(option.id, option.quantity - 1)}
-                          className="px-3 py-1 hover:bg-gray-500 rounded-l bg-gray-600"
-                        >
-                          —
-                        </button>
-                        <span className="px-3 py-1 min-w-[20px] text-center bg-gray-600">
-                          {option.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(option.id, option.quantity + 1)}
-                          className="px-3 py-1 hover:bg-gray-500 rounded-r bg-gray-600"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      {/* Remove button */}
-                      <button 
-                        onClick={() => removeFromCart(option.id)}
-                        className="text-red-500 hover:text-red-400 p-1"
-                      >
-                        <FaTimes className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Messages */}
-                  <div className="mt-3 space-y-3">
-                    {option.messages.map((message, index) => (
-                      <div key={index} className="bg-gray-800 rounded-md p-3 pt-4 relative">
-                        <button
-                          onClick={() => removeMessage(option.id, index)}
-                          className="absolute top-6 right-5 text-red-500 hover:text-red-400"
-                        >
-                          <FaTimes className="w-4 h-4" />
-                        </button>
-                        
-                        <textarea
-                          value={message.text}
-                          onChange={(e) => {
-                            const newMessages = [...option.messages];
-                            newMessages[index].text = e.target.value;
-                            updateMessages(option.id, newMessages);
-                          }}
-                          className="w-full p-2 bg-gray-700 rounded text-base mb-2"
-                          rows={3}
-                          maxLength={35}
-                        />
-                        
-                        <div className="flex flex-wrap gap-4 items-center">
-                          <label className="flex items-center text-base">
-                            <input
-                              type="checkbox"
-                              checked={message.urgent}
-                              onChange={(e) => {
-                                const newMessages = [...option.messages];
-                                newMessages[index].urgent = e.target.checked;
-                                updateMessages(option.id, newMessages);
-                              }}
-                              className="mr-2"
-                            />
-                            Urgent order (+$30)
-                          </label>
-                          <label className="flex items-center text-base">
-                            <input
-                              type="checkbox"
-                              checked={message.video}
-                              onChange={(e) => {
-                                const newMessages = [...option.messages];
-                                newMessages[index].video = e.target.checked;
-                                updateMessages(option.id, newMessages);
-                              }}
-                              className="mr-2"
-                            />
-                            Firing video (+$100)
-                          </label>
-                          <div className="text-base font-semibold ml-auto">
-                            Price: ${option.cost + calculateMessageCost(message)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Footer */}
-          {selectedOptions.length > 0 && (
-            <div className="border-t border-gray-700 p-4">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-semibold">Subtotal:</span>
-                <span className="text-xl font-bold">${calculateTotalCartCost(selectedOptions)}</span>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Payment Method</label>
-                <select
-                  value={payment}
-                  onChange={(e) => setPayment(e.target.value)}
-                  className="w-full p-2 bg-gray-700 rounded border border-gray-600"
-                >
-                  <option value="paypal">PayPal</option>
-                  <option value="card">Credit Card</option>
-                </select>
-              </div>
-              
+      {showCartModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Your Cart</h2>
               <button
-                onClick={handlePayment}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
+                onClick={() => setShowCartModal(false)}
+                className="text-gray-400 hover:text-white text-xl"
               >
-                Proceed to Payment (${calculateTotalCartCost(selectedOptions)})
+                <FaTimes />
               </button>
             </div>
-          )}
+
+            {/* Items - scrollable area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {selectedOptions.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  Your cart is empty
+                </div>
+              ) : (
+                selectedOptions.map((option) => (
+                  <div key={option.id} className="bg-gray-700 rounded-lg p-4">
+                    <div className="relative w-full h-48 mb-4 rounded-3xl overflow-hidden bg-gray-700">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Image
+                          src={option.image_url}
+                          alt={option.name}
+                          width={400}
+                          height={300}
+                          className="max-w-full max-h-full object-contain rounded-3xl"
+                          onClick={() =>
+                            setViewImageModal({
+                              isOpen: true,
+                              imageUrl: option.image_url,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Product info and controls in one row */}
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold">{option.name}</h3>
+                        {/* <span className="text-gray-400 text-lg">${option.cost}</span> */}
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {/* Quantity controls */}
+                        <div className="flex items-cente rounded text-lg">
+                          <button
+                            onClick={() =>
+                              updateQuantity(option.id, option.quantity - 1)
+                            }
+                            className="px-3 py-1 hover:bg-gray-500 rounded-l bg-gray-600"
+                          >
+                            —
+                          </button>
+                          <span className="px-3 py-1 min-w-[20px] text-center bg-gray-600">
+                            {option.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              updateQuantity(option.id, option.quantity + 1)
+                            }
+                            className="px-3 py-1 hover:bg-gray-500 rounded-r bg-gray-600"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Remove button */}
+                        <button
+                          onClick={() => removeFromCart(option.id)}
+                          className="text-red-500 hover:text-red-400 p-1"
+                        >
+                          <FaTimes className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Messages */}
+                    <div className="mt-3 space-y-3">
+                      {option.messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className="bg-gray-800 rounded-md p-3 pt-4 relative"
+                        >
+                          <button
+                            onClick={() => removeMessage(option.id, index)}
+                            className="absolute top-6 right-5 text-red-500 hover:text-red-400"
+                          >
+                            <FaTimes className="w-4 h-4" />
+                          </button>
+
+                          <textarea
+                            value={message.text}
+                            onChange={(e) => {
+                              const newMessages = [...option.messages];
+                              newMessages[index].text = e.target.value;
+                              updateMessages(option.id, newMessages);
+                            }}
+                            className="w-full p-2 bg-gray-700 rounded text-base mb-2"
+                            rows={3}
+                            maxLength={35}
+                          />
+
+                          <div className="flex flex-wrap gap-4 items-center">
+                            <label className="flex items-center text-base">
+                              <input
+                                type="checkbox"
+                                checked={message.urgent}
+                                onChange={(e) => {
+                                  const newMessages = [...option.messages];
+                                  newMessages[index].urgent = e.target.checked;
+                                  updateMessages(option.id, newMessages);
+                                }}
+                                className="mr-2"
+                              />
+                              Urgent order (+$30)
+                            </label>
+                            <label className="flex items-center text-base">
+                              <input
+                                type="checkbox"
+                                checked={message.video}
+                                onChange={(e) => {
+                                  const newMessages = [...option.messages];
+                                  newMessages[index].video = e.target.checked;
+                                  updateMessages(option.id, newMessages);
+                                }}
+                                className="mr-2"
+                              />
+                              Firing video (+$100)
+                            </label>
+                            <div className="text-base font-semibold ml-auto">
+                              Price: $
+                              {option.cost + calculateMessageCost(message)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            {selectedOptions.length > 0 && (
+              <div className="border-t border-gray-700 p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-lg font-semibold">Subtotal:</span>
+                  <span className="text-xl font-bold">
+                    ${calculateTotalCartCost(selectedOptions)}
+                  </span>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">
+                    Payment Method
+                  </label>
+                  <select
+                    value={payment}
+                    onChange={(e) => setPayment(e.target.value)}
+                    className="w-full p-2 bg-gray-700 rounded border border-gray-600"
+                  >
+                    <option value="paypal">PayPal</option>
+                    <option value="card">Credit Card</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={handlePayment}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
+                >
+                  Proceed to Payment (${calculateTotalCartCost(selectedOptions)}
+                  )
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )}
+      )}
 
       {/* Text input modal */}
       {showTextModal && (
@@ -550,22 +620,32 @@ export default function SendMessage() {
                 stroke="currentColor"
                 className="w-6 h-6"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
             <h2 className="text-xl font-bold mb-2 text-center">Add to Cart</h2>
-            
+
             {/* Отображаем название и базовую цену товара */}
             <div className="mb-4 p-3 bg-gray-700 rounded-md">
               <h3 className="text-lg font-semibold">{currentItem?.name}</h3>
-              <p className="text-gray-300">Base price: <span className="font-bold">${currentItem?.cost}</span></p>
+              <p className="text-gray-300">
+                Base price:{" "}
+                <span className="font-bold">${currentItem?.cost}</span>
+              </p>
             </div>
 
             <div className="flex items-center gap-2 mb-4">
               Quantity
               <button
-                onClick={() => handleQuantityChange(Math.max(1, itemQuantity - 1))}
+                onClick={() =>
+                  handleQuantityChange(Math.max(1, itemQuantity - 1))
+                }
                 className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
               >
                 -
@@ -580,7 +660,10 @@ export default function SendMessage() {
             </div>
 
             {itemMessages.map((message, index) => (
-              <div key={index} className="flex flex-col gap-2 mb-4 p-3 bg-gray-700 rounded-md">
+              <div
+                key={index}
+                className="flex flex-col gap-2 mb-4 p-3 bg-gray-700 rounded-md"
+              >
                 <textarea
                   placeholder={`Message ${index + 1}`}
                   value={message.text}
@@ -593,7 +676,7 @@ export default function SendMessage() {
                   required
                   className="mt-1 p-2 w-full bg-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 />
-                
+
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center">
@@ -641,12 +724,17 @@ export default function SendMessage() {
               <div className="flex justify-between items-center">
                 <span className="font-bold text-lg">TOTAL:</span>
                 <span className="font-bold text-xl">
-                  ${(currentItem?.cost * itemQuantity) + 
-                    itemMessages.reduce((sum, message) => sum + calculateMessageCost(message), 0)}
+                  $
+                  {currentItem?.cost * itemQuantity +
+                    itemMessages.reduce(
+                      (sum, message) => sum + calculateMessageCost(message),
+                      0
+                    )}
                 </span>
               </div>
               <div className="text-sm text-blue-200 mt-1">
-                (Base: ${currentItem?.cost} × {itemQuantity} + Messages & Options)
+                (Base: ${currentItem?.cost} × {itemQuantity} + Messages &
+                Options)
               </div>
             </div>
 
@@ -662,12 +750,24 @@ export default function SendMessage() {
 
       {/* Slideshow */}
       <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">{t('title')}</h1>
-        <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">{t('subtitle')}</h3>
-        <p className="text-xs md:text-sm lg:text-base text-gray-400 mt-4 text-center">{t('description')}</p>
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
+          {t("title")}
+        </h1>
+        <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-300 mt-4">
+          {t("subtitle")}
+        </h3>
+        <p className="text-xs md:text-sm lg:text-base text-gray-400 mt-4 text-center">
+          {t("description")}
+        </p>
 
-        <div {...swipeHandlers} className="mt-6 w-full lg:w-3/4 mx-auto relative rounded-lg overflow-hidden bg-gray-700 aspect-video">
-          <div className="flex h-full transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}>
+        <div
+          {...swipeHandlers}
+          className="mt-6 w-full lg:w-3/4 mx-auto relative rounded-lg overflow-hidden bg-gray-700 aspect-video"
+        >
+          <div
+            className="flex h-full transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+          >
             {images.map((src, index) => (
               <Image
                 key={index}
@@ -681,13 +781,21 @@ export default function SendMessage() {
           </div>
 
           <button
-            onClick={() => setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? images.length - 1 : prevIndex - 1))}
+            onClick={() =>
+              setCurrentImageIndex((prevIndex) =>
+                prevIndex === 0 ? images.length - 1 : prevIndex - 1
+              )
+            }
             className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
           >
             ‹
           </button>
           <button
-            onClick={() => setCurrentImageIndex((prevIndex) => (prevIndex === images.length - 1 ? 0 : prevIndex + 1))}
+            onClick={() =>
+              setCurrentImageIndex((prevIndex) =>
+                prevIndex === images.length - 1 ? 0 : prevIndex + 1
+              )
+            }
             className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full shadow-md hover:bg-gray-600 z-10"
           >
             ›
@@ -697,7 +805,7 @@ export default function SendMessage() {
             {images.map((_, index) => (
               <div
                 key={index}
-                className={`w-3 h-3 rounded-full ${index === currentImageIndex ? 'bg-white' : 'bg-gray-400'}`}
+                className={`w-3 h-3 rounded-full ${index === currentImageIndex ? "bg-white" : "bg-gray-400"}`}
               ></div>
             ))}
           </div>
@@ -707,21 +815,28 @@ export default function SendMessage() {
       {/* Artillery grid */}
       <div className="flex flex-wrap lg:flex-nowrap items-start justify-center min-h-screen bg-gray-900 text-white px-4 lg:px-6 py-12 gap-6 mb-20">
         <div className="w-full lg:w-2/3 bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">Choose Artillery</h1>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
+            Choose Artillery
+          </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {artilleryOptions.map((option) => (
               <div
                 key={option.id}
                 className={`p-4 bg-gray-700 rounded-lg shadow-md cursor-pointer transition-all duration-300 ${
-                  selectedOptions.some((item) => item.id === option.id) ? 'ring-2 ring-blue-500' : 'hover:bg-gray-600'
+                  selectedOptions.some((item) => item.id === option.id)
+                    ? "ring-2 ring-blue-500"
+                    : "hover:bg-gray-600"
                 }`}
               >
                 <div
                   className="w-full h-48 overflow-hidden rounded-md mb-4"
                   onClick={(e) => {
                     e.stopPropagation(); // Останавливаем всплытие события
-                    setViewImageModal({ isOpen: true, imageUrl: option.image_url });
+                    setViewImageModal({
+                      isOpen: true,
+                      imageUrl: option.image_url,
+                    });
                   }}
                 >
                   <Image
@@ -758,10 +873,15 @@ export default function SendMessage() {
         <div className="max-w-screen-lg mx-auto px-6 flex flex-wrap md:flex-nowrap items-center gap-10">
           <div className="w-full md:w-1/2">
             <h3 className="text-3xl font-bold mb-4">
-              {t('about.title')} <span className="text-blue-500 text-4xl">{t('about.projectName')}</span>
+              {t("about.title")}{" "}
+              <span className="text-blue-500 text-4xl">
+                {t("about.projectName")}
+              </span>
             </h3>
-            <p className="text-gray-400 leading-relaxed">{t('about.description')}</p>
-            <p className="text-gray-400 mt-4">{t('about.callToAction')}</p>
+            <p className="text-gray-400 leading-relaxed">
+              {t("about.description")}
+            </p>
+            <p className="text-gray-400 mt-4">{t("about.callToAction")}</p>
           </div>
 
           <div className="w-full md:w-1/2 h-72 bg-gray-700 rounded-lg overflow-hidden relative flex items-center justify-center">

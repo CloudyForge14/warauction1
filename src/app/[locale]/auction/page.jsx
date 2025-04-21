@@ -137,7 +137,9 @@ export default function AuctionItems() {
 
     setItems((prevItems) => {
       const updatedItems = auctionItemsFromServer.map((serverItem) => {
-        const existingItem = prevItems.find((item) => item.id === serverItem.id);
+        const existingItem = prevItems.find(
+          (item) => item.id === serverItem.id
+        );
         return {
           ...serverItem,
           time_left: serverItem.time_left,
@@ -145,15 +147,18 @@ export default function AuctionItems() {
       });
 
       if (updatedItems.length < 5) {
-        const placeholders = Array.from({ length: 5 - updatedItems.length }, (_, index) => ({
-          id: `placeholder-${index}`,
-          name: "Coming Soon",
-          description: "This item will be available soon!",
-          current_bid: 0,
-          min_raise: 0,
-          time_left: 0,
-          image_url: "/auction/comingsoon.jpg",
-        }));
+        const placeholders = Array.from(
+          { length: 5 - updatedItems.length },
+          (_, index) => ({
+            id: `placeholder-${index}`,
+            name: "Coming Soon",
+            description: "This item will be available soon!",
+            current_bid: 0,
+            min_raise: 0,
+            time_left: 0,
+            image_url: "/auction/comingsoon.jpg",
+          })
+        );
         return [...updatedItems, ...placeholders];
       }
 
@@ -261,7 +266,9 @@ export default function AuctionItems() {
 
       const updatedItem = await response.json();
       setItems((prevItems) =>
-        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+        prevItems.map((item) =>
+          item.id === updatedItem.id ? updatedItem : item
+        )
       );
 
       toast.success("Bid placed successfully!");
@@ -287,8 +294,12 @@ export default function AuctionItems() {
             animation: spin 0.8s linear infinite;
           }
           @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
           }
         `}</style>
       </div>
@@ -322,7 +333,10 @@ export default function AuctionItems() {
       <h1 className="text-3xl font-bold text-center mb-8">Auction Items</h1>
 
       {viewImageModal.isOpen && (
-        <ViewImageModal imageUrl={viewImageModal.imageUrl} onClose={closeImageModal} />
+        <ViewImageModal
+          imageUrl={viewImageModal.imageUrl}
+          onClose={closeImageModal}
+        />
       )}
 
       <div
@@ -344,14 +358,24 @@ export default function AuctionItems() {
             </div>
 
             <img
-              src={imageErrors[item.id] ? '/auction/comingsoon.jpg' : item.image_url}
+              src={
+                imageErrors[item.id]
+                  ? "/auction/comingsoon.jpg"
+                  : item.image_url
+              }
               alt={item.name}
               className="w-full h-48 object-contain cursor-pointer"
               loading="lazy"
-              onError={() => setImageErrors(prev => ({ ...prev, [item.id]: true }))}
+              onError={() =>
+                setImageErrors((prev) => ({ ...prev, [item.id]: true }))
+              }
               onClick={(e) => {
                 e.stopPropagation();
-                openImageModal(imageErrors[item.id] ? '/auction/comingsoon.jpg' : item.image_url);
+                openImageModal(
+                  imageErrors[item.id]
+                    ? "/auction/comingsoon.jpg"
+                    : item.image_url
+                );
               }}
             />
 
