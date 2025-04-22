@@ -12,9 +12,10 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: {
     default: "CloudyForge | Military Auctions & Project Revenge",
-    template: "%s | CloudyForge"
+    template: "%s | CloudyForge",
   },
-  description: "Support Ukraine through military collectible auctions and Project Revenge - sending powerful messages to Russians via artillery strikes funded by your contributions.",
+  description:
+    "Support Ukraine through military collectible auctions and Project Revenge - sending powerful messages to Russians via artillery strikes funded by your contributions.",
   keywords: [
     "military auction",
     "support Ukraine",
@@ -35,7 +36,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "CloudyForge | Military Auctions & Project Revenge",
-    description: "Auction platform funding artillery strikes with personalized messages to Russian forces. Every purchase makes an impact.",
+    description:
+      "Auction platform funding artillery strikes with personalized messages to Russian forces. Every purchase makes an impact.",
     url: "https://cloudyforge.com",
     siteName: "CloudyForge",
     locale: "en_US",
@@ -44,7 +46,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CloudyForge | Military Auctions & Project Revenge",
-    description: "Turn your donations into artillery messages to Russian forces. Auction proceeds fund precise strikes.",
+    description:
+      "Turn your donations into artillery messages to Russian forces. Auction proceeds fund precise strikes.",
     creator: "@GloOouD",
   },
   robots: {
@@ -87,11 +90,48 @@ export default async function LocaleLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
 
-        <meta name="google-site-verification" content="MZOifn7gpbzgnDuK4QRHFI0TNqFCyiIevGmgbfOV7hk" />
+        <meta
+          name="google-site-verification"
+          content="MZOifn7gpbzgnDuK4QRHFI0TNqFCyiIevGmgbfOV7hk"
+        />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: locale === "uk" ? "Головна" : "Home",
+                item: `https://www.cloudyforge.com/${locale}`,
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name:
+                  locale === "uk" ? "Військові Аукціони" : "Military Auctions",
+                item: `https://www.cloudyforge.com/${locale}/auction`,
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: locale === "uk" ? "Проект 'Помста'" : "Project Revenge",
+                item: `https://www.cloudyforge.com/${locale}/artillery`,
+              },
+            ],
+          })}
+        </script>
 
         {/* Preload critical assets */}
         <link rel="preload" href="/hero-image.webp" as="image" />
-        <link rel="preload" href="/fonts/Inter.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link
+          rel="preload"
+          href="/fonts/Inter.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
 
         {/* Google Analytics */}
         <Script
@@ -110,36 +150,36 @@ export default async function LocaleLayout({
         </Script>
 
         {/* Project Revenge Structured Data */}
-        <script type="application/ld+json">
+        {/* <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "CloudyForge",
-            "url": "https://cloudyforge.com",
-            "logo": "https://cloudyforge.com/web-app-manifest-192x192.png",
-            "description": "Military collectibles auction and artillery message platform supporting Ukraine",
-            "sameAs": [
-              "https://twitter.com/GloOouD",
-            ],
-            "foundingDate": "2024",
-            "keywords": "Ukraine, military auction, Project Revenge, artillery messages, signed shell"
+            name: "CloudyForge",
+            url: "https://cloudyforge.com",
+            logo: "https://cloudyforge.com/web-app-manifest-192x192.png",
+            description:
+              "Military collectibles auction and artillery message platform supporting Ukraine",
+            sameAs: ["https://twitter.com/GloOouD"],
+            foundingDate: "2024",
+            keywords:
+              "Ukraine, military auction, Project Revenge, artillery messages, signed shell",
           })}
-        </script>
+        </script> */}
 
         {/* Auction Structured Data */}
-        <script type="application/ld+json">
+        {/* <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebApplication",
-            "name": "CloudyForge Auctions",
-            "applicationCategory": "MilitaryCollectibles",
-            "operatingSystem": "Web",
-            "offers": {
+            name: "CloudyForge Auctions",
+            applicationCategory: "MilitaryCollectibles",
+            operatingSystem: "Web",
+            offers: {
               "@type": "Offer",
-              "category": "MilitaryArtifacts"
-            }
+              category: "MilitaryArtifacts",
+            },
           })}
-        </script>
+        </script> */}
       </head>
       <body className="flex flex-col min-h-screen bg-gray-900 text-white">
         <NextIntlClientProvider messages={messages}>

@@ -380,6 +380,20 @@ export default function SendMessage() {
         progressStyle={{ backgroundColor: "#2563eb" }}
       />
 
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "Project Revenge",
+          description: "Artillery message delivery service",
+          offers: {
+            "@type": "Offer",
+            price: "500",
+            priceCurrency: "USD",
+          },
+        })}
+      </script>
+
       {viewImageModal.isOpen && (
         <ViewImageModal
           imageUrl={viewImageModal.imageUrl}

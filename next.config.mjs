@@ -26,6 +26,22 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/en',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'cloudyforge.com' }],
+        destination: 'https://www.cloudyforge.com/:path*',
+        permanent: true,
+      },
+    ];
+  }
+
 };
 
 export default withNextIntl(nextConfig);
