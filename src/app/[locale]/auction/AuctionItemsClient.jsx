@@ -332,27 +332,27 @@ export default function AuctionItems() {
       />
 
       <script type="application/ld+json">
-            {JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "ItemList",
-              "itemListElement": items.slice(0, 5).map((item, index) => ({
-                "@type": "ListItem",
-                "position": index + 1,
-                "item": {
-                  "@type": ["Product", "Collectible"],
-                  "name": item.name,
-                  "image": item.image_url,
-                  "offers": {
-                    "@price": item.current_bid,
-                    "priceCurrency": "USD"
-                  }
-                }
-              }))
-            })}
-          </script>
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          itemListElement: items.slice(0, 5).map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            item: {
+              "@type": ["Product", "Collectible"],
+              name: item.name,
+              image: item.image_url,
+              offers: {
+                "@price": item.current_bid,
+                priceCurrency: "USD",
+              },
+            },
+          })),
+        })}
+      </script>
 
       <h1 className="text-3xl font-bold text-center mb-8">Auction Items</h1>
-      
+
       {viewImageModal.isOpen && (
         <ViewImageModal
           imageUrl={viewImageModal.imageUrl}
@@ -417,8 +417,281 @@ export default function AuctionItems() {
         ))}
       </div>
 
-      {/* Остальной код модальных окон остается без изменений */}
-      {/* ... */}
+      {/* Modal */}
+
+      {selectedItem && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-gray-800 text-white rounded-lg p-6 max-w-4xl w-full flex flex-col lg:flex-row gap-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="lg:w-1/2 w-full">
+              <img
+                src={
+                  selectedItem.images?.[currentImageIndex] ||
+                  selectedItem.image_url
+                }
+                alt={selectedItem.name}
+                className="w-full h-64 lg:h-96 object-contain rounded-lg"
+              />
+
+              {selectedItem.images && selectedItem.images.length > 1 && (
+                <div className="flex space-x-2 mt-4 overflow-x-auto">
+                  {selectedItem.images.map((img, index) => (
+                    <img
+                      key={index}
+                      src={img}
+                      alt={`Thumbnail ${index}`}
+                      className={`w-16 h-16 object-contain rounded cursor-pointer ${
+                        index === currentImageIndex
+                          ? "border-2 border-yellow-500"
+                          : ""
+                      }`}
+                      onClick={() => setCurrentImageIndex(index)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="lg:w-1/2 w-full flex flex-col justify-between">
+              <div>
+                <h2 className="text-2xl lg:text-3xl font-bold mb-4">
+                  {selectedItem.name}
+                </h2>
+
+                <p className="text-gray-400 mb-4">{selectedItem.description}</p>
+
+                <p className="font-semibold">
+                  Current Bid:{" "}
+                  <span className="text-yellow-500">
+                    ${selectedItem.current_bid}
+                  </span>
+                </p>
+
+                <p className="font-semibold mt-2">
+                  Min Raise:{" "}
+                  <span className="text-yellow-500">
+                    ${selectedItem.min_raise}
+                  </span>
+                </p>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-center mb-4">
+                  <button
+                    className="bg-gray-600 px-4 py-2 rounded-l"
+                    onClick={() => handleBidChange(-1, selectedItem.min_raise)}
+                  >
+                    -
+                  </button>
+
+                  <input
+                    type="number"
+                    value={
+                      selectedItem.bid ||
+                      selectedItem.current_bid + selectedItem.min_raise
+                    }
+                    onChange={(e) => {
+                      const newBid = parseFloat(e.target.value) || "";
+
+                      setSelectedItem((prevItem) => ({
+                        ...prevItem,
+
+                        bid: newBid,
+                      }));
+                    }}
+                    onBlur={() => {
+                      setSelectedItem((prevItem) => {
+                        const minBid =
+                          prevItem.current_bid + prevItem.min_raise;
+
+                        return {
+                          ...prevItem,
+
+                          bid: prevItem.bid >= minBid ? prevItem.bid : minBid,
+                        };
+                      });
+                    }}
+                    className="w-24 text-center bg-gray-700"
+                    style={{
+                      appearance: "none",
+
+                      WebkitAppearance: "none",
+
+                      MozAppearance: "textfield",
+
+                      margin: 0,
+
+                      padding: 0,
+                    }}
+                  />
+
+                  <button
+                    className="bg-blue-600 px-4 py-2 rounded-r"
+                    onClick={() => handleBidChange(1, selectedItem.min_raise)}
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    htmlFor="paymentSelect"
+                    className="block mb-1 text-gray-300"
+                  >
+                    Choose Payment Type:
+                  </label>
+
+                  <select
+                    id="paymentSelect"
+                    value={paymentType}
+                    onChange={(e) => setPaymentType(e.target.value)}
+                    className="bg-gray-700 border border-gray-600 rounded py-2 px-3 w-full"
+                  >
+                    <option value="">-- Select --</option>
+
+                    <option value="Paypal">Paypal</option>
+
+                    <option value="Card">Card</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={handlePlaceBid}
+                  className={`w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold`}
+                >
+                  Place a bid: $
+                  {selectedItem.bid ||
+                    selectedItem.current_bid + selectedItem.min_raise}
+                </button>
+
+                <button
+                  onClick={closeModal}
+                  className="mt-2 w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модалка с текстом Terms (Public Offer Auction) */}
+
+      {showTermsModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowTermsModal(false)}
+        >
+          <div
+            className="bg-gray-800 text-gray-100 rounded-lg p-6 max-w-2xl w-full relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 text-xl"
+              onClick={() => setShowTermsModal(false)}
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-bold mb-4">Auction Terms</h2>
+
+            <div className="max-h-96 overflow-y-auto space-y-4 text-sm leading-relaxed">
+              <p className="text-gray-200 font-semibold">
+                PUBLIC CONTRACT (OFFER)
+              </p>
+
+              <p className="text-gray-400">
+                1.1 The Auction is part of the , has its own rules for
+                transactions set out below, but in addition follows all the
+                basic(general) Site Rules.
+                <br />
+                1.2 By bidding at the auction, you confirm that you have read
+                and agree to the Auction Rules.
+                <br />
+                1.3 Auction on the site is an auction of military themes, on
+                which items (trophies) of military themes, equipment and
+                military clothing can be bought.
+                <br />
+                1.4 All prices at the auction are indicated in dollars ($).
+              </p>
+
+              <p className="text-gray-400">
+                <strong>2. Duties of the auction participants</strong>
+                <br />
+                2.1 Bidders are obliged to enter their real and valid data in
+                the settings of payment and delivery options.
+                <br />
+                2.2 By creating a lot and specifying a minimum (starting) price
+                for the lot, the seller undertakes to sell this lot to any user
+                who wins it, even after one bid with a minimum step.
+                <br />
+                2.3 By placing a bid on a lot, the buyer agrees to buy the lot
+                at the price he has indicated, without any additional
+                requirements to the seller or specification of details of the
+                lot. All questions about the lot must be clarified before
+                placing a bid.
+              </p>
+
+              <p className="text-gray-400">
+                <strong>3. Prices, terms and conditions</strong>
+                <br />
+                3.1 Bidding is free of charge.
+                <br />
+                3.2 After winning the lot, the buyer must pay the full amount of
+                the lot to the seller's details + delivery costs, which will be
+                specified on the lot page, within 2 days. If the lot is not paid
+                within this time, the buyer loses the right to the lot, and
+                depending on the choice of the seller, the lot either goes to
+                the user who made the previous bid, or re-created.
+                <br />
+                3.2.1 Only after payment of the lot and delivery costs, the
+                Seller undertakes to send the lot.
+                <br />
+                3.2.2 The price of delivery depends on the volume and weight of
+                the item.
+                <br />
+                3.3 After receiving payment for the lot, the seller is obliged
+                to actually dispatch the lot within 14 days.
+                <br />
+                3.4 If a bid on the lot was made less than 10 minutes before the
+                end of the auction, the auction end time will be extended by
+                another 10 minutes from the time of the last bid.
+              </p>
+
+              <p className="text-gray-400">
+                <strong>
+                  4. The first bid for a lot may be equal to the starting price.
+                </strong>
+              </p>
+
+              <p className="text-gray-400">
+                <strong>
+                  5. Payment of the costs of the buying process by the auction
+                  participants
+                </strong>
+                <br />
+                5.1 All costs of payment for the lot are the responsibility of
+                the buyer.
+                <br />
+                5.2 All shipping costs are the responsibility of the buyer
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowTermsModal(false)}
+              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
