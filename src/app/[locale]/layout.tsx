@@ -23,11 +23,15 @@ export const metadata: Metadata = {
     "Project Revenge",
     "artillery messages",
     "Russian warship",
-    "military donations",
+    "donations",
     "CloudyForge",
     "signed shells",
     "Send artillery messages to Russian",
-    "Russian invader"
+    "cloudy forge",
+    "Cloudy forge",
+    "donation to Ukraine",
+    "auction",
+    "sign my bomb",
   ],
   openGraph: {
     title: "CloudyForge | Military Auctions & Project Revenge",

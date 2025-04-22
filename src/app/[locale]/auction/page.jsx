@@ -311,7 +311,7 @@ export default function AuctionItems() {
   }
 
   return (
-    <div className="bg-gray-900 text-white h-auto py-12">
+    <main className="bg-gray-900 text-white h-auto py-12">
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -330,8 +330,29 @@ export default function AuctionItems() {
         }}
         progressStyle={{ backgroundColor: "#2563eb" }}
       />
-      <h1 className="text-3xl font-bold text-center mb-8">Auction Items</h1>
 
+      <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              "itemListElement": items.slice(0, 5).map((item, index) => ({
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": {
+                  "@type": ["Product", "Collectible"],
+                  "name": item.name,
+                  "image": item.image_url,
+                  "offers": {
+                    "@price": item.current_bid,
+                    "priceCurrency": "USD"
+                  }
+                }
+              }))
+            })}
+          </script>
+
+      <h1 className="text-3xl font-bold text-center mb-8">Auction Items</h1>
+      
       {viewImageModal.isOpen && (
         <ViewImageModal
           imageUrl={viewImageModal.imageUrl}
@@ -398,6 +419,33 @@ export default function AuctionItems() {
 
       {/* Остальной код модальных окон остается без изменений */}
       {/* ... */}
-    </div>
+    </main>
   );
 }
+
+
+// app/auction/page.js (or layout.js)
+export const metadata = {
+  title: "Military Auctions | CloudyForge",
+  description: "Bid on authentic war artifacts to support Ukraine. Each purchase funds artillery strikes through Project Revenge.",
+  keywords: [
+    "military auctions",
+    "auction",
+    "war artifacts for sale",
+    "signed artillery shells",
+    "support Ukraine army",
+    "war artifacts",
+    "military collectibles",
+  ],
+  openGraph: {
+    title: "Live Military Auctions | CloudyForge",
+    description: "Exclusive auctions funding artillery messages to Russian forces.",
+  },
+  alternates: {
+    canonical: "https://cloudyforge.com/auction",
+    languages: {
+      "en-US": "https://cloudyforge.com/en/auction",
+      "uk-UA": "https://cloudyforge.com/uk/auction",
+    },
+  }
+};
