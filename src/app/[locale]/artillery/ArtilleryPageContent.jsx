@@ -305,6 +305,8 @@ export default function SendMessage() {
       ),
       paypalEmail: paymentDetails?.paypal,
       cardNumber: paymentDetails?.card,
+      ethAddress: paymentDetails?.eth,
+      btcAddress: paymentDetails?.btc,
     };
 
     try {
@@ -601,6 +603,8 @@ export default function SendMessage() {
                   >
                     <option value="paypal">PayPal</option>
                     <option value="card">Credit Card</option>
+                    <option value="eth">Ethereum (ETH)</option>
+                    <option value="btc">Bitcoin (BTC)</option>
                   </select>
                 </div>
 

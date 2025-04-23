@@ -18,6 +18,8 @@ export async function POST(request) {
       video,
       paypalEmail,
       cardNumber,
+      ethAddress,
+      btcAddress,
     } = orderData;
 
     console.log('Received order data:', orderData); // Debugging
@@ -50,7 +52,22 @@ export async function POST(request) {
       });
     }
 
+    // Fetch the option name from the options table
+    const { data: optionData, error: optionError } = await supabase
+      .from('options')
+      .select('name')
+      .eq('id', option_id)
+      .single();
+
+    if (optionError) {
+      console.error('Error fetching option data:', optionError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch option data' }), {
+        status: 500,
+      });
+    }
+
     const username = userData.username;
+    const optionName = optionData.name; // Get the actual option name
 
     // Вставка сообщений в базу данных
     const { data: newMessages, error: insertError } = await supabase
@@ -80,31 +97,50 @@ export async function POST(request) {
     const template = templates['messageAccepted'];
     let emailContent;
 
-    if (payment_method === 'paypal') {
-      emailContent = {
-        subject: template.subject,
-        text: template.textWithPayPal(email, 'Artillery Shell', messages[0].text, paypalEmail),
-        html: template.htmlWithPayPal(email, 'Artillery Shell', messages[0].text.replace(/\n/g, '<br />'), paypalEmail),
-      };
-    } else if (payment_method === 'card') {
-      if (!template.textWithCard || !template.htmlWithCard) {
-        console.error('Template functions for card payment are missing.');
-        return new Response(
-          JSON.stringify({ error: 'Email template for card payment is not defined' }),
-          { status: 500 }
-        );
-      }
-    
-      emailContent = {
-        subject: template.subject,
-        text: template.textWithCard(email, 'Artillery Shell', messages[0].text, cardNumber),
-        html: template.htmlWithCard(email, 'Artillery Shell', messages[0].text.replace(/\n/g, '<br />'), cardNumber),
-      };
-    } else {
-      console.error('Invalid payment method:', payment_method);
-      return new Response(JSON.stringify({ error: 'Invalid payment method' }), {
-        status: 400,
-      });
+    switch (payment_method) {
+      case 'paypal':
+        if (!paypalEmail) {
+          return new Response(JSON.stringify({ error: 'PayPal email is required' }), {
+            status: 400,
+          });
+        }
+        emailContent = {
+          subject: template.subject,
+          text: template.textWithPayPal(username, optionName, messages[0].text, paypalEmail),
+          html: template.htmlWithPayPal(username, optionName, messages[0].text.replace(/\n/g, '<br />'), paypalEmail),
+        };
+        break;
+      case 'card':
+        if (!cardNumber) {
+          return new Response(JSON.stringify({ error: 'Card number is required' }), {
+            status: 400,
+          });
+        }
+        emailContent = {
+          subject: template.subject,
+          text: template.textWithCard(username, optionName, messages[0].text, cardNumber),
+          html: template.htmlWithCard(username, optionName, messages[0].text.replace(/\n/g, '<br />'), cardNumber),
+        };
+        break;
+      case 'eth':
+        emailContent = {
+          subject: template.subject,
+          text: template.textWithETH(username, optionName, messages[0].text, ethAddress),
+          html: template.htmlWithETH(username, optionName, messages[0].text.replace(/\n/g, '<br />'), ethAddress),
+        };
+        break;
+      case 'btc':
+        emailContent = {
+          subject: template.subject,
+          text: template.textWithBTC(username, optionName, messages[0].text, btcAddress),
+          html: template.htmlWithBTC(username, optionName, messages[0].text.replace(/\n/g, '<br />'), btcAddress),
+        };
+        break;
+      default:
+        console.error('Invalid payment method:', payment_method);
+        return new Response(JSON.stringify({ error: 'Invalid payment method' }), {
+          status: 400,
+        });
     }
 
     console.log('Email Content:', emailContent);

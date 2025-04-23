@@ -60,7 +60,7 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-
+    // TODO добавить способ оплаты криптовалютой
     // Отправляем письмо победителю в зависимости от типа оплаты
     if (paymentType === "Paypal") {
       await sendEmail(

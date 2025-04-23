@@ -545,7 +545,7 @@ export default function AuctionItems() {
                   >
                     Choose Payment Type:
                   </label>
-
+                   {/* TODO добавить способ оплаты криптовалютой */}
                   <select
                     id="paymentSelect"
                     value={paymentType}
