@@ -4,7 +4,6 @@ import { templates } from "@/utils/sendEmail/emailTemplates";
 
 export async function POST(request) {
   try {
-    // Получаем auctionId из тела запроса
     const { auctionId } = await request.json().catch(() => ({}));
     if (!auctionId) {
       return new Response(
@@ -13,7 +12,6 @@ export async function POST(request) {
       );
     }
 
-    // Запрашиваем конкретный лот, который завершён (time_left < 0) и активен (is_active === true)
     const { data: auctionData, error: auctionError } = await supabase
       .from("auction_items")
       .select("*")
@@ -33,7 +31,6 @@ export async function POST(request) {
       );
     }
 
-    // Получаем последний бид для данного лота
     const { data: lastBid, error: lastBidError } = await supabase
       .from("bid_history")
       .select("*")
@@ -49,8 +46,8 @@ export async function POST(request) {
       );
     }
 
-    const finalPrice = auctionData.current_bid; // либо можно взять lastBid.bid_amount
-    const paymentType = lastBid.payment_type; // 'Paypal' или 'Card'
+    const finalPrice = auctionData.current_bid;
+    const paymentType = lastBid.payment_type; // Now can be 'Paypal', 'Card', 'ETH', or 'BTC'
     const winnerEmail = auctionData.current_bid_user_email;
     const winnerName = auctionData.current_bid_user_name;
 
@@ -60,50 +57,118 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    // TODO добавить способ оплаты криптовалютой
-    // Отправляем письмо победителю в зависимости от типа оплаты
-    if (paymentType === "Paypal") {
-      await sendEmail(
-        winnerEmail,
-        templates.auctionWon.subject,
-        templates.auctionWon.textWithPayPal(
-          winnerName,
-          auctionData.name,
-          finalPrice,
-          auctionData.paypal
-        ),
-        templates.auctionWon.htmlWithPayPal(
-          winnerName,
-          auctionData.name,
-          finalPrice,
-          auctionData.paypal
-        )
-      );
-    } else if (paymentType === "Card") {
-      await sendEmail(
-        winnerEmail,
-        templates.auctionWon.subject,
-        templates.auctionWon.textWithCard(
-          winnerName,
-          auctionData.name,
-          finalPrice,
-          auctionData.card || "No card number found"
-        ),
-        templates.auctionWon.htmlWithCard(
-          winnerName,
-          auctionData.name,
-          finalPrice,
-          auctionData.card || "No card number found"
-        )
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ error: "Unknown payment type" }),
-        { status: 400 }
-      );
+
+    // Handle all payment types
+    let emailContent;
+    switch (paymentType.toLowerCase()) {
+      case "paypal":
+        if (!auctionData.paypal) {
+          return new Response(
+            JSON.stringify({ error: "PayPal address not configured for this auction" }),
+            { status: 400 }
+          );
+        }
+        emailContent = {
+          subject: templates.auctionWon.subject,
+          text: templates.auctionWon.textWithPayPal(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.paypal
+          ),
+          html: templates.auctionWon.htmlWithPayPal(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.paypal
+          )
+        };
+        break;
+      case "card":
+        if (!auctionData.card) {
+          return new Response(
+            JSON.stringify({ error: "Card number not configured for this auction" }),
+            { status: 400 }
+          );
+        }
+        emailContent = {
+          subject: templates.auctionWon.subject,
+          text: templates.auctionWon.textWithCard(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.card
+          ),
+          html: templates.auctionWon.htmlWithCard(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.card
+          )
+        };
+        break;
+      case "eth":
+        if (!auctionData.eth_address) {
+          return new Response(
+            JSON.stringify({ error: "Ethereum address not configured for this auction" }),
+            { status: 400 }
+          );
+        }
+        emailContent = {
+          subject: templates.auctionWon.subject,
+          text: templates.auctionWon.textWithETH(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.eth_address
+          ),
+          html: templates.auctionWon.htmlWithETH(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.eth_address
+          )
+        };
+        break;
+      case "btc":
+        if (!auctionData.btc_address) {
+          return new Response(
+            JSON.stringify({ error: "Bitcoin address not configured for this auction" }),
+            { status: 400 }
+          );
+        }
+        emailContent = {
+          subject: templates.auctionWon.subject,
+          text: templates.auctionWon.textWithBTC(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.btc_address
+          ),
+          html: templates.auctionWon.htmlWithBTC(
+            winnerName,
+            auctionData.name,
+            finalPrice,
+            auctionData.btc_address
+          )
+        };
+        break;
+      default:
+        return new Response(
+          JSON.stringify({ error: "Unknown payment type" }),
+          { status: 400 }
+        );
     }
 
-    // Обновляем запись, устанавливая is_active в false (аукцион завершён)
+    // Send the email
+    await sendEmail(
+      winnerEmail,
+      emailContent.subject,
+      emailContent.text,
+      emailContent.html
+    );
+
+    // Update auction status
     const { error: updateError } = await supabase
       .from("auction_items")
       .update({ is_active: false })

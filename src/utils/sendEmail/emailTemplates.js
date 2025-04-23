@@ -95,7 +95,7 @@ export const templates = {
            <p>We just wanted to let you know that your password has been updated.</p>
            <p>If you did not do this, please contact support immediately.</p>`,
       }, 
-      auctionWon: { // TODO добавить способ оплаты криптовалютой
+      auctionWon: {
         subject: 'Congratulations! You Won the Auction!',
         textWithPayPal: (username, itemName, finalPrice, paypalEmail) =>
           `Hi ${username},\n\nCongratulations on winning the auction for "${itemName}"! The final price is $${finalPrice.toFixed(
@@ -131,6 +131,50 @@ export const templates = {
            <ul>
              <li><strong>Card Number:</strong> ${cardNumber}</li>
            </ul>
+           <p>After payment, send your data for delivery to <strong>cloudyforge@gmail.com</strong>, namely:</p>
+           <ol>
+             <li>Country</li>
+             <li>Full name</li>
+             <li>Phone number</li>
+             <li>Full address</li>
+             <li>City</li>
+             <li>Zip code</li>
+           </ol>
+           <p>Thank you for participating!</p>
+           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+      
+        textWithETH: (username, itemName, finalPrice, ethAddress) =>
+          `Hi ${username},\n\nCongratulations on winning the auction for "${itemName}"! The final price is $${finalPrice.toFixed(
+            2
+          )}.\n\nTo complete your payment, please send the equivalent in ETH to the following Ethereum address: ${ethAddress}\n\nAfter payment, send your data for delivery, namely:\n1. Country\n2. Full name\n3. Phone number\n4. Full address\n5. City\n6. Zip code\n\nThank you for participating!\n\nBest regards,\nCloudyForge Team`,
+        htmlWithETH: (username, itemName, finalPrice, ethAddress) =>
+          `<h1>Hi ${username},</h1>
+           <p>Congratulations on winning the auction for <strong>"${itemName}"</strong>!</p>
+           <p>The final price is <strong>$${finalPrice.toFixed(2)}</strong>.</p>
+           <p>To complete your payment, please send the equivalent in ETH to the following Ethereum address:</p>
+           <p><strong>${ethAddress}</strong></p>
+           <p>After payment, send your data for delivery to <strong>cloudyforge@gmail.com</strong>, namely:</p>
+           <ol>
+             <li>Country</li>
+             <li>Full name</li>
+             <li>Phone number</li>
+             <li>Full address</li>
+             <li>City</li>
+             <li>Zip code</li>
+           </ol>
+           <p>Thank you for participating!</p>
+           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+      
+        textWithBTC: (username, itemName, finalPrice, btcAddress) =>
+          `Hi ${username},\n\nCongratulations on winning the auction for "${itemName}"! The final price is $${finalPrice.toFixed(
+            2
+          )}.\n\nTo complete your payment, please send the equivalent in BTC to the following Bitcoin address: ${btcAddress}\n\nAfter payment, send your data for delivery, namely:\n1. Country\n2. Full name\n3. Phone number\n4. Full address\n5. City\n6. Zip code\n\nThank you for participating!\n\nBest regards,\nCloudyForge Team`,
+        htmlWithBTC: (username, itemName, finalPrice, btcAddress) =>
+          `<h1>Hi ${username},</h1>
+           <p>Congratulations on winning the auction for <strong>"${itemName}"</strong>!</p>
+           <p>The final price is <strong>$${finalPrice.toFixed(2)}</strong>.</p>
+           <p>To complete your payment, please send the equivalent in BTC to the following Bitcoin address:</p>
+           <p><strong>${btcAddress}</strong></p>
            <p>After payment, send your data for delivery to <strong>cloudyforge@gmail.com</strong>, namely:</p>
            <ol>
              <li>Country</li>
