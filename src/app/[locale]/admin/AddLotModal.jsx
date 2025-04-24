@@ -1,6 +1,6 @@
 'use client';  // <-- очень важно
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,6 +16,8 @@ export const AddLotModal = ({ onSave, onClose }) => {
     image_url: '',
     paypal: '',
     card: '',
+    eth: '',
+    btc: '',
   });
   const [file, setFile] = useState(null);
 
@@ -59,6 +61,31 @@ export const AddLotModal = ({ onSave, onClose }) => {
     onSave({ ...formData, image_url: imageUrl });
     onClose();
   };
+
+  const fetchDefaultPaymentData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment')
+        .select('*')
+        .single();
+  
+      if (!error && data) {
+        setFormData(prev => ({
+          ...prev,
+          paypal: prev.paypal || data.paypal || '',
+          card: prev.card || data.card || '',
+          eth: prev.eth || data.eth || '',
+          btc: prev.btc || data.btc || '',
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching payment defaults:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDefaultPaymentData();
+  }, []);
 
   return (
     // Тёмный оверлей (цвета без изменений)
@@ -204,6 +231,37 @@ export const AddLotModal = ({ onSave, onClose }) => {
               value={formData.card}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md"
+            />
+          </div>
+          {/* ETH Address */}
+          <div className="md:col-span-2 flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="ethAddress">
+              Ethereum Address
+            </label>
+            <input
+              id="ethAddress"
+              type="text"
+              name="eth_address"
+              placeholder="ETH Wallet Address"
+              value={formData.eth || ''}
+              onChange={handleChange}
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* BTC Address */}
+          <div className="md:col-span-2 flex flex-col">
+            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="btcAddress">
+              Bitcoin Address
+            </label>
+            <input
+              id="btcAddress"
+              type="text"
+              name="btc_address"
+              placeholder="BTC Wallet Address"
+              value={formData.btc || ''}
+              onChange={handleChange}
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 

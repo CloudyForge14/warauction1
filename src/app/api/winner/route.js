@@ -108,7 +108,7 @@ export async function POST(request) {
         };
         break;
       case "eth":
-        if (!auctionData.eth_address) {
+        if (!auctionData.eth) {
           return new Response(
             JSON.stringify({ error: "Ethereum address not configured for this auction" }),
             { status: 400 }
@@ -120,18 +120,18 @@ export async function POST(request) {
             winnerName,
             auctionData.name,
             finalPrice,
-            auctionData.eth_address
+            auctionData.eth
           ),
           html: templates.auctionWon.htmlWithETH(
             winnerName,
             auctionData.name,
             finalPrice,
-            auctionData.eth_address
+            auctionData.eth
           )
         };
         break;
       case "btc":
-        if (!auctionData.btc_address) {
+        if (!auctionData.btc) {
           return new Response(
             JSON.stringify({ error: "Bitcoin address not configured for this auction" }),
             { status: 400 }
@@ -143,13 +143,13 @@ export async function POST(request) {
             winnerName,
             auctionData.name,
             finalPrice,
-            auctionData.btc_address
+            auctionData.btc
           ),
           html: templates.auctionWon.htmlWithBTC(
             winnerName,
             auctionData.name,
             finalPrice,
-            auctionData.btc_address
+            auctionData.btc
           )
         };
         break;

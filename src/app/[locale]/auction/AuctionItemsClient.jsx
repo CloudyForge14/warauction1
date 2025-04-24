@@ -7,7 +7,18 @@ import "react-toastify/dist/ReactToastify.css";
 import { supabase } from "@/utils/supabase/client";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Создаем QueryClient вне компонента
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,
+      cacheTime: 0,
+      refetchOnWindowFocus: true,
+    },
+  },
+});
 
 const ViewImageModal = memo(({ imageUrl, onClose }) => {
   const handleImageClick = useCallback((e) => e.stopPropagation(), []);
@@ -37,7 +48,7 @@ const ViewImageModal = memo(({ imageUrl, onClose }) => {
   );
 });
 
-export default function AuctionItems() {
+function AuctionItemsContent() {
   const [items, setItems] = useState([]);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -47,7 +58,6 @@ export default function AuctionItems() {
   const [paymentType, setPaymentType] = useState("");
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [imageErrors, setImageErrors] = useState({});
-  const queryClient = new QueryClient();
 
   const [viewImageModal, setViewImageModal] = useState({
     isOpen: false,
@@ -114,7 +124,9 @@ export default function AuctionItems() {
   // fetchAuctionItems
   const fetchAuctionItems = async () => {
     console.log("Fetching auction items...");
-    const response = await fetch("/api/auction-items");
+    // Добавляем timestamp к URL чтобы избежать кэширования
+    const timestamp = Date.now();
+    const response = await fetch(`/api/auction-items?timestamp=${timestamp}`);
     if (!response.ok) {
       throw new Error("Failed to fetch auction items");
     }
@@ -130,6 +142,7 @@ export default function AuctionItems() {
     queryFn: fetchAuctionItems,
     refetchInterval: 5000,
     staleTime: 0,
+    cacheTime: 0,
   });
 
   useEffect(() => {
@@ -696,5 +709,13 @@ export default function AuctionItems() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function AuctionItems() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuctionItemsContent />
+    </QueryClientProvider>
   );
 }

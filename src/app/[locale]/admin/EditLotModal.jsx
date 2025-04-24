@@ -74,10 +74,16 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
         </h2>
 
         {/* Форма: одна колонка на маленьких экранах, две на md и выше */}
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           {/* Левая колонка */}
           <div className="flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotName">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="lotName"
+            >
               Lot Name
             </label>
             <input
@@ -85,14 +91,17 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               type="text"
               name="name"
               placeholder="e.g. Rare Artifact"
-              value={formData.name || ''}
+              value={formData.name || ""}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="currentBid">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="currentBid"
+            >
               Current Bid
             </label>
             <input
@@ -108,7 +117,10 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
 
           {/* Правая колонка */}
           <div className="flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="minRaise">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="minRaise"
+            >
               Minimum Raise
             </label>
             <input
@@ -123,7 +135,10 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
           </div>
 
           <div className="flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotOrder">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="lotOrder"
+            >
               Order
             </label>
             <input
@@ -139,42 +154,51 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
 
           {/* Полная ширина для Description */}
           <div className="md:col-span-2 flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotDesc">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="lotDesc"
+            >
               Description
             </label>
             <textarea
               id="lotDesc"
               name="description"
               placeholder="Short description of the lot"
-              value={formData.description || ''}
+              value={formData.description || ""}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md h-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="finishingDate">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="finishingDate"
+            >
               Finishing Date
             </label>
             <input
               id="finishingDate"
               type="date"
               name="date_of_finishing"
-              value={formData.date_of_finishing || ''}
+              value={formData.date_of_finishing || ""}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="finishingTime">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="finishingTime"
+            >
               Finishing Time
             </label>
             <input
               id="finishingTime"
               type="time"
               name="time_of_finishing"
-              value={formData.time_of_finishing || ''}
+              value={formData.time_of_finishing || ""}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -194,7 +218,10 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
 
           {/* Поля PayPal и Card на всю ширину */}
           <div className="md:col-span-2 flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="lotPaypal">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="lotPaypal"
+            >
               Paypal
             </label>
             <input
@@ -202,14 +229,17 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               type="text"
               name="paypal"
               placeholder="Paypal Email"
-              value={formData.paypal || ''}
+              value={formData.paypal || ""}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="md:col-span-2 flex flex-col">
-            <label className="block text-sm sm:text-base text-gray-300 mb-1" htmlFor="card">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="card"
+            >
               Card Number
             </label>
             <input
@@ -217,7 +247,45 @@ export const EditLotModal = ({ lot, onSave, onClose }) => {
               type="text"
               name="card"
               placeholder="Card Number"
-              value={formData.card || ''}
+              value={formData.card || ""}
+              onChange={handleChange}
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* ETH Address */}
+          <div className="md:col-span-2 flex flex-col">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="ethAddress"
+            >
+              Ethereum Address
+            </label>
+            <input
+              id="ethAddress"
+              type="text"
+              name="eth"
+              placeholder="ETH Wallet Address"
+              value={formData.eth || ""}
+              onChange={handleChange}
+              className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* BTC Address */}
+          <div className="md:col-span-2 flex flex-col">
+            <label
+              className="block text-sm sm:text-base text-gray-300 mb-1"
+              htmlFor="btcAddress"
+            >
+              Bitcoin Address
+            </label>
+            <input
+              id="btcAddress"
+              type="text"
+              name="btc"
+              placeholder="BTC Wallet Address"
+              value={formData.btc || ""}
               onChange={handleChange}
               className="p-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />

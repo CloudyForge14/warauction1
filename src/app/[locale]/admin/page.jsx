@@ -24,7 +24,12 @@ export default function AdminPanel() {
 
 
   // --- Payment info ---
-  const [paymentInfo, setPaymentInfo] = useState({ card: "", paypal: "" });
+  const [paymentInfo, setPaymentInfo] = useState({ 
+    card: "", 
+    paypal: "", 
+    eth: "", 
+    btc: "" 
+  });
   const [paymentId, setPaymentId] = useState(null);
 
   // ======== Fetch Functions ========
@@ -167,7 +172,12 @@ export default function AdminPanel() {
         return;
       }
       if (data) {
-        setPaymentInfo({ card: data.card || "", paypal: data.paypal || "" });
+        setPaymentInfo({ 
+          card: data.card || "", 
+          paypal: data.paypal || "",
+          eth: data.eth || "",
+          btc: data.btc || ""
+        });
         setPaymentId(data.id);
       }
     } catch (err) {
@@ -276,6 +286,8 @@ export default function AdminPanel() {
           card: updatedData.card,
           order: updatedData.order,
           time_left: -1,
+          btc: updatedData.btc,
+          eth: updatedData.eth,
         })
         .eq("id", updatedData.id);
       if (error) {
@@ -442,7 +454,12 @@ export default function AdminPanel() {
     try {
       const { error } = await supabase
         .from("payment")
-        .update({ card: paymentInfo.card, paypal: paymentInfo.paypal })
+        .update({ 
+          card: paymentInfo.card, 
+          paypal: paymentInfo.paypal,
+          eth: paymentInfo.eth,
+          btc: paymentInfo.btc
+        })
         .eq("id", paymentId);
       if (error) {
         toast.error("Error updating payment info.");
@@ -663,7 +680,7 @@ export default function AdminPanel() {
                 </div>
                 <div className="flex justify-between mt-2">
                   <button
-                    onClick={() => toggleLotActiveStatus(lot.id, !lot.is_active)}
+                    onClick={() => toggleLotActiveStatus(lot.id, !lot.is_active)} // 
                     className={`px-3 py-1 rounded-md text-sm ${
                       lot.is_active
                         ? "bg-red-600 hover:bg-red-500"
@@ -922,6 +939,30 @@ export default function AdminPanel() {
                 setPaymentInfo({ ...paymentInfo, paypal: e.target.value })
               }
               className="mt-1 p-2 w-full bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Ethereum Address:</label>
+            <input
+              type="text"
+              value={paymentInfo.eth}
+              onChange={(e) =>
+                setPaymentInfo({ ...paymentInfo, eth: e.target.value })
+              }
+              className="mt-1 p-2 w-full bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="0x..."
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Bitcoin Address:</label>
+            <input
+              type="text"
+              value={paymentInfo.btc}
+              onChange={(e) =>
+                setPaymentInfo({ ...paymentInfo, btc: e.target.value })
+              }
+              className="mt-1 p-2 w-full bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="bc1q..."
             />
           </div>
           <button
