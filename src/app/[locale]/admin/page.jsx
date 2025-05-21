@@ -650,72 +650,104 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Остальной код для отображения лотов */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {lots.map((lot) => (
-          <div 
-            key={lot.id}
-            className="bg-gray-700 rounded-lg shadow-md overflow-hidden flex flex-col"
-          >
-            {lot.image_url && (
-              <div 
-                className="w-full h-48 relative cursor-pointer" // Добавляем cursor-pointer
-                onClick={() => setModal({ type: "view-image", data: lot.image_url })}
-              >
-                <Image
-                  src={lot.image_url}
-                  alt={lot.name}
-                  fill
-                  style={{ objectFit: 'contain' }}
-                  quality={75}
-                  loading="lazy"
-                />
-              </div>
-            )}
-            <div className="p-4 flex-grow flex flex-col">
-              <h3 className="text-lg font-bold text-white">{lot.name}</h3>
-              <p className="text-sm text-gray-300">Order: {lot.order || 0}</p>
-              <p className="text-sm text-gray-300">Current Bid: ${lot.current_bid}</p>
-              <p className="text-sm text-gray-300 whitespace-pre-line">
-                {lot.description}
-              </p>
-              <div className="mt-auto pt-4 border-t border-gray-600">
-                <div className="flex justify-between">
-                  <button
-                    onClick={() => setModal({ type: "edit-lot", data: lot })}
-                    className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteLot(lot.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
-                  >
-                    Delete
-                  </button>
+        {lots.map((lot) => {
+          const showBids = !!lotHistories[lot.id];
+          return (
+            <div 
+              key={lot.id}
+              className="bg-gray-700 rounded-lg shadow-md overflow-hidden flex flex-col"
+            >
+              {lot.image_url && (
+                <div 
+                  className="w-full h-48 relative cursor-pointer"
+                  onClick={() => setModal({ type: "view-image", data: lot.image_url })}
+                >
+                  <Image
+                    src={lot.image_url}
+                    alt={lot.name}
+                    fill
+                    style={{ objectFit: 'contain' }}
+                    quality={75}
+                    loading="lazy"
+                  />
                 </div>
-                <div className="flex justify-between mt-2">
+              )}
+              <div className="p-4 flex-grow flex flex-col">
+                <h3 className="text-lg font-bold text-white">{lot.name}</h3>
+                <p className="text-sm text-gray-300">Order: {lot.order || 0}</p>
+                <p className="text-sm text-gray-300">Current Bid: ${lot.current_bid}</p>
+                <p className="text-sm text-gray-300 whitespace-pre-line">
+                  {lot.description}
+                </p>
+                <div className="mt-auto pt-4 border-t border-gray-600">
+                  <div className="flex justify-between">
+                    <button
+                      onClick={() => setModal({ type: "edit-lot", data: lot })}
+                      className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLot(lot.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <button
+                      onClick={() => toggleLotActiveStatus(lot.id, !lot.is_active)}
+                      className={`px-3 py-1 rounded-md text-sm ${
+                        lot.is_active
+                          ? "bg-red-600 hover:bg-red-500"
+                          : "bg-green-600 hover:bg-green-500"
+                      }`}
+                    >
+                      {lot.is_active ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      onClick={() => handleFinishAuction(lot.id)}
+                      className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                      Finish Auction
+                    </button>
+                  </div>
                   <button
-                    onClick={() => toggleLotActiveStatus(lot.id, !lot.is_active)} // 
-                    className={`px-3 py-1 rounded-md text-sm ${
-                      lot.is_active
-                        ? "bg-red-600 hover:bg-red-500"
-                        : "bg-green-600 hover:bg-green-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewHistory(lot.id);
+                    }}
+                    className={`mt-2 w-full p-1 rounded-md text-sm ${
+                      showBids ? "bg-gray-600" : "bg-blue-600 hover:bg-blue-500"
                     }`}
                   >
-                    {lot.is_active ? "Deactivate" : "Activate"}
-                  </button>
-                  <button
-                    onClick={() => handleFinishAuction(lot.id)}
-                    className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1 rounded-md text-sm"
-                  >
-                    Finish Auction
+                    {showBids ? "Hide Bids" : "View Bid History"}
                   </button>
                 </div>
               </div>
+
+              {showBids && (
+                <div className="p-4 bg-gray-800">
+                  <h4 className="font-semibold mb-2">Bid History:</h4>
+                  {lotHistories[lot.id] && lotHistories[lot.id].length > 0 ? (
+                    <ul className="space-y-2 max-h-40 overflow-y-auto">
+                      {lotHistories[lot.id].map((bid) => (
+                        <li key={bid.id} className="bg-gray-700 p-2 rounded text-sm">
+                          <p><strong>User:</strong> {bid.users?.username || "Unknown"}</p>
+                          <p><strong>Amount:</strong> ${bid.bid_amount.toFixed(2)}</p>
+                          <p><strong>Time:</strong> {new Date(bid.bid_time).toLocaleString()}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-400">No bids yet</p>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Section>
   );
