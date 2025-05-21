@@ -62,6 +62,11 @@ export const AddOptionModal = ({ onSave, onClose }) => {
       toast.error('Please fill in all required fields: Name, Cost, and Order.');
       return;
     }
+    // В handleSubmit (AddLotModal.jsx и EditLotModal.jsx)
+    if (formData.max_length && formData.description.length > formData.max_length) {
+      toast.error(`Description exceeds maximum length of ${formData.max_length} characters`);
+      return;
+    }
     onSave(formData);
     onClose();
   };

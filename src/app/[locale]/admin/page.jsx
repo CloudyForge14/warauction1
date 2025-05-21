@@ -113,6 +113,7 @@ export default function AdminPanel() {
     const { data, error } = await supabase
       .from('options')
       .select('*')
+      .select("*, max_length, video_off")
       .order('order', { ascending: true });
   
     if (error) toast.error('Error fetching options.');
@@ -243,6 +244,21 @@ export default function AdminPanel() {
       toast.error("An unexpected error occurred while sending notifications.");
     }
   };
+  const notifyNewOptions = async () => {
+    try {
+      const res = await fetch("/api/notify-new-options", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("New Options notifications sent successfully!");
+      } else {
+        toast.error(data.error || "Error sending notifications.");
+      }
+    } catch (error) {
+      console.error("Failed to notify users:", error);
+      toast.error("An unexpected error occurred while sending notifications.");
+    }
+  }
+
   const toggleLotActiveStatus = async (lotId, isActive) => {
     try {
       const { error } = await supabase
@@ -712,6 +728,12 @@ export default function AdminPanel() {
         <h2 className="text-xl font-bold">
           {activeTab === "options" ? "All Messages" : "Options"}
         </h2>
+        <button 
+          onClick={notifyNewOptions}
+          className="p-2 bg-green-600 rounded-md hover:bg-green-700 mt-2 sm:mt-0"
+        >
+          Notify About New Options
+        </button>
         <button
           onClick={() => setModal({ type: "add-option", data: null })}
           className="p-2 bg-blue-600 rounded-md hover:bg-blue-700 mt-2 sm:mt-0"

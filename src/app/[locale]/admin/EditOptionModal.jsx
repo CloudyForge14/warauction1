@@ -45,6 +45,11 @@ export const EditOptionModal = ({ option, onSave, onClose, onMoveUp, onMoveDown 
   };
 
   const handleSubmit = (e) => {
+    // В handleSubmit (AddLotModal.jsx и EditLotModal.jsx)
+    if (formData.max_length && formData.description.length > formData.max_length) {
+      toast.error(`Description exceeds maximum length of ${formData.max_length} characters`);
+      return;
+    }
     e.preventDefault();
     onSave(formData);
     onClose();

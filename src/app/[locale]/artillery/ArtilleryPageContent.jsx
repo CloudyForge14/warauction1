@@ -334,8 +334,12 @@ export default function SendMessage() {
   const handleItemClick = (option) => {
     setCurrentItem(option);
     setItemQuantity(1);
-    setItemMessages([{ text: "", urgent: false, video: false }]);
-    setShowTextModal(true);
+    setItemMessages([{ 
+    text: "", 
+    urgent: false, 
+    video: option.video_off ? false : false // Инициализируем video как false если video_off true
+  }]);
+  setShowTextModal(true);
   };
 
   // Handle quantity change
@@ -556,6 +560,7 @@ export default function SendMessage() {
                               />
                               Urgent order (+$30)
                             </label>
+                                        {!option.video_off && (
                             <label className="flex items-center text-base">
                               <input
                                 type="checkbox"
@@ -569,6 +574,7 @@ export default function SendMessage() {
                               />
                               Firing video (+$100)
                             </label>
+                          )}
                             <div className="text-base font-semibold ml-auto">
                               Price: $
                               {option.cost + calculateMessageCost(message)}
@@ -690,7 +696,7 @@ export default function SendMessage() {
                     newMessages[index].text = e.target.value;
                     setItemMessages(newMessages);
                   }}
-                  maxLength={35}
+                  maxLength={currentItem?.max_length || 35} // Используем max_length или 35 по умолчанию
                   required
                   className="mt-1 p-2 w-full bg-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
                 />
@@ -713,6 +719,7 @@ export default function SendMessage() {
                         Urgent (+$30)
                       </label>
                     </div>
+                      {!currentItem?.video_off && (
                     <div className="flex items-center">
                       <input
                         type="checkbox"
@@ -729,6 +736,7 @@ export default function SendMessage() {
                         Video (+$100)
                       </label>
                     </div>
+                  )}
                   </div>
                   <div className="text-sm font-semibold">
                     Price: ${currentItem?.cost + calculateMessageCost(message)}
