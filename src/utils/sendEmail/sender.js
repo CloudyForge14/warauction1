@@ -7,6 +7,7 @@ const transporter = nodemailer.createTransport({
       user: process.env.MAILTRAP_USER,
       pass: process.env.MAILTRAP_PASS,
     },
+    secure: false,
   });
   
 
