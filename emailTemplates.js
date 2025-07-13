@@ -17,6 +17,18 @@ export const templates = {
           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
       },
     
+  newOptionsAvailable: {
+        subject: 'New Artillery Options Available!',
+        text: (username) => 
+          `Hi ${username},\n\nNew BOMB options have been added to Project Revenge!\n\nCheck them out and send your message to Russian forces today.\n\nBest regards,\nCloudyForge Team`,
+        html: (username) => 
+          `<h1>Hi ${username},</h1>
+          <p>New BOMB options have been added to <strong>Project Revenge</strong>!</p>
+          <p>Check them out and send your message to Russian forces today.</p>
+          <p><a href="https://cloudyforge.com/en/artillery" style="color: #2563eb; text-decoration: underline;">View New Options</a></p>
+          <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`
+      },
+    
       // Шаблон 2: Ваша ставка перебита
       bidOvertaken: {
         subject: 'Your Bid Has Been Outbid!',
@@ -46,13 +58,34 @@ export const templates = {
           `Hi ${username},\n\nYour message regarding the item "${itemName}" has been approved.\n\nYour message: "${userMessage}"\n\nConfirm your order - use the following card credentials:\n\nCard Number: ${cardNumber}\n\nBest regards,\nCloudyForge Team`,
         htmlWithCard: (username, itemName, userMessage, cardNumber) =>
           `<h1>Hi ${username},</h1>
-           <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong>.</p>
-           <p><strong>Your message:</strong> "${userMessage}"</p>
-           <p>Confirm your order - use the following card credentials:</p>
-           <ul>
-             <li><strong>Card Number:</strong> ${cardNumber}</li>
-           </ul>
-           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+          <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong>.</p>
+          <p><strong>Your message:</strong> "${userMessage}"</p>
+          <p>Confirm your order - use the following card credentials:</p>
+          <ul>
+            <li><strong>Card Number:</strong> ${cardNumber}</li>
+          </ul>
+          <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+
+        // Add these new methods for crypto payments
+        textWithETH: (username, itemName, userMessage, ethAddress) =>
+          `Hi ${username},\n\nYour message regarding the item "${itemName}" has been approved.\n\nYour message: "${userMessage}"\n\nConfirm your order - send payment to Ethereum address: ${ethAddress}\n\nBest regards,\nCloudyForge Team`,
+        htmlWithETH: (username, itemName, userMessage, ethAddress) =>
+          `<h1>Hi ${username},</h1>
+          <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong>.</p>
+          <p><strong>Your message:</strong> "${userMessage}"</p>
+          <p>Confirm your order - send payment to Ethereum address:</p>
+          <p><strong>${ethAddress}</strong></p>
+          <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+
+        textWithBTC: (username, itemName, userMessage, btcAddress) =>
+          `Hi ${username},\n\nYour message regarding the item "${itemName}" has been approved.\n\nYour message: "${userMessage}"\n\nConfirm your order - send payment to Bitcoin address: ${btcAddress}\n\nBest regards,\nCloudyForge Team`,
+        htmlWithBTC: (username, itemName, userMessage, btcAddress) =>
+          `<h1>Hi ${username},</h1>
+          <p>Your message regarding the item <strong>"${itemName}"</strong> has been <strong>approved</strong>.</p>
+          <p><strong>Your message:</strong> "${userMessage}"</p>
+          <p>Confirm your order - send payment to Bitcoin address:</p>
+          <p><strong>${btcAddress}</strong></p>
+          <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
       },
 
       usernameChanged: {
@@ -73,7 +106,7 @@ export const templates = {
           `<h1>Hi ${username},</h1>
            <p>We just wanted to let you know that your password has been updated.</p>
            <p>If you did not do this, please contact support immediately.</p>`,
-      },
+      }, 
       auctionWon: {
         subject: 'Congratulations! You Won the Auction!',
         textWithPayPal: (username, itemName, finalPrice, paypalEmail) =>
@@ -110,6 +143,50 @@ export const templates = {
            <ul>
              <li><strong>Card Number:</strong> ${cardNumber}</li>
            </ul>
+           <p>After payment, send your data for delivery to <strong>cloudyforge@gmail.com</strong>, namely:</p>
+           <ol>
+             <li>Country</li>
+             <li>Full name</li>
+             <li>Phone number</li>
+             <li>Full address</li>
+             <li>City</li>
+             <li>Zip code</li>
+           </ol>
+           <p>Thank you for participating!</p>
+           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+      
+        textWithETH: (username, itemName, finalPrice, ethAddress) =>
+          `Hi ${username},\n\nCongratulations on winning the auction for "${itemName}"! The final price is $${finalPrice.toFixed(
+            2
+          )}.\n\nTo complete your payment, please send the equivalent in ETH to the following Ethereum address: ${ethAddress}\n\nAfter payment, send your data for delivery, namely:\n1. Country\n2. Full name\n3. Phone number\n4. Full address\n5. City\n6. Zip code\n\nThank you for participating!\n\nBest regards,\nCloudyForge Team`,
+        htmlWithETH: (username, itemName, finalPrice, ethAddress) =>
+          `<h1>Hi ${username},</h1>
+           <p>Congratulations on winning the auction for <strong>"${itemName}"</strong>!</p>
+           <p>The final price is <strong>$${finalPrice.toFixed(2)}</strong>.</p>
+           <p>To complete your payment, please send the equivalent in ETH to the following Ethereum address:</p>
+           <p><strong>${ethAddress}</strong></p>
+           <p>After payment, send your data for delivery to <strong>cloudyforge@gmail.com</strong>, namely:</p>
+           <ol>
+             <li>Country</li>
+             <li>Full name</li>
+             <li>Phone number</li>
+             <li>Full address</li>
+             <li>City</li>
+             <li>Zip code</li>
+           </ol>
+           <p>Thank you for participating!</p>
+           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`,
+      
+        textWithBTC: (username, itemName, finalPrice, btcAddress) =>
+          `Hi ${username},\n\nCongratulations on winning the auction for "${itemName}"! The final price is $${finalPrice.toFixed(
+            2
+          )}.\n\nTo complete your payment, please send the equivalent in BTC to the following Bitcoin address: ${btcAddress}\n\nAfter payment, send your data for delivery, namely:\n1. Country\n2. Full name\n3. Phone number\n4. Full address\n5. City\n6. Zip code\n\nThank you for participating!\n\nBest regards,\nCloudyForge Team`,
+        htmlWithBTC: (username, itemName, finalPrice, btcAddress) =>
+          `<h1>Hi ${username},</h1>
+           <p>Congratulations on winning the auction for <strong>"${itemName}"</strong>!</p>
+           <p>The final price is <strong>$${finalPrice.toFixed(2)}</strong>.</p>
+           <p>To complete your payment, please send the equivalent in BTC to the following Bitcoin address:</p>
+           <p><strong>${btcAddress}</strong></p>
            <p>After payment, send your data for delivery to <strong>cloudyforge@gmail.com</strong>, namely:</p>
            <ol>
              <li>Country</li>
