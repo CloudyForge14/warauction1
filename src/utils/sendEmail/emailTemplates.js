@@ -20,10 +20,10 @@ export const templates = {
   newOptionsAvailable: {
         subject: 'New Artillery Options Available!',
         text: (username) => 
-          `Hi ${username},\n\nNew artillery options have been added to Project Revenge!\n\nCheck them out and send your message to Russian forces today.\n\nBest regards,\nCloudyForge Team`,
+          `Hi ${username},\n\nNew BOMB options have been added to Project Revenge!\n\nCheck them out and send your message to Russian forces today.\n\nBest regards,\nCloudyForge Team`,
         html: (username) => 
           `<h1>Hi ${username},</h1>
-          <p>New artillery options have been added to <strong>Project Revenge</strong>!</p>
+          <p>New BOMB options have been added to <strong>Project Revenge</strong>!</p>
           <p>Check them out and send your message to Russian forces today.</p>
           <p><a href="https://cloudyforge.com/en/artillery" style="color: #2563eb; text-decoration: underline;">View New Options</a></p>
           <p>Best regards,<br/><strong>CloudyForge Team</strong></p>`
